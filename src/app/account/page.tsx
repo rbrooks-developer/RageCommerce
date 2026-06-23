@@ -4,47 +4,95 @@ import { redirect } from "next/navigation";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { OrderStatusBadge } from "@/components/ui/badge";
 import { logout } from "@/lib/actions/auth";
-import type { Order } from "@/types";
+import { AddressManager } from "./AddressManager";
+import { ProfileForm } from "./ProfileForm";
+import { PasswordForm } from "./PasswordForm";
+import type { Order, UserAddress } from "@/types";
 
 type OrderRow = Pick<Order, "id" | "status" | "total_price" | "created_at" | "tracking_number">;
+
+function SectionHeading({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="mb-4">
+      <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+      {description && <p className="text-sm text-gray-500 mt-0.5">{description}</p>}
+    </div>
+  );
+}
 
 export default async function AccountPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: raw } = await supabase
-    .from("orders")
-    .select("id, status, total_price, created_at, tracking_number")
-    .eq("user_id", user.id)
-    .neq("status", "pending")
-    .order("created_at", { ascending: false });
+  const [{ data: profileRaw }, { data: addressesRaw }, { data: ordersRaw }] = await Promise.all([
+    supabase.from("profiles").select("first_name, last_name, phone").eq("id", user.id).maybeSingle(),
+    supabase.from("user_addresses").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
+    supabase
+      .from("orders")
+      .select("id, status, total_price, created_at, tracking_number")
+      .eq("user_id", user.id)
+      .neq("status", "pending")
+      .order("created_at", { ascending: false }),
+  ]);
 
-  const orders = (raw ?? []) as OrderRow[];
+  const profile = profileRaw as { first_name: string | null; last_name: string | null; phone: string | null } | null;
+  const addresses = (addressesRaw ?? []) as UserAddress[];
+  const orders = (ordersRaw ?? []) as OrderRow[];
+
+  const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || null;
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-10 pb-16">
+      {/* Page header */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Account</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{user.email}</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {displayName ?? "My Account"}
+          </h1>
+          <p className="text-sm text-gray-400 mt-0.5">{user.email}</p>
         </div>
         <form action={logout}>
           <button
             type="submit"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+            className="text-sm text-gray-500 hover:text-gray-900 transition-colors whitespace-nowrap"
           >
             Sign out
           </button>
         </form>
       </div>
 
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Order History</h2>
+      {/* ── Profile ─────────────────────────────────── */}
+      <section>
+        <SectionHeading title="Profile" description="Your name and contact details." />
+        <div className="rounded-lg border border-gray-200 bg-white p-5">
+          <ProfileForm
+            firstName={profile?.first_name ?? null}
+            lastName={profile?.last_name ?? null}
+            phone={profile?.phone ?? null}
+            email={user.email ?? ""}
+          />
+        </div>
+      </section>
+
+      {/* ── Addresses ───────────────────────────────── */}
+      <section>
+        <SectionHeading
+          title="Saved Addresses"
+          description="Manage your shipping and billing addresses."
+        />
+        <div className="rounded-lg border border-gray-200 bg-white p-5">
+          <AddressManager addresses={addresses} />
+        </div>
+      </section>
+
+      {/* ── Order History ───────────────────────────── */}
+      <section>
+        <SectionHeading title="Order History" />
 
         {orders.length === 0 ? (
           <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
-            <p className="text-gray-400 text-sm mb-4">You haven&apos;t placed any orders yet.</p>
+            <p className="text-gray-400 text-sm mb-4">No orders yet.</p>
             <Link
               href="/products"
               className="inline-block rounded-md bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-700 transition-colors"
@@ -54,7 +102,7 @@ export default async function AccountPage() {
           </div>
         ) : (
           <>
-            {/* Mobile cards */}
+            {/* Mobile */}
             <div className="space-y-3 md:hidden">
               {orders.map((order) => (
                 <Link
@@ -69,7 +117,7 @@ export default async function AccountPage() {
                       </p>
                       <p className="text-xs text-gray-400 mt-0.5">{formatDate(order.created_at)}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <OrderStatusBadge status={order.status} />
                       <p className="text-sm font-semibold text-gray-900 mt-1">
                         {formatPrice(Number(order.total_price) * 100)}
@@ -85,7 +133,7 @@ export default async function AccountPage() {
               ))}
             </div>
 
-            {/* Desktop table */}
+            {/* Desktop */}
             <div className="hidden md:block rounded-lg border border-gray-200 bg-white overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50">
@@ -113,10 +161,7 @@ export default async function AccountPage() {
                         {order.tracking_number ?? "—"}
                       </td>
                       <td className="px-5 py-3 text-right">
-                        <Link
-                          href={`/account/orders/${order.id}`}
-                          className="text-blue-600 hover:underline text-xs"
-                        >
+                        <Link href={`/account/orders/${order.id}`} className="text-blue-600 hover:underline text-xs">
                           View
                         </Link>
                       </td>
@@ -127,7 +172,15 @@ export default async function AccountPage() {
             </div>
           </>
         )}
-      </div>
+      </section>
+
+      {/* ── Security ────────────────────────────────── */}
+      <section>
+        <SectionHeading title="Security" description="Update your password." />
+        <div className="rounded-lg border border-gray-200 bg-white p-5">
+          <PasswordForm />
+        </div>
+      </section>
     </div>
   );
 }

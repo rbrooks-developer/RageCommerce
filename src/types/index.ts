@@ -74,6 +74,25 @@ export type ContactInfo = {
   address: string | null;
 };
 
+export type UserAddress = {
+  id: string;
+  user_id: string;
+  label: string;
+  first_name: string;
+  last_name: string;
+  company: string | null;
+  address_line1: string;
+  address_line2: string | null;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+  phone: string | null;
+  is_default_shipping: boolean;
+  is_default_billing: boolean;
+  created_at: string;
+};
+
 export type StoreAddress = {
   name: string;
   street1: string;
