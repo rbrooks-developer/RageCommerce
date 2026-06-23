@@ -10,6 +10,12 @@ const authSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+const registerSchema = authSchema.extend({
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  phone: z.string().optional(),
+});
+
 export async function login(_prevState: unknown, formData: FormData) {
   const parsed = authSchema.safeParse({
     email: formData.get("email"),
@@ -30,18 +36,24 @@ export async function login(_prevState: unknown, formData: FormData) {
 }
 
 export async function register(_prevState: unknown, formData: FormData) {
-  const parsed = authSchema.safeParse({
+  const parsed = registerSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
+    first_name: formData.get("first_name"),
+    last_name: formData.get("last_name"),
+    phone: formData.get("phone") || undefined,
   });
 
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
+  const { email, password, first_name, last_name, phone } = parsed.data;
+
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
-    ...parsed.data,
+  const { data: signUpData, error } = await supabase.auth.signUp({
+    email,
+    password,
     options: {
       emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`,
     },
@@ -49,8 +61,16 @@ export async function register(_prevState: unknown, formData: FormData) {
 
   if (error) return { error: { _form: [error.message] } };
 
+  // Save name + phone to profile (the trigger creates the row, we just update it)
+  if (signUpData.user) {
+    await supabase
+      .from("profiles")
+      .update({ first_name, last_name, phone: phone ?? null, updated_at: new Date().toISOString() } as any)
+      .eq("id", signUpData.user.id);
+  }
+
   sendWelcomeEmail(
-    parsed.data.email,
+    email,
     process.env.NEXT_PUBLIC_SITE_TITLE ?? "My Store",
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
   ).catch((err) => console.error("Failed to send welcome email:", err));

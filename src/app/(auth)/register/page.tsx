@@ -14,8 +14,8 @@ export default function RegisterPage() {
     boolean
   ];
 
-  const errors = (state as { error?: Record<string, string[]> } | null)?.error;
-  const success = (state as { success?: boolean } | null)?.success;
+  const errors = state?.error;
+  const success = state?.success;
 
   if (success) {
     return (
@@ -45,6 +45,40 @@ export default function RegisterPage() {
             {errors._form[0]}
           </div>
         )}
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="first_name" required>First Name</Label>
+            <Input
+              id="first_name"
+              name="first_name"
+              autoComplete="given-name"
+              error={errors?.first_name?.[0]}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="last_name" required>Last Name</Label>
+            <Input
+              id="last_name"
+              name="last_name"
+              autoComplete="family-name"
+              error={errors?.last_name?.[0]}
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="phone">Phone (optional)</Label>
+          <Input
+            id="phone"
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            placeholder="(555) 123-4567"
+          />
+        </div>
 
         <div>
           <Label htmlFor="email" required>Email</Label>
