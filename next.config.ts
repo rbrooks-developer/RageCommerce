@@ -14,16 +14,22 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
+      // Next.js requires unsafe-inline + unsafe-eval for dev; in prod only unsafe-inline is needed but
+      // Turbopack still uses eval — keeping both for now
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' blob: data: https:",
       "font-src 'self'",
+      "media-src 'none'",
       "object-src 'none'",
       "base-uri 'self'",
-      "form-action 'self'",
+      // Allow form submissions to self + Stripe hosted checkout
+      "form-action 'self' https://checkout.stripe.com",
       "frame-ancestors 'none'",
-      "frame-src https://js.stripe.com https://hooks.stripe.com",
-      "connect-src 'self' https://*.supabase.co https://api.stripe.com https://api.resend.com https://api.easypost.com",
+      // Stripe hosted checkout and 3DS frames
+      "frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com",
+      // API connections: Supabase, Stripe, Resend, EasyPost
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://api.resend.com https://api.easypost.com",
       "upgrade-insecure-requests",
     ].join("; "),
   },

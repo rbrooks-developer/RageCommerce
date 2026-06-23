@@ -43,7 +43,7 @@ export async function proxy(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
-    if (profile?.role !== "admin") {
+    if ((profile as { role: string } | null)?.role !== "admin") {
       return NextResponse.redirect(new URL("/", request.url));
     }
   }
@@ -57,8 +57,9 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Redirect logged-in users away from auth pages
-  if ((pathname === "/login" || pathname === "/register") && user) {
+  // Redirect logged-in users away from auth pages (except reset-password — always accessible)
+  const authOnlyPaths = ["/login", "/register", "/forgot-password"];
+  if (authOnlyPaths.includes(pathname) && user) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

@@ -44,7 +44,12 @@ function LoginForm() {
         </div>
 
         <div>
-          <Label htmlFor="password" required>Password</Label>
+          <div className="flex items-center justify-between mb-1">
+            <Label htmlFor="password" required>Password</Label>
+            <Link href="/forgot-password" className="text-xs text-gray-500 hover:text-gray-900 transition-colors">
+              Forgot password?
+            </Link>
+          </div>
           <Input id="password" name="password" type="password" autoComplete="current-password" error={errors?.password?.[0]} required />
         </div>
 
