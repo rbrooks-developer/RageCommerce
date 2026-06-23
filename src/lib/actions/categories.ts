@@ -1,0 +1,60 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { categorySchema } from "@/lib/validations/category";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+export async function createCategory(_prevState: unknown, formData: FormData) {
+  const supabase = await createClient();
+
+  const parsed = categorySchema.safeParse({
+    name: formData.get("name"),
+    slug: formData.get("slug"),
+    parent_id: formData.get("parent_id") || null,
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+
+  const { error } = await supabase.from("categories").insert(parsed.data);
+  if (error) return { error: { _form: [error.message] } };
+
+  revalidatePath("/admin/categories");
+  revalidatePath("/");
+  redirect("/admin/categories");
+}
+
+export async function updateCategory(id: string, _prevState: unknown, formData: FormData) {
+  const supabase = await createClient();
+
+  const parsed = categorySchema.safeParse({
+    name: formData.get("name"),
+    slug: formData.get("slug"),
+    parent_id: formData.get("parent_id") || null,
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.flatten().fieldErrors };
+  }
+
+  const { error } = await supabase
+    .from("categories")
+    .update(parsed.data)
+    .eq("id", id);
+
+  if (error) return { error: { _form: [error.message] } };
+
+  revalidatePath("/admin/categories");
+  revalidatePath("/");
+  redirect("/admin/categories");
+}
+
+export async function deleteCategory(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/categories");
+  revalidatePath("/");
+}

@@ -1,0 +1,226 @@
+"use client";
+
+import { useState } from "react";
+import { updateSettings } from "@/lib/actions/settings";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { ImageUpload } from "./ImageUpload";
+import type { SiteSettings } from "@/types";
+import type { HomepageConfig, NavConfig, FooterConfig, ContactInfo, StoreAddress } from "@/types";
+
+interface Props {
+  defaultValues: SiteSettings | null;
+  products: { id: string; name: string }[];
+  categories: { id: string; name: string }[];
+}
+
+export function SettingsForm({ defaultValues, products, categories }: Props) {
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [logoUrl, setLogoUrl] = useState<string[]>(defaultValues?.logo_url ? [defaultValues.logo_url] : []);
+  const [taxMode, setTaxMode] = useState(defaultValues?.tax_mode ?? "none");
+
+  const homepage = defaultValues?.homepage_config as HomepageConfig | null;
+  const nav = defaultValues?.nav_config as NavConfig | null;
+  const footer = defaultValues?.footer_config as FooterConfig | null;
+  const contact = defaultValues?.contact_info as ContactInfo | null;
+  const storeAddress = defaultValues?.store_address as StoreAddress | null;
+
+  const [navItems, setNavItems] = useState(nav?.items ?? [{ label: "", link: "" }]);
+  const [footerLinks, setFooterLinks] = useState(footer?.links ?? [{ label: "", link: "" }]);
+  const [socialLinks, setSocialLinks] = useState(footer?.social ?? [{ platform: "", url: "" }]);
+  const [featuredProducts, setFeaturedProducts] = useState<string[]>(homepage?.featured_product_ids ?? []);
+  const [featuredCategories, setFeaturedCategories] = useState<string[]>(homepage?.featured_category_ids ?? []);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage(null);
+    const form = e.currentTarget;
+    const g = (name: string) => (form.elements.namedItem(name) as HTMLInputElement)?.value ?? "";
+
+    const result = await updateSettings({
+      site_title: g("site_title"),
+      meta_title: g("meta_title") || undefined,
+      meta_description: g("meta_description") || undefined,
+      logo_url: logoUrl[0] ?? undefined,
+      favicon_url: g("favicon_url") || undefined,
+      tax_mode: taxMode as "stripe" | "flat_rate" | "none",
+      tax_flat_rate: taxMode === "flat_rate" ? parseFloat(g("tax_flat_rate")) : undefined,
+      homepage_config: {
+        hero_heading: g("hero_heading"),
+        hero_subtext: g("hero_subtext"),
+        hero_image_url: g("hero_image_url") || undefined,
+        hero_cta_text: g("hero_cta_text"),
+        hero_cta_link: g("hero_cta_link"),
+        featured_product_ids: featuredProducts,
+        featured_category_ids: featuredCategories,
+        banners: [],
+      },
+      nav_config: { items: navItems.filter((i) => i.label && i.link) },
+      footer_config: {
+        links: footerLinks.filter((l) => l.label && l.link),
+        social: socialLinks.filter((s) => s.platform && s.url),
+        copyright_text: g("copyright_text"),
+      },
+      contact_info: {
+        email: g("contact_email") || undefined,
+        phone: g("contact_phone") || undefined,
+        address: g("contact_address") || undefined,
+      },
+      store_address: {
+        name: g("store_name"),
+        street1: g("store_street1"),
+        street2: g("store_street2") || undefined,
+        city: g("store_city"),
+        state: g("store_state"),
+        zip: g("store_zip"),
+        country: g("store_country") || "US",
+        phone: g("store_phone") || undefined,
+      },
+    });
+
+    setSaving(false);
+    if (result && "error" in result) {
+      setMessage({ type: "error", text: "Failed to save settings. Check all required fields." });
+    } else {
+      setMessage({ type: "success", text: "Settings saved successfully." });
+    }
+  };
+
+  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
+      <h2 className="font-semibold text-gray-900 text-base">{title}</h2>
+      {children}
+    </div>
+  );
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5 max-w-3xl pb-10">
+      {message && (
+        <div className={`rounded-md p-3 text-sm ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+          {message.text}
+        </div>
+      )}
+
+      <Section title="General">
+        <div><Label htmlFor="site_title" required>Site Title</Label><Input id="site_title" name="site_title" defaultValue={defaultValues?.site_title ?? ""} required /></div>
+        <div><Label htmlFor="meta_title">Meta Title <span className="text-gray-400 font-normal">(max 60 chars)</span></Label><Input id="meta_title" name="meta_title" maxLength={60} defaultValue={defaultValues?.meta_title ?? ""} /></div>
+        <div><Label htmlFor="meta_description">Meta Description <span className="text-gray-400 font-normal">(max 160 chars)</span></Label><Textarea id="meta_description" name="meta_description" maxLength={160} rows={2} defaultValue={defaultValues?.meta_description ?? ""} /></div>
+        <div><Label>Logo</Label><ImageUpload value={logoUrl} onChange={setLogoUrl} max={1} /></div>
+        <div><Label htmlFor="favicon_url">Favicon URL</Label><Input id="favicon_url" name="favicon_url" type="url" defaultValue={defaultValues?.favicon_url ?? ""} placeholder="https://..." /></div>
+      </Section>
+
+      <Section title="Homepage">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div><Label htmlFor="hero_heading">Hero Heading</Label><Input id="hero_heading" name="hero_heading" defaultValue={homepage?.hero_heading ?? ""} /></div>
+          <div><Label htmlFor="hero_subtext">Hero Subtext</Label><Input id="hero_subtext" name="hero_subtext" defaultValue={homepage?.hero_subtext ?? ""} /></div>
+          <div><Label htmlFor="hero_image_url">Hero Image URL</Label><Input id="hero_image_url" name="hero_image_url" type="url" defaultValue={homepage?.hero_image_url ?? ""} /></div>
+          <div><Label htmlFor="hero_cta_text">CTA Button Text</Label><Input id="hero_cta_text" name="hero_cta_text" defaultValue={homepage?.hero_cta_text ?? "Shop Now"} /></div>
+          <div><Label htmlFor="hero_cta_link">CTA Button Link</Label><Input id="hero_cta_link" name="hero_cta_link" defaultValue={homepage?.hero_cta_link ?? "/products"} /></div>
+        </div>
+        <div>
+          <Label>Featured Products</Label>
+          <select multiple value={featuredProducts} onChange={(e) => setFeaturedProducts(Array.from(e.target.selectedOptions, (o) => o.value))} className="w-full h-32 rounded-md border border-gray-300 p-2 text-sm">
+            {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <p className="text-xs text-gray-400 mt-1">Ctrl/Cmd+click to select multiple</p>
+        </div>
+        <div>
+          <Label>Featured Categories</Label>
+          <select multiple value={featuredCategories} onChange={(e) => setFeaturedCategories(Array.from(e.target.selectedOptions, (o) => o.value))} className="w-full h-24 rounded-md border border-gray-300 p-2 text-sm">
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+      </Section>
+
+      <Section title="Navigation">
+        <div className="space-y-2">
+          {navItems.map((item, i) => (
+            <div key={i} className="flex gap-2">
+              <Input value={item.label} onChange={(e) => setNavItems((prev) => prev.map((n, idx) => idx === i ? { ...n, label: e.target.value } : n))} placeholder="Label (e.g. Shop)" />
+              <Input value={item.link} onChange={(e) => setNavItems((prev) => prev.map((n, idx) => idx === i ? { ...n, link: e.target.value } : n))} placeholder="Link (e.g. /products)" />
+              <button type="button" onClick={() => setNavItems((prev) => prev.filter((_, idx) => idx !== i))} className="shrink-0 text-red-500 hover:text-red-700 px-2">✕</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setNavItems((prev) => [...prev, { label: "", link: "" }])} className="text-sm text-blue-600 hover:underline">+ Add nav item</button>
+        </div>
+      </Section>
+
+      <Section title="Footer">
+        <div>
+          <Label>Footer Links</Label>
+          <div className="space-y-2">
+            {footerLinks.map((link, i) => (
+              <div key={i} className="flex gap-2">
+                <Input value={link.label} onChange={(e) => setFooterLinks((prev) => prev.map((l, idx) => idx === i ? { ...l, label: e.target.value } : l))} placeholder="Label" />
+                <Input value={link.link} onChange={(e) => setFooterLinks((prev) => prev.map((l, idx) => idx === i ? { ...l, link: e.target.value } : l))} placeholder="URL" />
+                <button type="button" onClick={() => setFooterLinks((prev) => prev.filter((_, idx) => idx !== i))} className="shrink-0 text-red-500 px-2">✕</button>
+              </div>
+            ))}
+            <button type="button" onClick={() => setFooterLinks((prev) => [...prev, { label: "", link: "" }])} className="text-sm text-blue-600 hover:underline">+ Add link</button>
+          </div>
+        </div>
+        <div>
+          <Label>Social Media</Label>
+          <div className="space-y-2">
+            {socialLinks.map((s, i) => (
+              <div key={i} className="flex gap-2">
+                <Input value={s.platform} onChange={(e) => setSocialLinks((prev) => prev.map((l, idx) => idx === i ? { ...l, platform: e.target.value } : l))} placeholder="Platform (e.g. Instagram)" />
+                <Input value={s.url} onChange={(e) => setSocialLinks((prev) => prev.map((l, idx) => idx === i ? { ...l, url: e.target.value } : l))} placeholder="URL" />
+                <button type="button" onClick={() => setSocialLinks((prev) => prev.filter((_, idx) => idx !== i))} className="shrink-0 text-red-500 px-2">✕</button>
+              </div>
+            ))}
+            <button type="button" onClick={() => setSocialLinks((prev) => [...prev, { platform: "", url: "" }])} className="text-sm text-blue-600 hover:underline">+ Add social</button>
+          </div>
+        </div>
+        <div><Label htmlFor="copyright_text">Copyright Text</Label><Input id="copyright_text" name="copyright_text" defaultValue={footer?.copyright_text ?? ""} placeholder={`© ${new Date().getFullYear()} My Store`} /></div>
+      </Section>
+
+      <Section title="Contact">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div><Label htmlFor="contact_email">Email</Label><Input id="contact_email" name="contact_email" type="email" defaultValue={contact?.email ?? ""} /></div>
+          <div><Label htmlFor="contact_phone">Phone</Label><Input id="contact_phone" name="contact_phone" defaultValue={contact?.phone ?? ""} /></div>
+        </div>
+        <div><Label htmlFor="contact_address">Address</Label><Textarea id="contact_address" name="contact_address" rows={2} defaultValue={contact?.address ?? ""} /></div>
+      </Section>
+
+      <Section title="Store Address (for EasyPost shipping rates)">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div><Label htmlFor="store_name" required>Store Name</Label><Input id="store_name" name="store_name" defaultValue={storeAddress?.name ?? ""} required /></div>
+          <div><Label htmlFor="store_phone">Phone</Label><Input id="store_phone" name="store_phone" defaultValue={storeAddress?.phone ?? ""} /></div>
+          <div className="sm:col-span-2"><Label htmlFor="store_street1" required>Street Address</Label><Input id="store_street1" name="store_street1" defaultValue={storeAddress?.street1 ?? ""} required /></div>
+          <div className="sm:col-span-2"><Label htmlFor="store_street2">Suite / Unit</Label><Input id="store_street2" name="store_street2" defaultValue={storeAddress?.street2 ?? ""} /></div>
+          <div><Label htmlFor="store_city" required>City</Label><Input id="store_city" name="store_city" defaultValue={storeAddress?.city ?? ""} required /></div>
+          <div><Label htmlFor="store_state" required>State (2-letter)</Label><Input id="store_state" name="store_state" maxLength={2} defaultValue={storeAddress?.state ?? ""} placeholder="CA" required /></div>
+          <div><Label htmlFor="store_zip" required>ZIP</Label><Input id="store_zip" name="store_zip" defaultValue={storeAddress?.zip ?? ""} required /></div>
+          <div><Label htmlFor="store_country">Country</Label><Input id="store_country" name="store_country" defaultValue={storeAddress?.country ?? "US"} /></div>
+        </div>
+      </Section>
+
+      <Section title="Tax">
+        <div>
+          <Label>Tax Mode</Label>
+          <div className="flex flex-col gap-2 mt-1">
+            {([["none", "No tax"], ["stripe", "Stripe Tax (automatic)"], ["flat_rate", "Flat rate"]] as const).map(([val, label]) => (
+              <label key={val} className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="tax_mode_radio" value={val} checked={taxMode === val} onChange={() => setTaxMode(val)} className="h-4 w-4" />
+                <span className="text-sm">{label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        {taxMode === "flat_rate" && (
+          <div className="max-w-xs">
+            <Label htmlFor="tax_flat_rate">Tax Rate (e.g. 0.08 for 8%)</Label>
+            <Input id="tax_flat_rate" name="tax_flat_rate" type="number" step="0.001" min="0" max="1" defaultValue={defaultValues?.tax_flat_rate ?? ""} placeholder="0.08" />
+          </div>
+        )}
+      </Section>
+
+      <Button type="submit" size="lg" loading={saving}>Save All Settings</Button>
+    </form>
+  );
+}
