@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { sendWelcomeEmail } from "@/lib/emails/welcomeEmail";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -47,6 +48,13 @@ export async function register(_prevState: unknown, formData: FormData) {
   });
 
   if (error) return { error: { _form: [error.message] } };
+
+  const siteTitle = process.env.NEXT_PUBLIC_SITE_TITLE ?? "My Store";
+  const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+  sendWelcomeEmail(parsed.data.email, siteTitle, siteUrl).catch((err) =>
+    console.error("Failed to send welcome email:", err)
+  );
 
   return { success: true };
 }

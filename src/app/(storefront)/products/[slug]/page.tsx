@@ -3,6 +3,7 @@ import { getSettings } from "@/lib/data/settings";
 import { notFound } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import { ProductImages } from "./ProductImages";
+import { AddToCartButton } from "@/components/storefront/AddToCartButton";
 import type { Metadata } from "next";
 import type { Product } from "@/types";
 
@@ -84,20 +85,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
             )}
 
-            <div className="pt-2">
-              {product.inventory > 0 ? (
-                <p className="text-sm text-green-600 font-medium">{product.inventory} in stock</p>
-              ) : (
-                <p className="text-sm text-red-500 font-medium">Out of stock</p>
-              )}
-            </div>
-
-            <button
-              disabled={product.inventory === 0}
-              className="w-full rounded-md bg-gray-900 py-4 text-sm font-semibold text-white hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {product.inventory > 0 ? "Add to Cart" : "Out of Stock"}
-            </button>
+            <AddToCartButton product={product} />
           </div>
         </div>
       </div>

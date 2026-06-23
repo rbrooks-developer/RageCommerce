@@ -1,5 +1,6 @@
 import { Header } from "@/components/storefront/Header";
 import { Footer } from "@/components/storefront/Footer";
+import { CartProvider } from "@/lib/cart/store";
 import { getSettings } from "@/lib/data/settings";
 import type { NavConfig, FooterConfig, ContactInfo } from "@/types";
 
@@ -7,7 +8,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
   const settings = await getSettings();
 
   return (
-    <>
+    <CartProvider>
       <Header
         siteTitle={settings?.site_title ?? "My Store"}
         logoUrl={settings?.logo_url ?? null}
@@ -19,6 +20,6 @@ export default async function StorefrontLayout({ children }: { children: React.R
         footerConfig={(settings?.footer_config as FooterConfig) ?? { links: [], social: [], copyright_text: "" }}
         contactInfo={(settings?.contact_info as ContactInfo) ?? { email: null, phone: null, address: null }}
       />
-    </>
+    </CartProvider>
   );
 }
