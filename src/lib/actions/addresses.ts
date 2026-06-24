@@ -47,12 +47,13 @@ export async function saveAddress(_prev: unknown, formData: FormData) {
 
   // Check if this will be the first address of its type → auto-default
   const defaultField = isShipping ? "is_default_shipping" : "is_default_billing";
-  const { count } = await supabase
+  let countQuery = supabase
     .from("user_addresses")
     .select("id", { count: "exact", head: true })
     .eq("user_id", user.id)
-    .eq("label", label)
-    .neq("id", addressId ?? "");
+    .eq("label", label);
+  if (addressId) countQuery = countQuery.neq("id", addressId);
+  const { count } = await countQuery;
 
   const autoDefault = (count ?? 0) === 0;
 
