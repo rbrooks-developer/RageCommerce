@@ -11,7 +11,7 @@ import type { Order, OrderItem, Product, StoreAddress } from "@/types";
 type OrderStatus = "pending" | "paid" | "shipped" | "fulfilled" | "cancelled";
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
-  const supabase = await createServiceClient();
+  const supabase = createServiceClient();
   const { error } = await supabase
     .from("orders")
     .update({ status })
@@ -22,7 +22,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
 }
 
 export async function cancelOrder(orderId: string) {
-  const supabase = await createServiceClient();
+  const supabase = createServiceClient();
 
   const { data: orderRaw } = await supabase
     .from("orders")
@@ -80,7 +80,7 @@ interface LabelResult {
 }
 
 export async function generateLabels(orderIds: string[]): Promise<LabelResult[]> {
-  const supabase = await createServiceClient();
+  const supabase = createServiceClient();
   const settings = await getSettings();
   const storeAddress = settings?.store_address as StoreAddress | null;
 

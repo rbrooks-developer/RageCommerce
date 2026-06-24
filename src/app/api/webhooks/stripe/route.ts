@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Missing order_id" }, { status: 400 });
   }
 
-  const supabase = await createServiceClient();
+  const supabase = createServiceClient();
 
   // Load the order
   const { data: orderRaw } = await supabase

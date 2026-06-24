@@ -66,7 +66,7 @@ export async function register(_prevState: unknown, formData: FormData) {
   // Upsert profile data via service client (bypasses RLS, handles both
   // "trigger already created the row" and "row not yet created" cases)
   if (signUpData.user) {
-    const serviceClient = await createServiceClient();
+    const serviceClient = createServiceClient();
     const { error: profileError } = await serviceClient
       .from("profiles")
       .upsert({
