@@ -50,6 +50,7 @@ export const siteSettingsSchema = z.object({
     links: z.array(footerLinkSchema),
     social: z.array(socialSchema),
     copyright_text: z.string(),
+    display_name: z.string().optional(),
     tagline: z.string().optional(),
     social_handle: z.string().optional(),
   }),
