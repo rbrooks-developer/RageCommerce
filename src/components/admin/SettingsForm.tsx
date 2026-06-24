@@ -117,6 +117,15 @@ function FaviconUpload({ value, onChange }: { value: string; onChange: (url: str
   );
 }
 
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
+      <h2 className="font-semibold text-gray-900 text-base">{title}</h2>
+      {children}
+    </div>
+  );
+}
+
 interface Props {
   defaultValues: SiteSettings | null;
   products: { id: string; name: string }[];
@@ -208,13 +217,6 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
       setMessage({ type: "success", text: "Settings saved successfully." });
     }
   };
-
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
-      <h2 className="font-semibold text-gray-900 text-base">{title}</h2>
-      {children}
-    </div>
-  );
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 max-w-3xl pb-10">

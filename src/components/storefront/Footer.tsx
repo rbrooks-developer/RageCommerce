@@ -49,7 +49,7 @@ export function Footer({
           <div className="flex flex-col items-start gap-3 text-left">
             {/* Display name */}
             <p className="text-base tracking-[0.15em]" style={{ color: fontColor }}>
-              {display_name || siteTitle}
+              {(display_name || siteTitle).toUpperCase()}
             </p>
 
             {/* Tagline */}
