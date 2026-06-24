@@ -31,7 +31,7 @@ export default async function AccountPage() {
   const allowedCodes = ((settings as any)?.shipping_countries as string[] | null) ?? ["US"];
   const allowedCountries = COUNTRIES.filter((c) => allowedCodes.includes(c.code));
 
-  const [{ data: profileRaw }, { data: addressesRaw }, { data: ordersRaw }] = await Promise.all([
+  const [{ data: profileRaw, error: profileError }, { data: addressesRaw }, { data: ordersRaw }] = await Promise.all([
     supabase.from("profiles").select("first_name, last_name, phone").eq("id", user.id).maybeSingle(),
     supabase.from("user_addresses").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
     supabase
@@ -42,7 +42,15 @@ export default async function AccountPage() {
       .order("created_at", { ascending: false }),
   ]);
 
-  const profile = profileRaw as { first_name: string | null; last_name: string | null; phone: string | null } | null;
+  if (profileError) console.error("[account] profile SELECT error:", profileError.message);
+
+  // Prefer DB row; fall back to auth metadata (set during signUp) if columns missing or RLS blocked
+  const meta = user.user_metadata as Record<string, string | null> | null;
+  const profile = {
+    first_name: (profileRaw as any)?.first_name ?? meta?.first_name ?? null,
+    last_name:  (profileRaw as any)?.last_name  ?? meta?.last_name  ?? null,
+    phone:      (profileRaw as any)?.phone       ?? meta?.phone      ?? null,
+  };
   const addresses = (addressesRaw ?? []) as UserAddress[];
   const orders = (ordersRaw ?? []) as OrderRow[];
 
