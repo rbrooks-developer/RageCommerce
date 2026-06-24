@@ -57,10 +57,6 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
           </nav>
 
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-5 mr-2">
-              <Link href="/products" className="text-base font-medium transition-opacity hover:opacity-70" style={{ color: fontColor }}>Products</Link>
-              <Link href="/#services" className="text-base font-medium transition-opacity hover:opacity-70" style={{ color: fontColor }}>Services</Link>
-            </div>
             <Link
               href={isLoggedIn ? "/account" : "/login"}
               className="p-1 transition-opacity hover:opacity-75"
@@ -112,8 +108,6 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
         style={{ backgroundColor: bgColor }}
       >
         <nav className="flex flex-col px-4 py-3 space-y-1">
-          <Link href="/products" onClick={() => setMenuOpen(false)} className="py-2.5 text-sm font-medium transition-opacity hover:opacity-70" style={{ color: fontColor }}>Products</Link>
-          <Link href="/#services" onClick={() => setMenuOpen(false)} className="py-2.5 text-sm font-medium transition-opacity hover:opacity-70" style={{ color: fontColor }}>Services</Link>
           {navItems.map((item) => (
             <Link
               key={item.link}
