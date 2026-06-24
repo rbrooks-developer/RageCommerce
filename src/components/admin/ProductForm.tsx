@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ImageUpload } from "./ImageUpload";
 import { slugify } from "@/lib/utils";
+import { CategorySelect, buildCategoryOptions } from "./CategorySelect";
 import type { Category, Product } from "@/types";
 
 interface ProductFormProps {
@@ -32,6 +33,9 @@ export function ProductForm({
     (defaultValues?.images as string[]) ?? []
   );
   const [isPublished, setIsPublished] = useState(defaultValues?.is_published ?? false);
+  const [categoryId, setCategoryId] = useState(defaultValues?.category_id ?? "");
+
+  const categoryOptions = buildCategoryOptions(categories, { noneLabel: "No category" });
 
   const nameRef = useRef<HTMLInputElement>(null);
   const slugRef = useRef<HTMLInputElement>(null);
@@ -99,18 +103,13 @@ export function ProductForm({
           <Input id="inventory" name="inventory" type="number" min="0" step="1" defaultValue={defaultValues?.inventory ?? 0} error={errors?.inventory?.[0]} required />
         </div>
         <div>
-          <Label htmlFor="category_id">Category</Label>
-          <select
-            id="category_id"
-            name="category_id"
-            defaultValue={defaultValues?.category_id ?? ""}
-            className="flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-          >
-            <option value="">No category</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <Label>Category</Label>
+          <CategorySelect
+            options={categoryOptions}
+            value={categoryId}
+            onChange={setCategoryId}
+            inputName="category_id"
+          />
         </div>
       </div>
 
