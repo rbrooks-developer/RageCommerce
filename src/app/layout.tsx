@@ -8,6 +8,11 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+export const metadata: Metadata = {
+  title: { default: "My Store", template: "%s | My Store" },
+  description: "Welcome to our store.",
+};
+
 const GOOGLE_FONT_FAMILIES = [
   "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins",
   "Raleway", "Oswald", "Nunito", "DM Sans", "Josefin Sans", "Outfit",
@@ -20,48 +25,36 @@ const GOOGLE_FONT_FAMILIES = [
   "Titan One", "Righteous", "Russo One", "Bebas Neue", "Press Start 2P",
 ];
 
-export async function generateMetadata(): Promise<Metadata> {
-  const settings = await getSettings();
-  const faviconUrl = settings?.favicon_url;
-  return {
-    title: {
-      default: settings?.site_title ?? "My Store",
-      template: `%s | ${settings?.site_title ?? "My Store"}`,
-    },
-    description: settings?.meta_description ?? "Welcome to our store.",
-    icons: {
-      icon: faviconUrl ?? "/favicon.ico",
-    },
-  };
-}
-
 export default async function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   const settings = await getSettings();
-  const bgColor = (settings as any)?.bg_color ?? "#ffffff";
-  const fontColor = (settings as any)?.font_color ?? "#111827";
-  const fontFamily = (settings as any)?.font_family ?? "default";
+  const bgColor     = (settings as any)?.bg_color    ?? "#ffffff";
+  const fontColor   = (settings as any)?.font_color  ?? "#111827";
+  const fontFamily  = (settings as any)?.font_family ?? "default";
+  const faviconUrl  = settings?.favicon_url ?? null;
 
-  const isGoogleFont = GOOGLE_FONT_FAMILIES.includes(fontFamily);
-  const googleFontUrl = isGoogleFont
+  const isGoogleFont   = GOOGLE_FONT_FAMILIES.includes(fontFamily);
+  const googleFontUrl  = isGoogleFont
     ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}&display=swap`
     : null;
 
-  const bodyFontFamily = fontFamily && fontFamily !== "default"
+  const bodyFontFamily = isGoogleFont
     ? `'${fontFamily}', sans-serif`
-    : "var(--font-geist-sans), Arial, sans-serif";
+    : `var(--font-geist-sans), Arial, sans-serif`;
 
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       <head>
+        {/* Favicon — rendered synchronously so the browser sees it on first load */}
+        {faviconUrl && <link rel="icon" href={faviconUrl} />}
+
+        {/* Google Font — synchronous so it blocks nothing and is ready immediately */}
         {googleFontUrl && (
           <>
             <link rel="preconnect" href="https://fonts.googleapis.com" />
             <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-            <link href={googleFontUrl} rel="stylesheet" />
+            <link rel="stylesheet" href={googleFontUrl} />
           </>
         )}
       </head>
