@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { deleteAddress, setDefaultAddress } from "@/lib/actions/addresses";
 import { AddressForm } from "./AddressForm";
 import { Pencil, Trash2, Plus, Package, CreditCard } from "lucide-react";
+import { getCountryName } from "@/lib/data/countries";
+import type { Country } from "@/lib/data/countries";
 import type { UserAddress } from "@/types";
 
-export function AddressManager({ addresses }: { addresses: UserAddress[] }) {
+export function AddressManager({ addresses, allowedCountries }: { addresses: UserAddress[]; allowedCountries: Country[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showForm, setShowForm] = useState(false);
@@ -100,7 +102,8 @@ export function AddressManager({ addresses }: { addresses: UserAddress[] }) {
               {addr.company && <p className="text-gray-500">{addr.company}</p>}
               <p>{addr.address_line1}</p>
               {addr.address_line2 && <p>{addr.address_line2}</p>}
-              <p>{addr.city}, {addr.state} {addr.zip}</p>
+              <p>{addr.city}{addr.state ? `, ${addr.state}` : ""} {addr.zip}</p>
+              {addr.country !== "US" && <p className="text-gray-500">{getCountryName(addr.country)}</p>}
               {addr.phone && <p className="text-gray-500 mt-0.5">{addr.phone}</p>}
             </div>
 
@@ -151,6 +154,7 @@ export function AddressManager({ addresses }: { addresses: UserAddress[] }) {
       {editingId && editingAddress && (
         <AddressForm
           address={editingAddress}
+          allowedCountries={allowedCountries}
           onClose={() => setEditingId(null)}
           onSuccess={handleSuccess}
         />
@@ -159,6 +163,7 @@ export function AddressManager({ addresses }: { addresses: UserAddress[] }) {
       {/* Add form */}
       {showForm && !editingId && (
         <AddressForm
+          allowedCountries={allowedCountries}
           onClose={() => setShowForm(false)}
           onSuccess={handleSuccess}
         />

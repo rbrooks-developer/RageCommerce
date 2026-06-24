@@ -52,6 +52,7 @@ export const siteSettingsSchema = z.object({
     phone: z.string().nullable().optional(),
     address: z.string().nullable().optional(),
   }),
+  shipping_countries: z.array(z.string()).min(1, "Select at least one shipping country"),
   store_address: z.object({
     name: z.string().min(1, "Store name is required"),
     street1: z.string().min(1, "Street address is required"),

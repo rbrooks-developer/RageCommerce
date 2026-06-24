@@ -11,8 +11,9 @@ const addressSchema = z.object({
   address_line1: z.string().min(1, "Street address is required"),
   address_line2: z.string().optional(),
   city: z.string().min(1, "City is required"),
-  state: z.string().min(2, "State is required").max(2, "Use 2-letter code (e.g. NY)").toUpperCase(),
-  zip: z.string().regex(/^\d{5}(-\d{4})?$/, "Enter a valid ZIP code"),
+  state: z.string().optional().default(""),
+  zip: z.string().min(1, "Postal code is required"),
+  country: z.string().min(2).default("US"),
   phone: z.string().optional(),
 });
 
@@ -30,8 +31,9 @@ export async function saveAddress(_prev: unknown, formData: FormData) {
     address_line1: formData.get("address_line1"),
     address_line2: formData.get("address_line2") || undefined,
     city: formData.get("city"),
-    state: formData.get("state"),
+    state: formData.get("state") || undefined,
     zip: formData.get("zip"),
+    country: formData.get("country") || "US",
     phone: formData.get("phone") || undefined,
   });
 

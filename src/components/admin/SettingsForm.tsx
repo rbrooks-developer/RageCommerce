@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ImageUpload } from "./ImageUpload";
+import { COUNTRIES } from "@/lib/data/countries";
 import type { SiteSettings } from "@/types";
 import type { HomepageConfig, NavConfig, FooterConfig, ContactInfo, StoreAddress } from "@/types";
 
@@ -27,6 +28,9 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const footer = defaultValues?.footer_config as FooterConfig | null;
   const contact = defaultValues?.contact_info as ContactInfo | null;
   const storeAddress = defaultValues?.store_address as StoreAddress | null;
+
+  const savedCountries = (defaultValues as any)?.shipping_countries as string[] | null;
+  const [shippingCountries, setShippingCountries] = useState<string[]>(savedCountries ?? ["US"]);
 
   const [navItems, setNavItems] = useState(nav?.items ?? [{ label: "", link: "" }]);
   const [footerLinks, setFooterLinks] = useState(footer?.links ?? [{ label: "", link: "" }]);
@@ -70,6 +74,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         phone: g("contact_phone") || undefined,
         address: g("contact_address") || undefined,
       },
+      shipping_countries: shippingCountries,
       store_address: {
         name: g("store_name"),
         street1: g("store_street1"),
@@ -198,6 +203,35 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
           <div><Label htmlFor="store_zip" required>ZIP</Label><Input id="store_zip" name="store_zip" defaultValue={storeAddress?.zip ?? ""} required /></div>
           <div><Label htmlFor="store_country">Country</Label><Input id="store_country" name="store_country" defaultValue={storeAddress?.country ?? "US"} /></div>
         </div>
+      </Section>
+
+      <Section title="Shipping Countries">
+        <p className="text-sm text-gray-500">Check the countries you ship to. Customers will only see these options at checkout.</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2 max-h-72 overflow-y-auto border border-gray-200 rounded-md p-3 bg-gray-50">
+          {COUNTRIES.map((country) => (
+            <label key={country.code} className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={shippingCountries.includes(country.code)}
+                onChange={(e) =>
+                  setShippingCountries((prev) =>
+                    e.target.checked
+                      ? [...prev, country.code]
+                      : prev.filter((c) => c !== country.code)
+                  )
+                }
+                className="h-4 w-4 rounded border-gray-300 accent-gray-900"
+              />
+              <span className="text-sm text-gray-700">
+                <span className="font-mono text-xs text-gray-400 mr-1">{country.code}</span>
+                {country.name}
+              </span>
+            </label>
+          ))}
+        </div>
+        {shippingCountries.length === 0 && (
+          <p className="text-sm text-red-500">Select at least one country.</p>
+        )}
       </Section>
 
       <Section title="Tax">

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getSettings } from "@/lib/data/settings";
+import { COUNTRIES } from "@/lib/data/countries";
 import { redirect } from "next/navigation";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { OrderStatusBadge } from "@/components/ui/badge";
@@ -24,6 +26,10 @@ export default async function AccountPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  const settings = await getSettings();
+  const allowedCodes = ((settings as any)?.shipping_countries as string[] | null) ?? ["US"];
+  const allowedCountries = COUNTRIES.filter((c) => allowedCodes.includes(c.code));
 
   const [{ data: profileRaw }, { data: addressesRaw }, { data: ordersRaw }] = await Promise.all([
     supabase.from("profiles").select("first_name, last_name, phone").eq("id", user.id).maybeSingle(),
@@ -82,7 +88,7 @@ export default async function AccountPage() {
           description="Manage your shipping and billing addresses."
         />
         <div className="rounded-lg border border-gray-200 bg-white p-5">
-          <AddressManager addresses={addresses} />
+          <AddressManager addresses={addresses} allowedCountries={allowedCountries} />
         </div>
       </section>
 
