@@ -143,6 +143,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [bgColor, setBgColor] = useState(homepage?.bg_color ?? "#ffffff");
   const [fontColor, setFontColor] = useState(homepage?.font_color ?? "#111827");
   const [fontFamily, setFontFamily] = useState(homepage?.font_family ?? "default");
+  const [fontGradient, setFontGradient] = useState(homepage?.font_gradient_enabled ?? false);
 
   useEffect(() => {
     const id = "admin-font-preview-link";
@@ -199,6 +200,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         bg_color: bgColor,
         font_color: fontColor,
         font_family: fontFamily,
+        font_gradient_enabled: fontGradient,
         hero_display_name: g("hero_display_name") || undefined,
         hero_tagline: g("hero_tagline") || undefined,
         hero_font: g("hero_font") || "Playfair Display",
@@ -255,6 +257,21 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <ColorPicker id="bg_color" label="Background Color" value={bgColor} onChange={setBgColor} />
           <ColorPicker id="font_color" label="Font Color" value={fontColor} onChange={setFontColor} />
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={fontGradient}
+            onClick={() => setFontGradient((v) => !v)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 ${fontGradient ? "bg-gray-900" : "bg-gray-200"}`}
+          >
+            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform ${fontGradient ? "translate-x-5" : "translate-x-0"}`} />
+          </button>
+          <div>
+            <p className="text-sm font-medium text-gray-900">Gradient text color</p>
+            <p className="text-xs text-gray-500">Apply a light-to-dark gradient to headings and text using the font color as the base</p>
+          </div>
         </div>
         <div>
           <Label htmlFor="font_family">Font Family</Label>

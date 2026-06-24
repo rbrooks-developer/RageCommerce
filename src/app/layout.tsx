@@ -32,9 +32,13 @@ export default async function RootLayout({
   const homepage   = settings?.homepage_config as import("@/types").HomepageConfig | null;
   const bgColor    = homepage?.bg_color    ?? "#ffffff";
   const fontColor  = homepage?.font_color  ?? "#111827";
-  const fontFamily = homepage?.font_family ?? "default";
-  const heroFont   = homepage?.hero_font   ?? "Playfair Display";
-  const faviconUrl = settings?.favicon_url ?? null;
+  const fontFamily        = homepage?.font_family          ?? "default";
+  const heroFont          = homepage?.hero_font             ?? "Playfair Display";
+  const fontGradient      = homepage?.font_gradient_enabled ?? false;
+  const faviconUrl        = settings?.favicon_url           ?? null;
+
+  // Same gradient formula as the hero: light → base → dark, driven by fontColor
+  const siteGradient = `linear-gradient(180deg, color-mix(in srgb, ${fontColor} 60%, white) 0%, ${fontColor} 50%, color-mix(in srgb, ${fontColor} 70%, black) 100%)`;
 
   const isGoogleFont   = GOOGLE_FONT_FAMILIES.includes(fontFamily);
   const googleFontUrl  = isGoogleFont
@@ -64,7 +68,15 @@ export default async function RootLayout({
       {heroFontUrl   && <link rel="stylesheet" href={heroFontUrl} />}
       <body
         className="min-h-full flex flex-col"
-        style={{ backgroundColor: bgColor, color: fontColor, fontFamily: bodyFontFamily, '--site-fg': fontColor, '--site-bg': bgColor } as React.CSSProperties}
+        data-text-gradient={fontGradient ? "true" : undefined}
+        style={{
+          backgroundColor: bgColor,
+          color: fontColor,
+          fontFamily: bodyFontFamily,
+          '--site-fg': fontColor,
+          '--site-bg': bgColor,
+          '--site-fg-gradient': siteGradient,
+        } as React.CSSProperties}
       >
         {children}
       </body>
