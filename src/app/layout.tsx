@@ -64,8 +64,8 @@ export default async function RootLayout({
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         </>
       )}
-      {googleFontUrl && <link rel="stylesheet" href={googleFontUrl} />}
-      {heroFontUrl   && <link rel="stylesheet" href={heroFontUrl} />}
+      {googleFontUrl && <link rel="stylesheet" href={googleFontUrl} precedence="default" />}
+      {heroFontUrl   && <link rel="stylesheet" href={heroFontUrl}   precedence="default" />}
       <body
         className="min-h-full flex flex-col"
         style={{
