@@ -66,10 +66,10 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
               {isLoggedIn ? (
                 <span className="relative inline-flex">
                   <span
-                    className="flex h-12 w-12 items-center justify-center rounded-full"
+                    className="flex h-10 w-10 items-center justify-center rounded-full"
                     style={{ backgroundColor: fontColor }}
                   >
-                    <UserRound className="h-7 w-7" style={{ color: bgColor }} />
+                    <UserRound className="h-6 w-6" style={{ color: bgColor }} />
                   </span>
                   <span
                     className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500"
@@ -77,11 +77,11 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
                   />
                 </span>
               ) : (
-                <CircleUser className="h-12 w-12" strokeWidth={1.5} />
+                <CircleUser className="h-10 w-10" strokeWidth={1.5} />
               )}
             </Link>
             <Link href="/cart" className="relative p-2 transition-opacity hover:opacity-70" style={{ color: fontColor }}>
-              <ShoppingCart className="h-12 w-12" />
+              <ShoppingCart className="h-10 w-10" />
               {itemCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold text-white">
                   {itemCount > 9 ? "9+" : itemCount}
