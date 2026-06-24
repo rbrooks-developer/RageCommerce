@@ -31,6 +31,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
       <main className="flex-1">{children}</main>
       <Footer
         siteTitle={settings?.site_title ?? "My Store"}
+        logoUrl={settings?.logo_url ?? null}
         footerConfig={(settings?.footer_config as FooterConfig) ?? { links: [], social: [], copyright_text: "" }}
         contactInfo={(settings?.contact_info as ContactInfo) ?? { email: null, phone: null, address: null }}
         bgColor={bgColor}

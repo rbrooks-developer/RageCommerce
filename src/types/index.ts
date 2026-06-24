@@ -66,6 +66,8 @@ export type FooterConfig = {
   links: { label: string; link: string }[];
   social: { platform: string; url: string }[];
   copyright_text: string;
+  tagline?: string;
+  social_handle?: string;
 };
 
 export type ContactInfo = {

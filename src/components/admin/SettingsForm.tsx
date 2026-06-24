@@ -179,6 +179,8 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         links: footerLinks.filter((l) => l.label && l.link),
         social: socialLinks.filter((s) => s.platform && s.url),
         copyright_text: g("copyright_text"),
+        tagline: g("footer_tagline") || undefined,
+        social_handle: g("social_handle") || undefined,
       },
       contact_info: {
         email: g("contact_email") || undefined,
@@ -296,6 +298,8 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
             <button type="button" onClick={() => setSocialLinks((prev) => [...prev, { platform: "", url: "" }])} className="text-sm text-blue-600 hover:underline">+ Add social</button>
           </div>
         </div>
+        <div><Label htmlFor="footer_tagline">Tagline / Subtitle <span className="text-gray-400 font-normal">(shown under site name in footer)</span></Label><Input id="footer_tagline" name="footer_tagline" defaultValue={footer?.tagline ?? ""} placeholder="Founder &amp; Creator" /></div>
+        <div><Label htmlFor="social_handle">Social Handle <span className="text-gray-400 font-normal">(e.g. @MyBrand)</span></Label><Input id="social_handle" name="social_handle" defaultValue={footer?.social_handle ?? ""} placeholder="@MyBrand" /></div>
         <div><Label htmlFor="copyright_text">Copyright Text</Label><Input id="copyright_text" name="copyright_text" defaultValue={footer?.copyright_text ?? ""} placeholder={`© ${new Date().getFullYear()} My Store`} /></div>
       </Section>
 
