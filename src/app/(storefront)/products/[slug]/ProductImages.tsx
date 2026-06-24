@@ -70,7 +70,7 @@ export function ProductImages({ images, name }: { images: string[]; name: string
             src={images[selected]}
             alt={`${name} - image ${selected + 1}`}
             fill
-            className="object-cover"
+            className="object-contain p-4"
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
           />

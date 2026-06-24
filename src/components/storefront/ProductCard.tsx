@@ -17,7 +17,7 @@ export function ProductCard({ product }: { product: Pick<Product, "id" | "slug" 
             src={image}
             alt={product.name}
             fill
-            className="object-cover"
+            className="object-contain p-2"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
         ) : (
