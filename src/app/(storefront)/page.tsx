@@ -168,7 +168,7 @@ export default async function HomePage() {
 
       {/* Services section */}
       {serviceImages.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+        <section id="services" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
           {serviceImages.length === 1 ? (
             // Single image: natural size, centered
             <div className="flex justify-center">

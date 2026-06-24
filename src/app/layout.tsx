@@ -52,17 +52,16 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
-      <head>
-        {faviconUrl && <link rel="icon" href={faviconUrl} />}
-        {(googleFontUrl || heroFontUrl) && (
-          <>
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-          </>
-        )}
-        {googleFontUrl && <link rel="stylesheet" href={googleFontUrl} />}
-        {heroFontUrl   && <link rel="stylesheet" href={heroFontUrl} />}
-      </head>
+      {/* React 19 hoists <link> elements to <head> automatically — no manual <head> wrapper needed */}
+      {faviconUrl && <link rel="icon" href={faviconUrl} />}
+      {(googleFontUrl || heroFontUrl) && (
+        <>
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        </>
+      )}
+      {googleFontUrl && <link rel="stylesheet" href={googleFontUrl} />}
+      {heroFontUrl   && <link rel="stylesheet" href={heroFontUrl} />}
       <body
         className="min-h-full flex flex-col"
         style={{ backgroundColor: bgColor, color: fontColor, fontFamily: bodyFontFamily, '--site-fg': fontColor, '--site-bg': bgColor } as React.CSSProperties}
