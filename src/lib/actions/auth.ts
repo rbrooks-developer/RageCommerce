@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { sendWelcomeEmail } from "@/lib/emails/welcomeEmail";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -56,14 +56,18 @@ export async function register(_prevState: unknown, formData: FormData) {
     password,
     options: {
       emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`,
+      // Passed to raw_user_meta_data so the DB trigger can read them on row creation
+      data: { first_name, last_name, phone: phone ?? null },
     },
   });
 
   if (error) return { error: { _form: [error.message] } };
 
-  // Save name + phone to profile (the trigger creates the row, we just update it)
+  // Belt-and-suspenders: also update directly via service client (bypasses RLS,
+  // works even when email confirmation is pending and there is no active session)
   if (signUpData.user) {
-    await supabase
+    const serviceClient = await createServiceClient();
+    await serviceClient
       .from("profiles")
       .update({ first_name, last_name, phone: phone ?? null, updated_at: new Date().toISOString() } as any)
       .eq("id", signUpData.user.id);
