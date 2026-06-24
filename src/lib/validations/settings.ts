@@ -43,6 +43,9 @@ export const siteSettingsSchema = z.object({
     bg_color: hexColor.default("#ffffff"),
     font_color: hexColor.default("#111827"),
     font_family: z.string().default("default"),
+    hero_display_name: z.string().optional(),
+    hero_tagline: z.string().optional(),
+    hero_font: z.string().default("Playfair Display"),
   }),
   nav_config: z.object({
     items: z.array(navItemSchema),

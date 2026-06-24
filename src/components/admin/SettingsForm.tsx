@@ -198,6 +198,9 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         bg_color: bgColor,
         font_color: fontColor,
         font_family: fontFamily,
+        hero_display_name: g("hero_display_name") || undefined,
+        hero_tagline: g("hero_tagline") || undefined,
+        hero_font: g("hero_font") || "Playfair Display",
       },
       nav_config: { items: navItems.filter((i) => i.label && i.link) },
       footer_config: {
@@ -320,6 +323,40 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
           >
             The quick brown fox jumps over the lazy dog
           </p>
+        </div>
+      </Section>
+
+      <Section title="Hero">
+        <div>
+          <Label htmlFor="hero_display_name">Display Name <span className="text-gray-400 font-normal">(large title text on homepage)</span></Label>
+          <Input id="hero_display_name" name="hero_display_name" defaultValue={homepage?.hero_display_name ?? ""} placeholder="e.g. GODLY COMICS" />
+        </div>
+        <div>
+          <Label htmlFor="hero_tagline">Tagline <span className="text-gray-400 font-normal">(small text below title)</span></Label>
+          <Input id="hero_tagline" name="hero_tagline" defaultValue={homepage?.hero_tagline ?? ""} placeholder="e.g. Faith. Purpose. Story." />
+        </div>
+        <div>
+          <Label htmlFor="hero_font">Hero Title Font</Label>
+          <select
+            id="hero_font"
+            name="hero_font"
+            defaultValue={homepage?.hero_font ?? "Playfair Display"}
+            className="mt-1 flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          >
+            <option value="Playfair Display">Playfair Display</option>
+            <option value="Cinzel">Cinzel</option>
+            <option value="Cormorant Garamond">Cormorant Garamond</option>
+            <option value="EB Garamond">EB Garamond</option>
+            <option value="Libre Baskerville">Libre Baskerville</option>
+            <option value="Lora">Lora</option>
+            <option value="Merriweather">Merriweather</option>
+            <option value="Crimson Text">Crimson Text</option>
+            <option value="Raleway">Raleway</option>
+            <option value="Montserrat">Montserrat</option>
+            <option value="Oswald">Oswald</option>
+            <option value="Bebas Neue">Bebas Neue</option>
+            <option value="Russo One">Russo One</option>
+          </select>
         </div>
       </Section>
 

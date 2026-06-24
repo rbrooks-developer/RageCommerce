@@ -33,11 +33,17 @@ export default async function RootLayout({
   const bgColor    = homepage?.bg_color    ?? "#ffffff";
   const fontColor  = homepage?.font_color  ?? "#111827";
   const fontFamily = homepage?.font_family ?? "default";
+  const heroFont   = homepage?.hero_font   ?? "Playfair Display";
   const faviconUrl = settings?.favicon_url ?? null;
 
   const isGoogleFont   = GOOGLE_FONT_FAMILIES.includes(fontFamily);
   const googleFontUrl  = isGoogleFont
     ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}&display=swap`
+    : null;
+
+  // Hero font is always a Google Font (all options in the picker are Google Fonts)
+  const heroFontUrl = heroFont !== fontFamily
+    ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(heroFont)}&display=swap`
     : null;
 
   const bodyFontFamily = isGoogleFont
@@ -47,17 +53,15 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       <head>
-        {/* Favicon — rendered synchronously so the browser sees it on first load */}
         {faviconUrl && <link rel="icon" href={faviconUrl} />}
-
-        {/* Google Font — synchronous so it blocks nothing and is ready immediately */}
-        {googleFontUrl && (
+        {(googleFontUrl || heroFontUrl) && (
           <>
             <link rel="preconnect" href="https://fonts.googleapis.com" />
             <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-            <link rel="stylesheet" href={googleFontUrl} />
           </>
         )}
+        {googleFontUrl && <link rel="stylesheet" href={googleFontUrl} />}
+        {heroFontUrl   && <link rel="stylesheet" href={heroFontUrl} />}
       </head>
       <body
         className="min-h-full flex flex-col"

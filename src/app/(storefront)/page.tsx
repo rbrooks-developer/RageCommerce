@@ -25,14 +25,15 @@ export default async function HomePage() {
 
   const bgColor   = homepage?.bg_color    ?? "#1a1a1a";
   const fontColor = homepage?.font_color  ?? "#d4af37";
+  const heroFont  = homepage?.hero_font   ?? "Playfair Display";
   const logoUrl   = settings?.logo_url    ?? null;
   const siteTitle = settings?.site_title  ?? "My Store";
 
-  // Display name + tagline come from footer config (admin has already set them there)
-  const displayName = footer?.display_name || siteTitle;
-  const tagline     = footer?.tagline || homepage?.hero_subtext || "";
+  // Hero display name and tagline: use hero-specific fields, fall back to footer, then site title
+  const displayName = homepage?.hero_display_name || footer?.display_name || siteTitle;
+  const tagline     = homepage?.hero_tagline     || footer?.tagline       || "";
 
-  // Gold gradient for the hero title: lighter → base → darker
+  // Gold gradient for the hero title: lighter → base → darker using the admin font color
   const goldGradient = `linear-gradient(180deg, color-mix(in srgb, ${fontColor} 60%, white) 0%, ${fontColor} 50%, color-mix(in srgb, ${fontColor} 70%, black) 100%)`;
 
   const featuredProductIds  = homepage?.featured_product_ids  ?? [];
@@ -85,6 +86,7 @@ export default async function HomePage() {
             id="hero-heading"
             className="tracking-[0.2em] text-5xl md:text-7xl lg:text-8xl leading-none uppercase"
             style={{
+              fontFamily: `'${heroFont}', serif`,
               background: goldGradient,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",

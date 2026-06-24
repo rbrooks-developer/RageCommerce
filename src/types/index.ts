@@ -59,6 +59,9 @@ export type HomepageConfig = {
   bg_color?: string;
   font_color?: string;
   font_family?: string;
+  hero_display_name?: string;
+  hero_tagline?: string;
+  hero_font?: string;
 };
 
 export type NavConfig = {
