@@ -74,6 +74,7 @@ export default async function CategoriesPage() {
                         <DeleteCategoryButton id={grand.id} />
                       </div>
                     </div>
+                    <p className="text-xs text-gray-400">/{grand.slug}</p>
                   </div>
                 ))}
               </div>
