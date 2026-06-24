@@ -117,22 +117,45 @@ export function ProductForm({
       {/* Shipping: Weight + Dimensions */}
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-3">Shipping (required for rate calculation)</h3>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
           <div>
-            <Label htmlFor="weight_oz" required>Weight (oz)</Label>
-            <Input id="weight_oz" name="weight_oz" type="number" step="0.1" min="0.1" defaultValue={defaultValues?.weight_oz} placeholder="0.0" error={errors?.weight_oz?.[0]} required />
+            <Label htmlFor="weight_lbs" required>Weight (lbs)</Label>
+            <Input
+              id="weight_lbs"
+              name="weight_lbs"
+              type="number"
+              step="1"
+              min="0"
+              defaultValue={defaultValues?.weight_oz != null ? Math.floor(Number(defaultValues.weight_oz) / 16) : ""}
+              placeholder="0"
+              error={errors?.weight_oz?.[0]}
+              required
+            />
           </div>
           <div>
-            <Label htmlFor="length_in" required>Length (in)</Label>
-            <Input id="length_in" name="length_in" type="number" step="0.1" min="0.1" defaultValue={defaultValues?.length_in} placeholder="0.0" error={errors?.length_in?.[0]} required />
+            <Label htmlFor="weight_oz" required>oz</Label>
+            <Input
+              id="weight_oz"
+              name="weight_oz"
+              type="number"
+              step="0.1"
+              min="0"
+              max="15.9"
+              defaultValue={defaultValues?.weight_oz != null ? Number((Number(defaultValues.weight_oz) % 16).toFixed(1)) : ""}
+              placeholder="0.0"
+            />
           </div>
           <div>
-            <Label htmlFor="width_in" required>Width (in)</Label>
-            <Input id="width_in" name="width_in" type="number" step="0.1" min="0.1" defaultValue={defaultValues?.width_in} placeholder="0.0" error={errors?.width_in?.[0]} required />
+            <Label htmlFor="length_in">Length (in)</Label>
+            <Input id="length_in" name="length_in" type="number" step="0.1" min="0.1" defaultValue={defaultValues?.length_in ?? ""} placeholder="0.0" error={errors?.length_in?.[0]} />
           </div>
           <div>
-            <Label htmlFor="height_in" required>Height (in)</Label>
-            <Input id="height_in" name="height_in" type="number" step="0.1" min="0.1" defaultValue={defaultValues?.height_in} placeholder="0.0" error={errors?.height_in?.[0]} required />
+            <Label htmlFor="width_in">Width (in)</Label>
+            <Input id="width_in" name="width_in" type="number" step="0.1" min="0.1" defaultValue={defaultValues?.width_in ?? ""} placeholder="0.0" error={errors?.width_in?.[0]} />
+          </div>
+          <div>
+            <Label htmlFor="height_in">Height (in)</Label>
+            <Input id="height_in" name="height_in" type="number" step="0.1" min="0.1" defaultValue={defaultValues?.height_in ?? ""} placeholder="0.0" error={errors?.height_in?.[0]} />
           </div>
         </div>
       </div>
