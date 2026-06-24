@@ -59,26 +59,28 @@ export function Footer({
               </p>
             )}
 
-            {/* Phone */}
-            {contactInfo?.phone && (
-              <a
-                href={`tel:${contactInfo.phone.replace(/\D/g, "")}`}
-                className="text-sm transition-opacity duration-150 mt-3 hover:opacity-100"
-                style={{ color: fontColor, opacity: 0.7 }}
-              >
-                T: {contactInfo.phone}
-              </a>
-            )}
-
-            {/* Email */}
-            {contactInfo?.email && (
-              <a
-                href={`mailto:${contactInfo.email}`}
-                className="text-sm transition-opacity duration-150 hover:opacity-100"
-                style={{ color: fontColor, opacity: 0.7 }}
-              >
-                E: {contactInfo.email}
-              </a>
+            {/* Phone + Email */}
+            {(contactInfo?.phone || contactInfo?.email) && (
+              <div className="flex flex-col gap-1 mt-3">
+                {contactInfo.phone && (
+                  <a
+                    href={`tel:${contactInfo.phone.replace(/\D/g, "")}`}
+                    className="text-sm transition-opacity duration-150 hover:opacity-100"
+                    style={{ color: fontColor, opacity: 0.7 }}
+                  >
+                    T: {contactInfo.phone}
+                  </a>
+                )}
+                {contactInfo.email && (
+                  <a
+                    href={`mailto:${contactInfo.email}`}
+                    className="text-sm transition-opacity duration-150 hover:opacity-100"
+                    style={{ color: fontColor, opacity: 0.7 }}
+                  >
+                    E: {contactInfo.email}
+                  </a>
+                )}
+              </div>
             )}
 
             {/* Divider */}
