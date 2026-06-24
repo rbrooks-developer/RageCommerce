@@ -16,8 +16,8 @@ type OrderRow = Pick<Order, "id" | "status" | "total_price" | "created_at" | "tr
 function SectionHeading({ title, description }: { title: string; description?: string }) {
   return (
     <div className="mb-4">
-      <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-      {description && <p className="text-sm text-gray-500 mt-0.5">{description}</p>}
+      <h2 className="text-base font-semibold">{title}</h2>
+      {description && <p className="text-sm opacity-70 mt-0.5">{description}</p>}
     </div>
   );
 }
@@ -61,15 +61,15 @@ export default async function AccountPage() {
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold">
             {displayName ?? "My Account"}
           </h1>
-          <p className="text-sm text-gray-400 mt-0.5">{user.email}</p>
+          <p className="text-sm opacity-60 mt-0.5">{user.email}</p>
         </div>
         <form action={logout}>
           <button
             type="submit"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors whitespace-nowrap"
+            className="text-sm opacity-70 hover:opacity-100 transition-opacity whitespace-nowrap"
           >
             Sign out
           </button>
@@ -79,7 +79,7 @@ export default async function AccountPage() {
       {/* ── Profile ─────────────────────────────────── */}
       <section>
         <SectionHeading title="Profile" description="Your name and contact details." />
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
+        <div className="rounded-lg border border-gray-200 bg-white text-gray-900 p-5">
           <ProfileForm
             firstName={profile?.first_name ?? null}
             lastName={profile?.last_name ?? null}
@@ -95,7 +95,7 @@ export default async function AccountPage() {
           title="Saved Addresses"
           description="Manage your shipping and billing addresses."
         />
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
+        <div className="rounded-lg border border-gray-200 bg-white text-gray-900 p-5">
           <AddressManager addresses={addresses} allowedCountries={allowedCountries} />
         </div>
       </section>
@@ -105,7 +105,7 @@ export default async function AccountPage() {
         <SectionHeading title="Order History" />
 
         {orders.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
+          <div className="rounded-lg border border-gray-200 bg-white text-gray-900 p-12 text-center">
             <p className="text-gray-400 text-sm mb-4">No orders yet.</p>
             <Link
               href="/products"
@@ -122,7 +122,7 @@ export default async function AccountPage() {
                 <Link
                   key={order.id}
                   href={`/account/orders/${order.id}`}
-                  className="block rounded-lg border border-gray-200 bg-white p-4 hover:border-gray-300 transition-colors"
+                  className="block rounded-lg border border-gray-200 bg-white text-gray-900 p-4 hover:border-gray-300 transition-colors"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
@@ -148,15 +148,15 @@ export default async function AccountPage() {
             </div>
 
             {/* Desktop */}
-            <div className="hidden md:block rounded-lg border border-gray-200 bg-white overflow-hidden">
+            <div className="hidden md:block rounded-lg border border-gray-200 bg-white text-gray-900 overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 text-gray-500">
                   <tr>
-                    <th className="px-5 py-3 text-left font-medium text-gray-500">Order</th>
-                    <th className="px-5 py-3 text-left font-medium text-gray-500">Date</th>
-                    <th className="px-5 py-3 text-left font-medium text-gray-500">Status</th>
-                    <th className="px-5 py-3 text-left font-medium text-gray-500">Total</th>
-                    <th className="px-5 py-3 text-left font-medium text-gray-500">Tracking</th>
+                    <th className="px-5 py-3 text-left font-medium">Order</th>
+                    <th className="px-5 py-3 text-left font-medium">Date</th>
+                    <th className="px-5 py-3 text-left font-medium">Status</th>
+                    <th className="px-5 py-3 text-left font-medium">Total</th>
+                    <th className="px-5 py-3 text-left font-medium">Tracking</th>
                     <th className="px-5 py-3" />
                   </tr>
                 </thead>
@@ -191,7 +191,7 @@ export default async function AccountPage() {
       {/* ── Security ────────────────────────────────── */}
       <section>
         <SectionHeading title="Security" description="Update your password." />
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
+        <div className="rounded-lg border border-gray-200 bg-white text-gray-900 p-5">
           <PasswordForm />
         </div>
       </section>

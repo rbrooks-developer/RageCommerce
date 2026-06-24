@@ -20,10 +20,10 @@ export function RegisterForm() {
   if (success) {
     return (
       <div className="text-center space-y-3">
-        <h1 className="text-2xl font-bold text-gray-900">Check your email</h1>
-        <p className="text-gray-500 text-sm">
+        <h1 className="text-2xl font-bold">Check your email</h1>
+        <p className="opacity-70 text-sm">
           We sent a confirmation link to your email. Click it to activate your account, then{" "}
-          <Link href="/login" className="text-gray-900 underline underline-offset-2">sign in</Link>.
+          <Link href="/login" className="opacity-100 underline underline-offset-2">sign in</Link>.
         </p>
       </div>
     );
@@ -32,10 +32,10 @@ export function RegisterForm() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Create account</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold">Create account</h1>
+        <p className="mt-1 text-sm opacity-70">
           Already have an account?{" "}
-          <Link href="/login" className="text-gray-900 underline underline-offset-2">Sign in</Link>
+          <Link href="/login" className="opacity-100 underline underline-offset-2">Sign in</Link>
         </p>
       </div>
 
@@ -88,7 +88,7 @@ export function RegisterForm() {
         <div>
           <Label htmlFor="password" required>Password</Label>
           <Input id="password" name="password" type="password" autoComplete="new-password" error={errors?.password?.[0]} required />
-          <p className="mt-1 text-xs text-gray-400">Minimum 8 characters</p>
+          <p className="mt-1 text-xs opacity-60">Minimum 8 characters</p>
         </div>
 
         <Button type="submit" size="lg" className="w-full" loading={isPending}>

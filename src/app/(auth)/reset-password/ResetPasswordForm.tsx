@@ -17,8 +17,8 @@ export function ResetPasswordForm() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Set new password</h1>
-        <p className="mt-1 text-sm text-gray-500">Choose a strong password for your account.</p>
+        <h1 className="text-2xl font-bold">Set new password</h1>
+        <p className="mt-1 text-sm opacity-70">Choose a strong password for your account.</p>
       </div>
 
       <form action={action} className="space-y-4">

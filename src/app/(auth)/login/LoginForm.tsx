@@ -21,10 +21,10 @@ export function LoginForm() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Sign in</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold">Sign in</h1>
+        <p className="mt-1 text-sm opacity-70">
           Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-gray-900 underline underline-offset-2">Create one</Link>
+          <Link href="/register" className="opacity-100 underline underline-offset-2">Create one</Link>
         </p>
       </div>
 
@@ -45,7 +45,7 @@ export function LoginForm() {
         <div>
           <div className="flex items-center justify-between mb-1">
             <Label htmlFor="password" required>Password</Label>
-            <Link href="/forgot-password" className="text-xs text-gray-500 hover:text-gray-900 transition-colors">
+            <Link href="/forgot-password" className="text-xs opacity-70 hover:opacity-100 transition-opacity">
               Forgot password?
             </Link>
           </div>

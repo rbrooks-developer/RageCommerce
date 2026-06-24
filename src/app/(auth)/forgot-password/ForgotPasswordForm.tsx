@@ -18,11 +18,11 @@ export function ForgotPasswordForm() {
   if (state?.success) {
     return (
       <div className="space-y-4 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Check your email</h1>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-2xl font-bold">Check your email</h1>
+        <p className="text-sm opacity-70">
           We sent a password reset link to your email address. Click the link in the email to reset your password.
         </p>
-        <Link href="/login" className="inline-block text-sm text-gray-900 underline underline-offset-2">
+        <Link href="/login" className="inline-block text-sm underline underline-offset-2">
           Back to sign in
         </Link>
       </div>
@@ -32,8 +32,8 @@ export function ForgotPasswordForm() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Forgot password?</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold">Forgot password?</h1>
+        <p className="mt-1 text-sm opacity-70">
           Enter your email and we&apos;ll send you a reset link.
         </p>
       </div>
@@ -62,8 +62,8 @@ export function ForgotPasswordForm() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-500">
-        <Link href="/login" className="text-gray-900 underline underline-offset-2">
+      <p className="text-center text-sm">
+        <Link href="/login" className="underline underline-offset-2">
           Back to sign in
         </Link>
       </p>
