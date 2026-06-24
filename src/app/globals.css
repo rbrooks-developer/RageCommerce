@@ -17,16 +17,9 @@ body {
   font-family: var(--font-sans), Arial, sans-serif;
 }
 
-/* Ensure all interactive elements meet 44px minimum touch target */
+/* Ensure form controls and buttons meet 44px minimum touch target */
 button,
 [role="button"],
-a,
-input,
-select,
-textarea {
-  min-height: 44px;
-}
-
 input,
 select,
 textarea {
