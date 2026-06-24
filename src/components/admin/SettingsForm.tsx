@@ -65,14 +65,14 @@ function FaviconUpload({ value, onChange }: { value: string; onChange: (url: str
     const ext = file.name.split(".").pop() ?? "png";
     const path = `site/favicon-${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
-      .from("product-images")
+      .from("site-assets")
       .upload(path, file, { upsert: true });
     if (uploadError) {
       setError(uploadError.message);
       setUploading(false);
       return;
     }
-    const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+    const { data } = supabase.storage.from("site-assets").getPublicUrl(path);
     onChange(data.publicUrl);
     setUploading(false);
   };
@@ -107,7 +107,7 @@ function FaviconUpload({ value, onChange }: { value: string; onChange: (url: str
         <input
           ref={inputRef}
           type="file"
-          accept=".png,.webp,image/png,image/webp"
+          accept=".ico,.png,.svg,.webp,image/x-icon,image/png,image/svg+xml,image/webp"
           className="hidden"
           onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
         />
