@@ -63,8 +63,7 @@ export async function register(_prevState: unknown, formData: FormData) {
 
   if (error) return { error: { _form: [error.message] } };
 
-  // Belt-and-suspenders: also update directly via service client (bypasses RLS,
-  // works even when email confirmation is pending and there is no active session)
+  // Use service client to bypass RLS — no active session yet when email confirmation is on
   if (signUpData.user) {
     const serviceClient = await createServiceClient();
     await serviceClient
@@ -78,6 +77,12 @@ export async function register(_prevState: unknown, formData: FormData) {
     process.env.NEXT_PUBLIC_SITE_TITLE ?? "My Store",
     process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
   ).catch((err) => console.error("Failed to send welcome email:", err));
+
+  // When email confirmation is disabled Supabase returns a session immediately —
+  // redirect the now-logged-in user instead of showing "check your email"
+  if (signUpData.session) {
+    redirect("/account");
+  }
 
   return { success: true };
 }
