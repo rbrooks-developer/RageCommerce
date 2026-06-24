@@ -12,7 +12,7 @@ VALUES (
   'product-images',
   'product-images',
   true,
-  5242880,  -- 5 MB
+  12582912,  -- 12 MB
   ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 )
 ON CONFLICT (id) DO UPDATE SET

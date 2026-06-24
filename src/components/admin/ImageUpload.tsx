@@ -35,8 +35,8 @@ export function ImageUpload({ value, onChange, max = 10 }: ImageUploadProps) {
         setError("Only image files are allowed");
         continue;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Each image must be under 5MB");
+      if (file.size > 12 * 1024 * 1024) {
+        setError("Each image must be under 12MB");
         continue;
       }
 
@@ -109,7 +109,7 @@ export function ImageUpload({ value, onChange, max = 10 }: ImageUploadProps) {
       />
 
       <p className="text-xs text-gray-500">
-        {value.length}/{max} images · Max 5MB each · JPEG, PNG, WebP
+        {value.length}/{max} images · Max 12MB each · JPEG, PNG, WebP
       </p>
       {error && <p className="text-sm text-red-500">{error}</p>}
     </div>
