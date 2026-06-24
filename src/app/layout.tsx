@@ -50,9 +50,9 @@ export default async function RootLayout({
     ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}&display=swap`
     : null;
 
-  const bodyFontFamily = fontFamily === "default" || !fontFamily
-    ? undefined
-    : `'${fontFamily}', sans-serif`;
+  const bodyFontFamily = fontFamily && fontFamily !== "default"
+    ? `'${fontFamily}', sans-serif`
+    : "var(--font-geist-sans), Arial, sans-serif";
 
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
