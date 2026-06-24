@@ -58,8 +58,8 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
 
           <div className="flex items-center gap-3">
             <div className="hidden md:flex items-center gap-5 mr-2">
-              <Link href="/products" className="text-sm font-medium transition-opacity hover:opacity-70" style={{ color: fontColor }}>Products</Link>
-              <Link href="/services" className="text-sm font-medium transition-opacity hover:opacity-70" style={{ color: fontColor }}>Services</Link>
+              <Link href="/products" className="text-base font-medium transition-opacity hover:opacity-70" style={{ color: fontColor }}>Products</Link>
+              <Link href="/services" className="text-base font-medium transition-opacity hover:opacity-70" style={{ color: fontColor }}>Services</Link>
             </div>
             <Link
               href={isLoggedIn ? "/account" : "/login"}
