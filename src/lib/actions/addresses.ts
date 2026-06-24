@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 const addressSchema = z.object({
-  label: z.string().min(1).default("Home"),
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
   company: z.string().optional(),
@@ -25,7 +24,6 @@ export async function saveAddress(_prev: unknown, formData: FormData) {
   const addressId = formData.get("address_id") as string | null;
 
   const parsed = addressSchema.safeParse({
-    label: formData.get("label"),
     first_name: formData.get("first_name"),
     last_name: formData.get("last_name"),
     company: formData.get("company") || undefined,

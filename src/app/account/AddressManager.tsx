@@ -56,7 +56,7 @@ export function AddressManager({ addresses }: { addresses: UserAddress[] }) {
             {/* Header */}
             <div className="flex items-start justify-between gap-2">
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                {addr.label}
+                {addr.city}, {addr.state}
               </span>
               <div className="flex items-center gap-1 shrink-0">
                 <button

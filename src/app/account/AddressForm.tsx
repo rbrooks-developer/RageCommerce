@@ -5,7 +5,24 @@ import { saveAddress } from "@/lib/actions/addresses";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { UserAddress } from "@/types";
+
+const US_STATES = [
+  ["AL", "Alabama"], ["AK", "Alaska"], ["AZ", "Arizona"], ["AR", "Arkansas"],
+  ["CA", "California"], ["CO", "Colorado"], ["CT", "Connecticut"], ["DE", "Delaware"],
+  ["DC", "District of Columbia"], ["FL", "Florida"], ["GA", "Georgia"], ["HI", "Hawaii"],
+  ["ID", "Idaho"], ["IL", "Illinois"], ["IN", "Indiana"], ["IA", "Iowa"],
+  ["KS", "Kansas"], ["KY", "Kentucky"], ["LA", "Louisiana"], ["ME", "Maine"],
+  ["MD", "Maryland"], ["MA", "Massachusetts"], ["MI", "Michigan"], ["MN", "Minnesota"],
+  ["MS", "Mississippi"], ["MO", "Missouri"], ["MT", "Montana"], ["NE", "Nebraska"],
+  ["NV", "Nevada"], ["NH", "New Hampshire"], ["NJ", "New Jersey"], ["NM", "New Mexico"],
+  ["NY", "New York"], ["NC", "North Carolina"], ["ND", "North Dakota"], ["OH", "Ohio"],
+  ["OK", "Oklahoma"], ["OR", "Oregon"], ["PA", "Pennsylvania"], ["RI", "Rhode Island"],
+  ["SC", "South Carolina"], ["SD", "South Dakota"], ["TN", "Tennessee"], ["TX", "Texas"],
+  ["UT", "Utah"], ["VT", "Vermont"], ["VA", "Virginia"], ["WA", "Washington"],
+  ["WV", "West Virginia"], ["WI", "Wisconsin"], ["WY", "Wyoming"],
+] as const;
 
 interface AddressFormProps {
   address?: UserAddress | null;
@@ -40,22 +57,13 @@ export function AddressForm({ address, onClose, onSuccess }: AddressFormProps) {
           </div>
         )}
 
-        <div>
-          <Label htmlFor="label">Label</Label>
-          <Input
-            id="label"
-            name="label"
-            placeholder="Home, Work, etc."
-            defaultValue={address?.label ?? "Home"}
-          />
-        </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="first_name" required>First Name</Label>
             <Input
               id="first_name"
               name="first_name"
+              autoComplete="given-name"
               defaultValue={address?.first_name ?? ""}
               error={errors?.first_name?.[0]}
               required
@@ -66,6 +74,7 @@ export function AddressForm({ address, onClose, onSuccess }: AddressFormProps) {
             <Input
               id="last_name"
               name="last_name"
+              autoComplete="family-name"
               defaultValue={address?.last_name ?? ""}
               error={errors?.last_name?.[0]}
               required
@@ -78,16 +87,18 @@ export function AddressForm({ address, onClose, onSuccess }: AddressFormProps) {
           <Input
             id="company"
             name="company"
+            autoComplete="organization"
             defaultValue={address?.company ?? ""}
           />
         </div>
 
         <div>
-          <Label htmlFor="address_line1" required>Address</Label>
+          <Label htmlFor="address_line1" required>Street Address</Label>
           <Input
             id="address_line1"
             name="address_line1"
             placeholder="123 Main St"
+            autoComplete="address-line1"
             defaultValue={address?.address_line1 ?? ""}
             error={errors?.address_line1?.[0]}
             required
@@ -95,11 +106,12 @@ export function AddressForm({ address, onClose, onSuccess }: AddressFormProps) {
         </div>
 
         <div>
-          <Label htmlFor="address_line2">Apartment, suite, etc. (optional)</Label>
+          <Label htmlFor="address_line2">Apt, suite, etc. (optional)</Label>
           <Input
             id="address_line2"
             name="address_line2"
             placeholder="Apt 4B"
+            autoComplete="address-line2"
             defaultValue={address?.address_line2 ?? ""}
           />
         </div>
@@ -110,29 +122,42 @@ export function AddressForm({ address, onClose, onSuccess }: AddressFormProps) {
             <Input
               id="city"
               name="city"
+              autoComplete="address-level2"
               defaultValue={address?.city ?? ""}
               error={errors?.city?.[0]}
               required
             />
           </div>
+
           <div>
             <Label htmlFor="state" required>State</Label>
-            <Input
+            <select
               id="state"
               name="state"
-              placeholder="NY"
-              maxLength={2}
               defaultValue={address?.state ?? ""}
-              error={errors?.state?.[0]}
               required
-            />
+              className={cn(
+                "flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50",
+                errors?.state?.[0] && "border-red-500 focus:ring-red-500"
+              )}
+            >
+              <option value="" disabled>Select…</option>
+              {US_STATES.map(([abbr, name]) => (
+                <option key={abbr} value={abbr}>{abbr} — {name}</option>
+              ))}
+            </select>
+            {errors?.state?.[0] && (
+              <p className="mt-1 text-sm text-red-500">{errors.state[0]}</p>
+            )}
           </div>
+
           <div>
             <Label htmlFor="zip" required>ZIP</Label>
             <Input
               id="zip"
               name="zip"
               placeholder="10001"
+              autoComplete="postal-code"
               defaultValue={address?.zip ?? ""}
               error={errors?.zip?.[0]}
               required
@@ -147,6 +172,7 @@ export function AddressForm({ address, onClose, onSuccess }: AddressFormProps) {
             name="phone"
             type="tel"
             placeholder="(555) 123-4567"
+            autoComplete="tel"
             defaultValue={address?.phone ?? ""}
           />
         </div>
