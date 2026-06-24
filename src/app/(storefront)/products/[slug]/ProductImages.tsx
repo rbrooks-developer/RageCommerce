@@ -21,6 +21,7 @@ export function ProductImages({ images, name }: { images: string[]; name: string
   function zoomIn(clientX: number, clientY: number) {
     if (!wrapperRef.current) return;
     const { x, y } = getPos(clientX, clientY);
+    wrapperRef.current.style.transition = "transform 200ms ease-out";
     wrapperRef.current.style.transformOrigin = `${x}% ${y}%`;
     wrapperRef.current.style.transform = "scale(2.5)";
   }
@@ -28,11 +29,13 @@ export function ProductImages({ images, name }: { images: string[]; name: string
   function pan(clientX: number, clientY: number) {
     if (!wrapperRef.current) return;
     const { x, y } = getPos(clientX, clientY);
+    wrapperRef.current.style.transition = "none";
     wrapperRef.current.style.transformOrigin = `${x}% ${y}%`;
   }
 
   function zoomOut() {
     if (!wrapperRef.current) return;
+    wrapperRef.current.style.transition = "transform 200ms ease-out";
     wrapperRef.current.style.transform = "scale(1)";
   }
 
@@ -50,7 +53,7 @@ export function ProductImages({ images, name }: { images: string[]; name: string
     <div className="space-y-3">
       <div
         ref={containerRef}
-        className="relative aspect-square overflow-hidden rounded-lg bg-gray-100 cursor-crosshair"
+        className="product-zoom-container relative aspect-square overflow-hidden rounded-lg bg-gray-100 cursor-crosshair"
         onMouseEnter={(e) => zoomIn(e.clientX, e.clientY)}
         onMouseMove={(e) => pan(e.clientX, e.clientY)}
         onMouseLeave={zoomOut}
@@ -60,8 +63,8 @@ export function ProductImages({ images, name }: { images: string[]; name: string
       >
         <div
           ref={wrapperRef}
-          className="absolute inset-0"
-          style={{ transition: "transform 200ms ease-out", transformOrigin: "50% 50%" }}
+          className="product-zoom-wrapper absolute inset-0"
+          style={{ transformOrigin: "50% 50%" }}
         >
           <Image
             src={images[selected]}

@@ -77,6 +77,13 @@ body {
   -webkit-background-clip: initial;
 }
 
+/* Product image zoom — CSS fallback works before JS hydration.
+   JS takes over after hydration for mouse-position-aware panning via inline styles. */
+.product-zoom-container:hover .product-zoom-wrapper {
+  transform: scale(2.5);
+  transition: transform 200ms ease-out;
+}
+
 /* Ensure form controls and buttons meet 44px minimum touch target */
 button,
 [role="button"],
