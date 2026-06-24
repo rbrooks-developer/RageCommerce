@@ -6,19 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Package, CreditCard } from "lucide-react";
 import { SUBDIVISIONS, getSubdivisionLabel } from "@/lib/data/countries";
 import type { Country } from "@/lib/data/countries";
 import type { UserAddress } from "@/types";
 
 interface AddressFormProps {
   address?: UserAddress | null;
+  addressType: "shipping" | "billing";
   allowedCountries: Country[];
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function AddressForm({ address, allowedCountries, onClose, onSuccess }: AddressFormProps) {
+export function AddressForm({ address, addressType, allowedCountries, onClose, onSuccess }: AddressFormProps) {
   const [state, action, isPending] = useActionState(saveAddress, null) as [
     { error?: Record<string, string[]>; success?: boolean } | null,
     (payload: FormData) => void,
@@ -43,14 +43,17 @@ export function AddressForm({ address, allowedCountries, onClose, onSuccess }: A
       hasError && "border-red-500 focus:ring-red-500"
     );
 
+  const typeLabel = addressType === "shipping" ? "Shipping" : "Billing";
+
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
       <h3 className="text-sm font-semibold text-gray-900 mb-4">
-        {address ? "Edit Address" : "Add New Address"}
+        {address ? `Edit ${typeLabel} Address` : `Add ${typeLabel} Address`}
       </h3>
 
       <form action={action} className="space-y-4">
         {address && <input type="hidden" name="address_id" value={address.id} />}
+        <input type="hidden" name="address_type" value={addressType} />
 
         {errors?._form && (
           <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
@@ -133,7 +136,6 @@ export function AddressForm({ address, allowedCountries, onClose, onSuccess }: A
             </div>
           )}
 
-          {/* Hidden state field for countries without subdivisions */}
           {!hasSubdivisions && <input type="hidden" name="state" value="" />}
 
           <div>
@@ -151,35 +153,9 @@ export function AddressForm({ address, allowedCountries, onClose, onSuccess }: A
             autoComplete="tel" defaultValue={address?.phone ?? ""} />
         </div>
 
-        <div className="space-y-2 pt-1">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Set as default</p>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              name="is_default_shipping"
-              defaultChecked={address?.is_default_shipping ?? false}
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <span className="flex items-center gap-1.5 text-gray-700">
-              <Package className="h-3.5 w-3.5 text-blue-500" /> Default shipping address
-            </span>
-          </label>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              name="is_default_billing"
-              defaultChecked={address?.is_default_billing ?? false}
-              className="h-4 w-4 rounded border-gray-300"
-            />
-            <span className="flex items-center gap-1.5 text-gray-700">
-              <CreditCard className="h-3.5 w-3.5 text-purple-500" /> Default billing address
-            </span>
-          </label>
-        </div>
-
         <div className="flex gap-3 pt-1">
           <Button type="submit" loading={isPending}>
-            {address ? "Save Changes" : "Add Address"}
+            {address ? "Save Changes" : `Add ${typeLabel} Address`}
           </Button>
           <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
         </div>
