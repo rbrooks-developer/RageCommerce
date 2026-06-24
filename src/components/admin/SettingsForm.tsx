@@ -181,8 +181,8 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
       site_title: g("site_title"),
       meta_title: g("meta_title") || undefined,
       meta_description: g("meta_description") || undefined,
-      logo_url: logoUrl[0] ?? undefined,
-      favicon_url: faviconUrl || undefined,
+      logo_url: logoUrl[0] ?? null,
+      favicon_url: faviconUrl || null,
       tax_mode: taxMode as "stripe" | "flat_rate" | "none",
       tax_flat_rate: taxMode === "flat_rate" ? parseFloat(g("tax_flat_rate")) : undefined,
       homepage_config: {
