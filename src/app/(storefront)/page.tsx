@@ -171,7 +171,21 @@ export default async function HomePage() {
       {/* Services section */}
       {serviceImages.length > 0 && (
         <section id="services" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-          <h2 className="text-3xl font-bold mb-4 text-center">Services</h2>
+          <div className="flex flex-col items-center gap-3 mb-6">
+            <h2
+              className="text-3xl tracking-[0.2em] uppercase"
+              style={{
+                fontFamily: `'${heroFont}', serif`,
+                background: goldGradient,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              Services
+            </h2>
+            <div className="w-16 h-px" style={{ backgroundColor: fontColor, opacity: 0.6 }} />
+          </div>
           {serviceImages.length === 1 ? (
             // Single image: natural size, centered
             <div className="flex justify-center">
