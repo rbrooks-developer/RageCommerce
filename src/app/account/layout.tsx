@@ -12,6 +12,11 @@ export default async function AccountLayout({ children }: { children: React.Reac
   const [settings, supabase] = await Promise.all([getSettings(), createClient()]);
   const { data: { user } } = await supabase.auth.getUser();
 
+  const isAdmin = user
+    ? ((await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle())
+        .data as { role: string } | null)?.role === "admin"
+    : false;
+
   return (
     <CartProvider>
       <Header
@@ -19,6 +24,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
         logoUrl={settings?.logo_url ?? null}
         navConfig={(settings?.nav_config as NavConfig) ?? { items: [] }}
         isLoggedIn={!!user}
+        isAdmin={isAdmin}
       />
       <main className="flex-1">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8">

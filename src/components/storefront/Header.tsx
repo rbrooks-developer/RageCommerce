@@ -12,9 +12,10 @@ interface HeaderProps {
   logoUrl: string | null;
   navConfig: NavConfig;
   isLoggedIn: boolean;
+  isAdmin?: boolean;
 }
 
-export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn }: HeaderProps) {
+export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = false }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { itemCount } = useCart();
   const navItems = navConfig?.items ?? [];
@@ -42,6 +43,11 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn }: HeaderProp
                 {item.label}
               </Link>
             ))}
+            {isAdmin && (
+              <Link href="/admin" className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                Admin
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center gap-3">
@@ -91,6 +97,15 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn }: HeaderProp
           >
             {isLoggedIn ? "My Account" : "Sign in"}
           </Link>
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => setMenuOpen(false)}
+              className="py-2.5 text-sm font-medium text-indigo-600 hover:text-indigo-800"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
       </div>
     </header>
