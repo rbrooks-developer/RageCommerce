@@ -16,6 +16,33 @@ body {
   color: var(--foreground);
 }
 
+/* Hero section gold-outline button */
+.btn-hero {
+  display: inline-block;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  color: var(--site-fg);
+  background: transparent;
+  border: 3px solid var(--site-fg);
+  box-shadow: 4px 4px 0 var(--site-fg);
+  cursor: pointer;
+  transition: all 100ms;
+  text-decoration: none;
+}
+.btn-hero:hover {
+  background-color: var(--site-fg);
+  color: var(--site-bg);
+  box-shadow: 2px 2px 0 var(--site-fg);
+  transform: translate(2px, 2px);
+}
+.btn-hero:active {
+  box-shadow: none;
+  transform: translate(4px, 4px);
+}
+
 /* Ensure form controls and buttons meet 44px minimum touch target */
 button,
 [role="button"],
