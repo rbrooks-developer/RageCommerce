@@ -190,6 +190,8 @@ export interface Database {
           meta_description: string | null;
           logo_url: string | null;
           favicon_url: string | null;
+          bg_color: string;
+          font_color: string;
           homepage_config: Json;
           nav_config: Json;
           footer_config: Json;
@@ -207,6 +209,8 @@ export interface Database {
           meta_description?: string | null;
           logo_url?: string | null;
           favicon_url?: string | null;
+          bg_color?: string;
+          font_color?: string;
           homepage_config?: Json;
           nav_config?: Json;
           footer_config?: Json;
@@ -223,6 +227,8 @@ export interface Database {
           meta_description?: string | null;
           logo_url?: string | null;
           favicon_url?: string | null;
+          bg_color?: string;
+          font_color?: string;
           homepage_config?: Json;
           nav_config?: Json;
           footer_config?: Json;

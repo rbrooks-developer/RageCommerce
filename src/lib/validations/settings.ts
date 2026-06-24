@@ -21,12 +21,16 @@ const socialSchema = z.object({
   url: z.string().url(),
 });
 
+const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color");
+
 export const siteSettingsSchema = z.object({
   site_title: z.string().min(1, "Site title is required"),
   meta_title: z.string().max(60).nullable().optional(),
   meta_description: z.string().max(160).nullable().optional(),
   logo_url: z.string().url().nullable().optional(),
   favicon_url: z.string().url().nullable().optional(),
+  bg_color: hexColor.default("#ffffff"),
+  font_color: hexColor.default("#111827"),
   tax_mode: z.enum(["stripe", "flat_rate", "none"]),
   tax_flat_rate: z.number().min(0).max(1).nullable().optional(),
   homepage_config: z.object({

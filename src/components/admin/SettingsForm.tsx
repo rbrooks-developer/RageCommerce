@@ -1,15 +1,109 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { updateSettings } from "@/lib/actions/settings";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ImageUpload } from "./ImageUpload";
+import { Spinner } from "@/components/ui/spinner";
+import { createClient } from "@/lib/supabase/client";
 import { COUNTRIES } from "@/lib/data/countries";
 import type { SiteSettings } from "@/types";
 import type { HomepageConfig, NavConfig, FooterConfig, ContactInfo, StoreAddress } from "@/types";
+
+function ColorPicker({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <Label htmlFor={id}>{label}</Label>
+      <div className="flex items-center gap-2 mt-1">
+        <input
+          type="color"
+          id={id}
+          value={/^#[0-9a-fA-F]{6}$/.test(value) ? value : "#ffffff"}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-11 w-14 cursor-pointer rounded-md border border-gray-300 p-1 bg-white"
+        />
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (/^#[0-9a-fA-F]{0,6}$/.test(v)) onChange(v);
+          }}
+          className="flex h-11 w-28 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900"
+          maxLength={7}
+          placeholder="#ffffff"
+        />
+      </div>
+    </div>
+  );
+}
+
+function FaviconUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file: File) => {
+    setError(null);
+    setUploading(true);
+    const supabase = createClient();
+    const ext = file.name.split(".").pop() ?? "png";
+    const path = `site/favicon-${Date.now()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("product-images")
+      .upload(path, file, { upsert: true });
+    if (uploadError) {
+      setError(uploadError.message);
+      setUploading(false);
+      return;
+    }
+    const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+    onChange(data.publicUrl);
+    setUploading(false);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-3">
+        {value && (
+          <div className="h-10 w-10 rounded border border-gray-200 bg-gray-50 p-1 flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={value} alt="Favicon" className="h-full w-full object-contain" />
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+        >
+          {uploading && <Spinner className="h-3.5 w-3.5" />}
+          {uploading ? "Uploading…" : value ? "Change" : "Browse…"}
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="text-sm text-red-500 hover:text-red-700"
+          >
+            Remove
+          </button>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".ico,.png,.svg,.webp,image/x-icon,image/png,image/svg+xml,image/webp"
+          className="hidden"
+          onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+        />
+      </div>
+      {error && <p className="text-xs text-red-500">{error}</p>}
+    </div>
+  );
+}
 
 interface Props {
   defaultValues: SiteSettings | null;
@@ -21,6 +115,9 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [logoUrl, setLogoUrl] = useState<string[]>(defaultValues?.logo_url ? [defaultValues.logo_url] : []);
+  const [faviconUrl, setFaviconUrl] = useState(defaultValues?.favicon_url ?? "");
+  const [bgColor, setBgColor] = useState((defaultValues as any)?.bg_color ?? "#ffffff");
+  const [fontColor, setFontColor] = useState((defaultValues as any)?.font_color ?? "#111827");
   const [taxMode, setTaxMode] = useState(defaultValues?.tax_mode ?? "none");
 
   const homepage = defaultValues?.homepage_config as HomepageConfig | null;
@@ -50,7 +147,9 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
       meta_title: g("meta_title") || undefined,
       meta_description: g("meta_description") || undefined,
       logo_url: logoUrl[0] ?? undefined,
-      favicon_url: g("favicon_url") || undefined,
+      favicon_url: faviconUrl || undefined,
+      bg_color: bgColor,
+      font_color: fontColor,
       tax_mode: taxMode as "stripe" | "flat_rate" | "none",
       tax_flat_rate: taxMode === "flat_rate" ? parseFloat(g("tax_flat_rate")) : undefined,
       homepage_config: {
@@ -115,7 +214,11 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         <div><Label htmlFor="meta_title">Meta Title <span className="text-gray-400 font-normal">(max 60 chars)</span></Label><Input id="meta_title" name="meta_title" maxLength={60} defaultValue={defaultValues?.meta_title ?? ""} /></div>
         <div><Label htmlFor="meta_description">Meta Description <span className="text-gray-400 font-normal">(max 160 chars)</span></Label><Textarea id="meta_description" name="meta_description" maxLength={160} rows={2} defaultValue={defaultValues?.meta_description ?? ""} /></div>
         <div><Label>Logo</Label><ImageUpload value={logoUrl} onChange={setLogoUrl} max={1} /></div>
-        <div><Label htmlFor="favicon_url">Favicon URL</Label><Input id="favicon_url" name="favicon_url" type="url" defaultValue={defaultValues?.favicon_url ?? ""} placeholder="https://..." /></div>
+        <div><Label>Favicon</Label><FaviconUpload value={faviconUrl} onChange={setFaviconUrl} /></div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <ColorPicker id="bg_color" label="Background Color" value={bgColor} onChange={setBgColor} />
+          <ColorPicker id="font_color" label="Font Color" value={fontColor} onChange={setFontColor} />
+        </div>
       </Section>
 
       <Section title="Homepage">
