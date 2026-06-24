@@ -259,12 +259,46 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
               <option value="DM Sans">DM Sans</option>
               <option value="Josefin Sans">Josefin Sans</option>
               <option value="Oswald">Oswald</option>
+              <option value="Outfit">Outfit</option>
+              <option value="Urbanist">Urbanist</option>
+              <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+              <option value="Figtree">Figtree</option>
+              <option value="Mulish">Mulish</option>
+              <option value="Quicksand">Quicksand</option>
             </optgroup>
             <optgroup label="Serif">
               <option value="Playfair Display">Playfair Display</option>
               <option value="Merriweather">Merriweather</option>
               <option value="PT Serif">PT Serif</option>
               <option value="Source Sans 3">Source Sans 3</option>
+              <option value="Lora">Lora</option>
+              <option value="Crimson Text">Crimson Text</option>
+              <option value="EB Garamond">EB Garamond</option>
+              <option value="Libre Baskerville">Libre Baskerville</option>
+            </optgroup>
+            <optgroup label="Comic &amp; Display">
+              <option value="Bangers">Bangers</option>
+              <option value="Comic Neue">Comic Neue</option>
+              <option value="Boogaloo">Boogaloo</option>
+              <option value="Fredoka One">Fredoka One</option>
+              <option value="Lilita One">Lilita One</option>
+              <option value="Titan One">Titan One</option>
+              <option value="Creepster">Creepster</option>
+              <option value="Righteous">Righteous</option>
+              <option value="Russo One">Russo One</option>
+              <option value="Bebas Neue">Bebas Neue</option>
+              <option value="Amatic SC">Amatic SC</option>
+              <option value="Press Start 2P">Press Start 2P</option>
+            </optgroup>
+            <optgroup label="Handwritten">
+              <option value="Permanent Marker">Permanent Marker</option>
+              <option value="Pacifico">Pacifico</option>
+              <option value="Caveat">Caveat</option>
+              <option value="Patrick Hand">Patrick Hand</option>
+              <option value="Indie Flower">Indie Flower</option>
+              <option value="Shadows Into Light">Shadows Into Light</option>
+              <option value="Architects Daughter">Architects Daughter</option>
+              <option value="Kalam">Kalam</option>
             </optgroup>
           </select>
         </div>

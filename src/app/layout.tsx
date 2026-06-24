@@ -17,9 +17,18 @@ export const metadata: Metadata = {
 };
 
 const GOOGLE_FONT_FAMILIES = [
+  // Sans-serif
   "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins",
-  "Raleway", "Oswald", "Nunito", "Playfair Display", "Merriweather",
-  "PT Serif", "Source Sans 3", "DM Sans", "Josefin Sans",
+  "Raleway", "Oswald", "Nunito", "DM Sans", "Josefin Sans", "Outfit",
+  "Urbanist", "Plus Jakarta Sans", "Figtree", "Mulish", "Quicksand",
+  // Serif
+  "Playfair Display", "Merriweather", "PT Serif", "Source Sans 3",
+  "Lora", "Crimson Text", "EB Garamond", "Libre Baskerville",
+  // Comic & Display
+  "Bangers", "Comic Neue", "Permanent Marker", "Boogaloo", "Fredoka One",
+  "Pacifico", "Caveat", "Patrick Hand", "Indie Flower", "Shadows Into Light",
+  "Architects Daughter", "Kalam", "Amatic SC", "Creepster", "Lilita One",
+  "Titan One", "Righteous", "Russo One", "Bebas Neue", "Press Start 2P",
 ];
 
 export default async function RootLayout({
