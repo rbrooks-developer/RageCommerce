@@ -31,6 +31,7 @@ export const siteSettingsSchema = z.object({
   favicon_url: z.string().url().nullable().optional(),
   bg_color: hexColor.default("#ffffff"),
   font_color: hexColor.default("#111827"),
+  font_family: z.string().default("default"),
   tax_mode: z.enum(["stripe", "flat_rate", "none"]),
   tax_flat_rate: z.number().min(0).max(1).nullable().optional(),
   homepage_config: z.object({

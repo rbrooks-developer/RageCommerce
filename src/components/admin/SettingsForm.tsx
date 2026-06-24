@@ -139,6 +139,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [faviconUrl, setFaviconUrl] = useState(defaultValues?.favicon_url ?? "");
   const [bgColor, setBgColor] = useState((defaultValues as any)?.bg_color ?? "#ffffff");
   const [fontColor, setFontColor] = useState((defaultValues as any)?.font_color ?? "#111827");
+  const [fontFamily, setFontFamily] = useState((defaultValues as any)?.font_family ?? "default");
   const [taxMode, setTaxMode] = useState(defaultValues?.tax_mode ?? "none");
 
   const homepage = defaultValues?.homepage_config as HomepageConfig | null;
@@ -171,6 +172,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
       favicon_url: faviconUrl || undefined,
       bg_color: bgColor,
       font_color: fontColor,
+      font_family: fontFamily,
       tax_mode: taxMode as "stripe" | "flat_rate" | "none",
       tax_flat_rate: taxMode === "flat_rate" ? parseFloat(g("tax_flat_rate")) : undefined,
       homepage_config: {
@@ -235,6 +237,36 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <ColorPicker id="bg_color" label="Background Color" value={bgColor} onChange={setBgColor} />
           <ColorPicker id="font_color" label="Font Color" value={fontColor} onChange={setFontColor} />
+        </div>
+        <div>
+          <Label htmlFor="font_family">Font Family</Label>
+          <select
+            id="font_family"
+            value={fontFamily}
+            onChange={(e) => setFontFamily(e.target.value)}
+            className="mt-1 flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          >
+            <option value="default">Default (Geist)</option>
+            <optgroup label="Sans-serif">
+              <option value="Inter">Inter</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Open Sans">Open Sans</option>
+              <option value="Lato">Lato</option>
+              <option value="Montserrat">Montserrat</option>
+              <option value="Poppins">Poppins</option>
+              <option value="Raleway">Raleway</option>
+              <option value="Nunito">Nunito</option>
+              <option value="DM Sans">DM Sans</option>
+              <option value="Josefin Sans">Josefin Sans</option>
+              <option value="Oswald">Oswald</option>
+            </optgroup>
+            <optgroup label="Serif">
+              <option value="Playfair Display">Playfair Display</option>
+              <option value="Merriweather">Merriweather</option>
+              <option value="PT Serif">PT Serif</option>
+              <option value="Source Sans 3">Source Sans 3</option>
+            </optgroup>
+          </select>
         </div>
       </Section>
 

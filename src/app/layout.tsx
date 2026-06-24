@@ -16,6 +16,12 @@ export const metadata: Metadata = {
   description: "Welcome to our store.",
 };
 
+const GOOGLE_FONT_FAMILIES = [
+  "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins",
+  "Raleway", "Oswald", "Nunito", "Playfair Display", "Merriweather",
+  "PT Serif", "Source Sans 3", "DM Sans", "Josefin Sans",
+];
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -24,12 +30,31 @@ export default async function RootLayout({
   const settings = await getSettings();
   const bgColor = (settings as any)?.bg_color ?? "#ffffff";
   const fontColor = (settings as any)?.font_color ?? "#111827";
+  const fontFamily = (settings as any)?.font_family ?? "default";
+
+  const isGoogleFont = GOOGLE_FONT_FAMILIES.includes(fontFamily);
+  const googleFontUrl = isGoogleFont
+    ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@300;400;500;600;700&display=swap`
+    : null;
+
+  const bodyFontFamily = fontFamily === "default" || !fontFamily
+    ? undefined
+    : `'${fontFamily}', sans-serif`;
 
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
+      <head>
+        {googleFontUrl && (
+          <>
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+            <link href={googleFontUrl} rel="stylesheet" />
+          </>
+        )}
+      </head>
       <body
         className="min-h-full flex flex-col"
-        style={{ backgroundColor: bgColor, color: fontColor }}
+        style={{ backgroundColor: bgColor, color: fontColor, fontFamily: bodyFontFamily }}
       >
         {children}
       </body>

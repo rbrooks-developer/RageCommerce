@@ -192,6 +192,7 @@ export interface Database {
           favicon_url: string | null;
           bg_color: string;
           font_color: string;
+          font_family: string;
           homepage_config: Json;
           nav_config: Json;
           footer_config: Json;
@@ -211,6 +212,7 @@ export interface Database {
           favicon_url?: string | null;
           bg_color?: string;
           font_color?: string;
+          font_family?: string;
           homepage_config?: Json;
           nav_config?: Json;
           footer_config?: Json;
@@ -229,6 +231,7 @@ export interface Database {
           favicon_url?: string | null;
           bg_color?: string;
           font_color?: string;
+          font_family?: string;
           homepage_config?: Json;
           nav_config?: Json;
           footer_config?: Json;
