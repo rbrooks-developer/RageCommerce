@@ -64,6 +64,7 @@ export type HomepageConfig = {
   hero_font?: string;
   service_images?: string[];
   font_gradient_enabled?: boolean;
+  og_image_url?: string | null;
 };
 
 export type NavConfig = {

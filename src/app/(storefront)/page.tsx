@@ -7,13 +7,15 @@ import type { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();
+  const homepage = settings?.homepage_config as import("@/types").HomepageConfig | null;
+  const ogImage = homepage?.og_image_url ?? settings?.logo_url ?? null;
   return {
     title: settings?.meta_title ?? settings?.site_title ?? "Home",
     description: settings?.meta_description ?? undefined,
     openGraph: {
       title: settings?.meta_title ?? settings?.site_title ?? "Home",
       description: settings?.meta_description ?? undefined,
-      images: settings?.logo_url ? [settings.logo_url] : [],
+      images: ogImage ? [ogImage] : [],
     },
   };
 }

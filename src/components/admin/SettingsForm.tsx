@@ -172,6 +172,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [featuredProducts, setFeaturedProducts] = useState<string[]>(homepage?.featured_product_ids ?? []);
   const [featuredCategories, setFeaturedCategories] = useState<string[]>(homepage?.featured_category_ids ?? []);
   const [serviceImages, setServiceImages] = useState<string[]>(homepage?.service_images ?? []);
+  const [ogImageUrl, setOgImageUrl] = useState<string[]>(homepage?.og_image_url ? [homepage.og_image_url] : []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -205,6 +206,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         hero_tagline: g("hero_tagline") || undefined,
         hero_font: g("hero_font") || "Playfair Display",
         service_images: serviceImages,
+        og_image_url: ogImageUrl[0] ?? null,
       },
       nav_config: { items: navItems.filter((i) => i.label && i.link) },
       footer_config: {
@@ -254,6 +256,10 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         <div><Label htmlFor="meta_description">Meta Description <span className="text-gray-400 font-normal">(max 160 chars)</span></Label><Textarea id="meta_description" name="meta_description" maxLength={160} rows={2} defaultValue={defaultValues?.meta_description ?? ""} /></div>
         <div><Label>Logo</Label><ImageUpload value={logoUrl} onChange={setLogoUrl} max={1} /></div>
         <div><Label>Favicon</Label><FaviconUpload value={faviconUrl} onChange={setFaviconUrl} /></div>
+        <div>
+          <Label>OG Image <span className="text-gray-400 font-normal">(shared preview image for social media — recommended 1200×630)</span></Label>
+          <ImageUpload value={ogImageUrl} onChange={setOgImageUrl} max={1} bucket="site-assets" pathPrefix="og" />
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <ColorPicker id="bg_color" label="Background Color" value={bgColor} onChange={setBgColor} />
           <ColorPicker id="font_color" label="Font Color" value={fontColor} onChange={setFontColor} />

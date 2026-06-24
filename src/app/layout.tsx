@@ -8,10 +8,16 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: { default: "My Store", template: "%s | My Store" },
-  description: "Welcome to our store.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSettings();
+  const homepage = settings?.homepage_config as import("@/types").HomepageConfig | null;
+  const ogImage = homepage?.og_image_url ?? settings?.logo_url ?? null;
+  return {
+    title: { default: settings?.site_title ?? "My Store", template: `%s | ${settings?.site_title ?? "My Store"}` },
+    description: settings?.meta_description ?? undefined,
+    openGraph: ogImage ? { images: [ogImage] } : {},
+  };
+}
 
 const GOOGLE_FONT_FAMILIES = [
   "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins",
