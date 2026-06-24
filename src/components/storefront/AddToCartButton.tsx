@@ -32,7 +32,11 @@ export function AddToCartButton({ product }: { product: ProductProps }) {
 
   if (product.inventory === 0) {
     return (
-      <button disabled className="w-full rounded-md bg-gray-200 py-4 text-sm font-semibold text-gray-400 cursor-not-allowed">
+      <button
+        disabled
+        className="w-full rounded-md py-4 text-sm font-semibold cursor-not-allowed"
+        style={{ opacity: 0.35, border: "1px solid currentColor" }}
+      >
         Out of Stock
       </button>
     );
@@ -41,11 +45,14 @@ export function AddToCartButton({ product }: { product: ProductProps }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3">
-        <span className="text-sm text-gray-600">Qty</span>
-        <div className="flex items-center border border-gray-200 rounded-md overflow-hidden">
+        <span className="text-sm" style={{ opacity: 0.6 }}>Qty</span>
+        <div
+          className="flex items-center rounded-md overflow-hidden"
+          style={{ border: "1px solid currentColor", opacity: 0.85 }}
+        >
           <button
             onClick={() => setQty((q) => Math.max(1, q - 1))}
-            className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
+            className="w-10 h-10 flex items-center justify-center transition-opacity hover:opacity-60"
             aria-label="Decrease quantity"
           >
             −
@@ -53,18 +60,22 @@ export function AddToCartButton({ product }: { product: ProductProps }) {
           <span className="w-10 text-center text-sm font-medium">{qty}</span>
           <button
             onClick={() => setQty((q) => Math.min(product.inventory, q + 1))}
-            className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors"
+            className="w-10 h-10 flex items-center justify-center transition-opacity hover:opacity-60"
             aria-label="Increase quantity"
           >
             +
           </button>
         </div>
-        <span className="text-xs text-gray-400">{product.inventory} available</span>
+        <span className="text-xs" style={{ opacity: 0.45 }}>{product.inventory} available</span>
       </div>
 
       <button
         onClick={handleAdd}
-        className="w-full rounded-md bg-gray-900 py-4 text-sm font-semibold text-white hover:bg-gray-700 transition-colors"
+        className="w-full rounded-md py-4 text-sm font-semibold transition-opacity hover:opacity-85"
+        style={{
+          backgroundColor: "var(--site-fg)",
+          color: "var(--site-bg)",
+        }}
       >
         {added ? "Added to Cart!" : "Add to Cart"}
       </button>

@@ -61,7 +61,7 @@ export default async function RootLayout({
       </head>
       <body
         className="min-h-full flex flex-col"
-        style={{ backgroundColor: bgColor, color: fontColor, fontFamily: bodyFontFamily }}
+        style={{ backgroundColor: bgColor, color: fontColor, fontFamily: bodyFontFamily, '--site-fg': fontColor, '--site-bg': bgColor } as React.CSSProperties}
       >
         {children}
       </body>

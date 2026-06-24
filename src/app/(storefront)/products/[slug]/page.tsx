@@ -74,15 +74,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
           <div className="lg:w-1/2 space-y-5">
             {product.categories && (
-              <p className="text-xs text-gray-400 uppercase tracking-wide">
+              <p className="text-xs uppercase tracking-widest" style={{ opacity: 0.5 }}>
                 {product.categories.name}
               </p>
             )}
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{product.name}</h1>
-            <p className="text-2xl font-semibold text-gray-800">{formatPrice(Number(product.price) * 100)}</p>
+            <h1 className="text-2xl md:text-3xl font-bold">{product.name}</h1>
+            <p className="text-2xl font-semibold">{formatPrice(Number(product.price) * 100)}</p>
 
             {product.description && (
-              <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
+              <p className="text-sm leading-relaxed" style={{ opacity: 0.7 }}>{product.description}</p>
             )}
 
             <AddToCartButton product={product} />
