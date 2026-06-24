@@ -142,18 +142,13 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [fontFamily, setFontFamily] = useState((defaultValues as any)?.font_family ?? "default");
 
   useEffect(() => {
+    document.getElementById("admin-font-preview-link")?.remove();
     if (!fontFamily || fontFamily === "default") return;
-    const url = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@400;700&display=swap`;
-    const existing = document.getElementById("admin-font-preview-link") as HTMLLinkElement | null;
-    if (existing) {
-      existing.href = url;
-    } else {
-      const link = document.createElement("link");
-      link.id = "admin-font-preview-link";
-      link.rel = "stylesheet";
-      link.href = url;
-      document.head.appendChild(link);
-    }
+    const link = document.createElement("link");
+    link.id = "admin-font-preview-link";
+    link.rel = "stylesheet";
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}&display=swap`;
+    document.head.appendChild(link);
   }, [fontFamily]);
   const [taxMode, setTaxMode] = useState(defaultValues?.tax_mode ?? "none");
 

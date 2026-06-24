@@ -43,7 +43,7 @@ export default async function RootLayout({
 
   const isGoogleFont = GOOGLE_FONT_FAMILIES.includes(fontFamily);
   const googleFontUrl = isGoogleFont
-    ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@300;400;500;600;700&display=swap`
+    ? `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}&display=swap`
     : null;
 
   const bodyFontFamily = fontFamily === "default" || !fontFamily
