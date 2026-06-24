@@ -11,10 +11,28 @@ import type { EasyPostRate, ShippingAddress } from "@/types";
 
 type Step = "address" | "shipping" | "review";
 
-const inputClass = (hasError?: boolean) =>
-  `w-full rounded-md border px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-400 ${
-    hasError ? "border-red-400" : "border-gray-200"
-  }`;
+const panelStyle: React.CSSProperties = {
+  border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)",
+  backgroundColor: "color-mix(in srgb, var(--site-fg) 5%, var(--site-bg))",
+};
+
+const inputStyle: React.CSSProperties = {
+  backgroundColor: "color-mix(in srgb, var(--site-fg) 8%, var(--site-bg))",
+  color: "var(--site-fg)",
+  border: "1px solid color-mix(in srgb, var(--site-fg) 25%, transparent)",
+};
+
+const inputErrorStyle: React.CSSProperties = {
+  ...inputStyle,
+  border: "1px solid rgb(248 113 113)",
+};
+
+const btnPrimaryStyle: React.CSSProperties = {
+  backgroundColor: "var(--site-fg)",
+  color: "var(--site-bg)",
+};
+
+const inputClass = "w-full rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-current";
 
 export function CheckoutFlow({ allowedCountries }: { allowedCountries: Country[] }) {
   const router = useRouter();
@@ -39,9 +57,10 @@ export function CheckoutFlow({ allowedCountries }: { allowedCountries: Country[]
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
-        <p className="text-gray-500 mb-6">Your cart is empty.</p>
+        <p className="mb-6" style={{ opacity: 0.5 }}>Your cart is empty.</p>
         <button onClick={() => router.push("/products")}
-          className="rounded-md bg-gray-900 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-700 transition-colors">
+          className="rounded-md px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-80"
+          style={btnPrimaryStyle}>
           Browse Products
         </button>
       </div>
@@ -117,15 +136,18 @@ export function CheckoutFlow({ allowedCountries }: { allowedCountries: Country[]
     address.country !== defaultCountry ? getCountryName(address.country) : null,
   ].filter(Boolean).join(", ");
 
+  const dividerStyle: React.CSSProperties = { borderTop: "1px solid color-mix(in srgb, var(--site-fg) 15%, transparent)" };
+
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Checkout</h1>
+      <h1 className="text-2xl font-bold mb-2">Checkout</h1>
 
+      {/* Step breadcrumb */}
       <div className="flex items-center gap-2 text-sm mb-8">
         {(["address", "shipping", "review"] as Step[]).map((s, i) => (
           <span key={s} className="flex items-center gap-2">
-            {i > 0 && <span className="text-gray-300">›</span>}
-            <span className={step === s ? "font-semibold text-gray-900" : "text-gray-400 capitalize"}>
+            {i > 0 && <span style={{ opacity: 0.3 }}>›</span>}
+            <span className={step === s ? "font-semibold" : "capitalize"} style={step !== s ? { opacity: 0.4 } : {}}>
               {s === "address" ? "Address" : s === "shipping" ? "Shipping" : "Review"}
             </span>
           </span>
@@ -134,88 +156,87 @@ export function CheckoutFlow({ allowedCountries }: { allowedCountries: Country[]
 
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="flex-1">
+
           {/* Step 1: Address */}
           {step === "address" && (
-            <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-4">
-              <h2 className="font-semibold text-gray-900">Shipping Address</h2>
+            <div className="rounded-lg p-6 space-y-4" style={panelStyle}>
+              <h2 className="font-semibold">Shipping Address</h2>
 
-              {/* Full name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium mb-1" style={{ opacity: 0.75 }}>Full Name</label>
                 <input value={address.name} onChange={(e) => setAddress((a) => ({ ...a, name: e.target.value }))}
-                  placeholder="Jane Smith" autoComplete="name" className={inputClass(!!fieldErrors.name)} />
-                {fieldErrors.name && <p className="mt-1 text-xs text-red-500">{fieldErrors.name}</p>}
+                  placeholder="Jane Smith" autoComplete="name"
+                  className={inputClass} style={fieldErrors.name ? inputErrorStyle : inputStyle} />
+                {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
               </div>
 
-              {/* Country */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                <select
-                  value={address.country}
+                <label className="block text-sm font-medium mb-1" style={{ opacity: 0.75 }}>Country</label>
+                <select value={address.country}
                   onChange={(e) => setAddress((a) => ({ ...a, country: e.target.value, state: "" }))}
-                  className={inputClass()}
-                >
+                  className={inputClass} style={inputStyle}>
                   {allowedCountries.map((c) => (
                     <option key={c.code} value={c.code}>{c.name}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Street address */}
               {[
                 { key: "address_line1" as const, label: "Street Address", placeholder: "123 Main St", autoComplete: "address-line1" },
                 { key: "address_line2" as const, label: "Apt, Suite, etc. (optional)", placeholder: "", autoComplete: "address-line2" },
               ].map(({ key, label, placeholder, autoComplete }) => (
                 <div key={key}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                  <label className="block text-sm font-medium mb-1" style={{ opacity: 0.75 }}>{label}</label>
                   <input type="text" value={address[key] ?? ""}
                     onChange={(e) => setAddress((a) => ({ ...a, [key]: e.target.value }))}
                     placeholder={placeholder} autoComplete={autoComplete}
-                    className={inputClass(!!fieldErrors[key])} />
-                  {fieldErrors[key] && <p className="mt-1 text-xs text-red-500">{fieldErrors[key]}</p>}
+                    className={inputClass} style={fieldErrors[key] ? inputErrorStyle : inputStyle} />
+                  {fieldErrors[key] && <p className="mt-1 text-xs text-red-400">{fieldErrors[key]}</p>}
                 </div>
               ))}
 
-              {/* City / State / ZIP */}
               <div className={`grid gap-4 ${hasSubdivisions ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2"}`}>
                 <div className={hasSubdivisions ? "col-span-2 sm:col-span-1" : ""}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <label className="block text-sm font-medium mb-1" style={{ opacity: 0.75 }}>City</label>
                   <input value={address.city} onChange={(e) => setAddress((a) => ({ ...a, city: e.target.value }))}
-                    autoComplete="address-level2" className={inputClass(!!fieldErrors.city)} />
-                  {fieldErrors.city && <p className="mt-1 text-xs text-red-500">{fieldErrors.city}</p>}
+                    autoComplete="address-level2"
+                    className={inputClass} style={fieldErrors.city ? inputErrorStyle : inputStyle} />
+                  {fieldErrors.city && <p className="mt-1 text-xs text-red-400">{fieldErrors.city}</p>}
                 </div>
 
                 {hasSubdivisions && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium mb-1" style={{ opacity: 0.75 }}>
                       {getSubdivisionLabel(address.country)}
                     </label>
                     <select value={address.state}
                       onChange={(e) => setAddress((a) => ({ ...a, state: e.target.value }))}
-                      className={inputClass(!!fieldErrors.state)}>
+                      className={inputClass} style={fieldErrors.state ? inputErrorStyle : inputStyle}>
                       <option value="">Select…</option>
                       {subdivisions.map((s) => (
                         <option key={s.code} value={s.code}>{s.code} — {s.name}</option>
                       ))}
                     </select>
-                    {fieldErrors.state && <p className="mt-1 text-xs text-red-500">{fieldErrors.state}</p>}
+                    {fieldErrors.state && <p className="mt-1 text-xs text-red-400">{fieldErrors.state}</p>}
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium mb-1" style={{ opacity: 0.75 }}>
                     {address.country === "GB" ? "Postcode" : "ZIP / Postal Code"}
                   </label>
                   <input value={address.zip} onChange={(e) => setAddress((a) => ({ ...a, zip: e.target.value }))}
-                    autoComplete="postal-code" className={inputClass(!!fieldErrors.zip)} />
-                  {fieldErrors.zip && <p className="mt-1 text-xs text-red-500">{fieldErrors.zip}</p>}
+                    autoComplete="postal-code"
+                    className={inputClass} style={fieldErrors.zip ? inputErrorStyle : inputStyle} />
+                  {fieldErrors.zip && <p className="mt-1 text-xs text-red-400">{fieldErrors.zip}</p>}
                 </div>
               </div>
 
-              {error && <p className="text-sm text-red-500 bg-red-50 rounded-md px-3 py-2">{error}</p>}
+              {error && <p className="text-sm text-red-400 rounded-md px-3 py-2" style={{ backgroundColor: "rgba(239,68,68,0.1)" }}>{error}</p>}
 
               <button onClick={fetchRates} disabled={loading}
-                className="w-full rounded-md bg-gray-900 py-3.5 text-sm font-semibold text-white hover:bg-gray-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+                className="w-full rounded-md py-3.5 text-sm font-semibold transition-opacity hover:opacity-80 disabled:opacity-60 flex items-center justify-center gap-2"
+                style={btnPrimaryStyle}>
                 {loading && <Spinner className="h-4 w-4" />}
                 {loading ? "Getting rates…" : "Continue to Shipping"}
               </button>
@@ -224,36 +245,39 @@ export function CheckoutFlow({ allowedCountries }: { allowedCountries: Country[]
 
           {/* Step 2: Shipping rates */}
           {step === "shipping" && (
-            <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-4">
+            <div className="rounded-lg p-6 space-y-4" style={panelStyle}>
               <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-gray-900">Select Shipping</h2>
-                <button onClick={() => setStep("address")} className="text-xs text-gray-400 hover:text-gray-600">← Edit address</button>
+                <h2 className="font-semibold">Select Shipping</h2>
+                <button onClick={() => setStep("address")} className="text-xs transition-opacity hover:opacity-60" style={{ opacity: 0.45 }}>← Edit address</button>
               </div>
-              <p className="text-sm text-gray-500">{address.name} · {addressSummary}</p>
+              <p className="text-sm" style={{ opacity: 0.55 }}>{address.name} · {addressSummary}</p>
               {rates.length === 0 ? (
-                <p className="text-sm text-gray-400">No rates available for this address.</p>
+                <p className="text-sm" style={{ opacity: 0.4 }}>No rates available for this address.</p>
               ) : (
                 <div className="space-y-2">
                   {rates.map((rate) => (
                     <label key={rate.id}
-                      className={`flex items-center gap-3 rounded-md border p-3.5 cursor-pointer transition-colors ${
-                        selectedRate?.id === rate.id ? "border-gray-900 bg-gray-50" : "border-gray-200 hover:border-gray-300"
-                      }`}>
+                      className="flex items-center gap-3 rounded-md p-3.5 cursor-pointer transition-opacity"
+                      style={selectedRate?.id === rate.id
+                        ? { border: "1px solid var(--site-fg)", backgroundColor: "color-mix(in srgb, var(--site-fg) 10%, var(--site-bg))" }
+                        : { border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)" }
+                      }>
                       <input type="radio" name="shipping_rate" value={rate.id}
                         checked={selectedRate?.id === rate.id} onChange={() => setSelectedRate(rate)} className="shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{rate.carrier} {rate.service}</p>
+                        <p className="text-sm font-medium">{rate.carrier} {rate.service}</p>
                         {rate.delivery_days != null && (
-                          <p className="text-xs text-gray-400">{rate.delivery_days} business {rate.delivery_days === 1 ? "day" : "days"}</p>
+                          <p className="text-xs" style={{ opacity: 0.45 }}>{rate.delivery_days} business {rate.delivery_days === 1 ? "day" : "days"}</p>
                         )}
                       </div>
-                      <span className="font-semibold text-gray-900 text-sm">{formatPrice(parseFloat(rate.rate) * 100)}</span>
+                      <span className="font-semibold text-sm">{formatPrice(parseFloat(rate.rate) * 100)}</span>
                     </label>
                   ))}
                 </div>
               )}
               <button onClick={() => setStep("review")} disabled={!selectedRate}
-                className="w-full rounded-md bg-gray-900 py-3.5 text-sm font-semibold text-white hover:bg-gray-700 transition-colors disabled:opacity-50">
+                className="w-full rounded-md py-3.5 text-sm font-semibold transition-opacity hover:opacity-80 disabled:opacity-50"
+                style={btnPrimaryStyle}>
                 Continue to Review
               </button>
             </div>
@@ -261,67 +285,68 @@ export function CheckoutFlow({ allowedCountries }: { allowedCountries: Country[]
 
           {/* Step 3: Review */}
           {step === "review" && (
-            <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-5">
-              <h2 className="font-semibold text-gray-900">Review Your Order</h2>
+            <div className="rounded-lg p-6 space-y-5" style={panelStyle}>
+              <h2 className="font-semibold">Review Your Order</h2>
               <div>
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Shipping to</p>
-                <p className="text-sm text-gray-700">
+                <p className="text-xs font-medium uppercase tracking-wide mb-2" style={{ opacity: 0.45 }}>Shipping to</p>
+                <p className="text-sm" style={{ opacity: 0.8 }}>
                   {address.name}<br />
                   {address.address_line1}{address.address_line2 ? `, ${address.address_line2}` : ""}<br />
                   {address.city}{address.state ? `, ${address.state}` : ""} {address.zip}
                   {address.country !== defaultCountry && <><br />{getCountryName(address.country)}</>}
                 </p>
-                <button onClick={() => setStep("address")} className="mt-1 text-xs text-blue-600 hover:underline">Edit</button>
+                <button onClick={() => setStep("address")} className="mt-1 text-xs transition-opacity hover:opacity-60" style={{ opacity: 0.5 }}>Edit</button>
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Shipping method</p>
-                <p className="text-sm text-gray-700">
+              <div style={dividerStyle} className="pt-4">
+                <p className="text-xs font-medium uppercase tracking-wide mb-2" style={{ opacity: 0.45 }}>Shipping method</p>
+                <p className="text-sm" style={{ opacity: 0.8 }}>
                   {selectedRate?.carrier} {selectedRate?.service} — {formatPrice(parseFloat(selectedRate?.rate ?? "0") * 100)}
                 </p>
-                <button onClick={() => setStep("shipping")} className="mt-1 text-xs text-blue-600 hover:underline">Edit</button>
+                <button onClick={() => setStep("shipping")} className="mt-1 text-xs transition-opacity hover:opacity-60" style={{ opacity: 0.5 }}>Edit</button>
               </div>
-              <div>
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Items</p>
+              <div style={dividerStyle} className="pt-4">
+                <p className="text-xs font-medium uppercase tracking-wide mb-2" style={{ opacity: 0.45 }}>Items</p>
                 <ul className="space-y-1">
                   {items.map((item) => (
-                    <li key={item.productId} className="flex justify-between text-sm text-gray-700">
+                    <li key={item.productId} className="flex justify-between text-sm" style={{ opacity: 0.8 }}>
                       <span>{item.name} × {item.quantity}</span>
                       <span>{formatPrice(item.price * item.quantity * 100)}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-              {error && <p className="text-sm text-red-500 bg-red-50 rounded-md px-3 py-2">{error}</p>}
+              {error && <p className="text-sm text-red-400 rounded-md px-3 py-2" style={{ backgroundColor: "rgba(239,68,68,0.1)" }}>{error}</p>}
               <button onClick={startPayment} disabled={loading}
-                className="w-full rounded-md bg-gray-900 py-3.5 text-sm font-semibold text-white hover:bg-gray-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+                className="w-full rounded-md py-3.5 text-sm font-semibold transition-opacity hover:opacity-80 disabled:opacity-60 flex items-center justify-center gap-2"
+                style={btnPrimaryStyle}>
                 {loading && <Spinner className="h-4 w-4" />}
                 {loading ? "Redirecting to payment…" : "Pay Now"}
               </button>
-              <p className="text-xs text-gray-400 text-center">You'll be redirected to Stripe's secure payment page.</p>
+              <p className="text-xs text-center" style={{ opacity: 0.4 }}>You'll be redirected to Stripe's secure payment page.</p>
             </div>
           )}
         </div>
 
         {/* Order summary sidebar */}
         <div className="lg:w-72 shrink-0">
-          <div className="rounded-lg border border-gray-200 bg-white p-5 sticky top-24 space-y-3">
-            <h3 className="font-semibold text-gray-900 text-sm">Order Summary</h3>
+          <div className="rounded-lg p-5 sticky top-24 space-y-3" style={panelStyle}>
+            <h3 className="font-semibold text-sm">Order Summary</h3>
             <ul className="space-y-2">
               {items.map((item) => (
-                <li key={item.productId} className="flex justify-between text-xs text-gray-600">
+                <li key={item.productId} className="flex justify-between text-xs" style={{ opacity: 0.7 }}>
                   <span className="truncate pr-2">{item.name} × {item.quantity}</span>
                   <span className="shrink-0">{formatPrice(item.price * item.quantity * 100)}</span>
                 </li>
               ))}
             </ul>
-            <div className="border-t border-gray-100 pt-3 space-y-1.5 text-sm">
-              <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{formatPrice(subtotal * 100)}</span></div>
+            <div className="pt-3 space-y-1.5 text-sm" style={dividerStyle}>
+              <div className="flex justify-between" style={{ opacity: 0.7 }}><span>Subtotal</span><span>{formatPrice(subtotal * 100)}</span></div>
               {selectedRate && (
-                <div className="flex justify-between text-gray-600">
+                <div className="flex justify-between" style={{ opacity: 0.7 }}>
                   <span>Shipping</span><span>{formatPrice(parseFloat(selectedRate.rate) * 100)}</span>
                 </div>
               )}
-              <div className="flex justify-between font-semibold text-gray-900 pt-1 border-t border-gray-100">
+              <div className="flex justify-between font-semibold pt-1" style={dividerStyle}>
                 <span>Total</span><span>{formatPrice((subtotal + shippingCost) * 100)}</span>
               </div>
             </div>
