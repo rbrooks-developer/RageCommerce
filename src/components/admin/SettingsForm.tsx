@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { updateSettings } from "@/lib/actions/settings";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,24 +14,36 @@ import type { SiteSettings } from "@/types";
 import type { HomepageConfig, NavConfig, FooterConfig, ContactInfo, StoreAddress } from "@/types";
 
 function ColorPicker({ id, label, value, onChange }: { id: string; label: string; value: string; onChange: (v: string) => void }) {
+  const [text, setText] = useState(value);
+
+  // Sync text when the color wheel changes the parent value
+  useEffect(() => {
+    if (/^#[0-9a-fA-F]{6}$/.test(value)) setText(value);
+  }, [value]);
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    if (/^#[0-9a-fA-F]{0,6}$/.test(v)) {
+      setText(v);
+      if (/^#[0-9a-fA-F]{6}$/.test(v)) onChange(v);
+    }
+  };
+
   return (
     <div>
       <Label htmlFor={id}>{label}</Label>
       <div className="flex items-center gap-2 mt-1">
         <input
           type="color"
-          id={id}
           value={/^#[0-9a-fA-F]{6}$/.test(value) ? value : "#ffffff"}
           onChange={(e) => onChange(e.target.value)}
           className="h-11 w-14 cursor-pointer rounded-md border border-gray-300 p-1 bg-white"
         />
         <input
+          id={id}
           type="text"
-          value={value}
-          onChange={(e) => {
-            const v = e.target.value;
-            if (/^#[0-9a-fA-F]{0,6}$/.test(v)) onChange(v);
-          }}
+          value={text}
+          onChange={handleTextChange}
           className="flex h-11 w-28 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-900"
           maxLength={7}
           placeholder="#ffffff"
