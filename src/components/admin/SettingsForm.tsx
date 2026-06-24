@@ -65,14 +65,14 @@ function FaviconUpload({ value, onChange }: { value: string; onChange: (url: str
     const ext = file.name.split(".").pop() ?? "png";
     const path = `site/favicon-${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
-      .from("site-assets")
+      .from("product-images")
       .upload(path, file, { upsert: true });
     if (uploadError) {
       setError(uploadError.message);
       setUploading(false);
       return;
     }
-    const { data } = supabase.storage.from("site-assets").getPublicUrl(path);
+    const { data } = supabase.storage.from("product-images").getPublicUrl(path);
     onChange(data.publicUrl);
     setUploading(false);
   };
@@ -107,7 +107,7 @@ function FaviconUpload({ value, onChange }: { value: string; onChange: (url: str
         <input
           ref={inputRef}
           type="file"
-          accept=".ico,.png,.svg,.webp,image/x-icon,image/png,image/svg+xml,image/webp"
+          accept=".png,.webp,image/png,image/webp"
           className="hidden"
           onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
         />
@@ -137,9 +137,12 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [logoUrl, setLogoUrl] = useState<string[]>(defaultValues?.logo_url ? [defaultValues.logo_url] : []);
   const [faviconUrl, setFaviconUrl] = useState(defaultValues?.favicon_url ?? "");
-  const [bgColor, setBgColor] = useState((defaultValues as any)?.bg_color ?? "#ffffff");
-  const [fontColor, setFontColor] = useState((defaultValues as any)?.font_color ?? "#111827");
-  const [fontFamily, setFontFamily] = useState((defaultValues as any)?.font_family ?? "default");
+
+  const homepage = defaultValues?.homepage_config as HomepageConfig | null;
+
+  const [bgColor, setBgColor] = useState(homepage?.bg_color ?? "#ffffff");
+  const [fontColor, setFontColor] = useState(homepage?.font_color ?? "#111827");
+  const [fontFamily, setFontFamily] = useState(homepage?.font_family ?? "default");
 
   useEffect(() => {
     const id = "admin-font-preview-style";
@@ -153,7 +156,6 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
 
   const [taxMode, setTaxMode] = useState(defaultValues?.tax_mode ?? "none");
 
-  const homepage = defaultValues?.homepage_config as HomepageConfig | null;
   const nav = defaultValues?.nav_config as NavConfig | null;
   const footer = defaultValues?.footer_config as FooterConfig | null;
   const contact = defaultValues?.contact_info as ContactInfo | null;
@@ -181,9 +183,6 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
       meta_description: g("meta_description") || undefined,
       logo_url: logoUrl[0] ?? undefined,
       favicon_url: faviconUrl || undefined,
-      bg_color: bgColor,
-      font_color: fontColor,
-      font_family: fontFamily,
       tax_mode: taxMode as "stripe" | "flat_rate" | "none",
       tax_flat_rate: taxMode === "flat_rate" ? parseFloat(g("tax_flat_rate")) : undefined,
       homepage_config: {
@@ -195,6 +194,9 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         featured_product_ids: featuredProducts,
         featured_category_ids: featuredCategories,
         banners: [],
+        bg_color: bgColor,
+        font_color: fontColor,
+        font_family: fontFamily,
       },
       nav_config: { items: navItems.filter((i) => i.label && i.link) },
       footer_config: {

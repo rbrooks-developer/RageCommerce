@@ -29,10 +29,11 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const settings = await getSettings();
-  const bgColor     = (settings as any)?.bg_color    ?? "#ffffff";
-  const fontColor   = (settings as any)?.font_color  ?? "#111827";
-  const fontFamily  = (settings as any)?.font_family ?? "default";
-  const faviconUrl  = settings?.favicon_url ?? null;
+  const homepage   = settings?.homepage_config as import("@/types").HomepageConfig | null;
+  const bgColor    = homepage?.bg_color    ?? "#ffffff";
+  const fontColor  = homepage?.font_color  ?? "#111827";
+  const fontFamily = homepage?.font_family ?? "default";
+  const faviconUrl = settings?.favicon_url ?? null;
 
   const isGoogleFont   = GOOGLE_FONT_FAMILIES.includes(fontFamily);
   const googleFontUrl  = isGoogleFont

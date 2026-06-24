@@ -4,7 +4,7 @@ import { Footer } from "@/components/storefront/Footer";
 import { CartProvider } from "@/lib/cart/store";
 import { getSettings } from "@/lib/data/settings";
 import { createClient } from "@/lib/supabase/server";
-import type { NavConfig, FooterConfig, ContactInfo } from "@/types";
+import type { NavConfig, FooterConfig, ContactInfo, HomepageConfig } from "@/types";
 
 export const metadata: Metadata = {};
 
@@ -17,8 +17,9 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         .data as { role: string } | null)?.role === "admin"
     : false;
 
-  const bgColor = (settings as any)?.bg_color ?? "#ffffff";
-  const fontColor = (settings as any)?.font_color ?? "#111827";
+  const homepage = settings?.homepage_config as HomepageConfig | null;
+  const bgColor = homepage?.bg_color ?? "#ffffff";
+  const fontColor = homepage?.font_color ?? "#111827";
 
   return (
     <CartProvider>

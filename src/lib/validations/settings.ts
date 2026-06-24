@@ -29,9 +29,6 @@ export const siteSettingsSchema = z.object({
   meta_description: z.string().max(160).nullable().optional(),
   logo_url: z.string().url().nullable().optional(),
   favicon_url: z.string().url().nullable().optional(),
-  bg_color: hexColor.default("#ffffff"),
-  font_color: hexColor.default("#111827"),
-  font_family: z.string().default("default"),
   tax_mode: z.enum(["stripe", "flat_rate", "none"]),
   tax_flat_rate: z.number().min(0).max(1).nullable().optional(),
   homepage_config: z.object({
@@ -43,6 +40,9 @@ export const siteSettingsSchema = z.object({
     featured_product_ids: z.array(z.string().uuid()),
     featured_category_ids: z.array(z.string().uuid()),
     banners: z.array(bannerSchema),
+    bg_color: hexColor.default("#ffffff"),
+    font_color: hexColor.default("#111827"),
+    font_family: z.string().default("default"),
   }),
   nav_config: z.object({
     items: z.array(navItemSchema),

@@ -56,6 +56,9 @@ export type HomepageConfig = {
   featured_product_ids: string[];
   featured_category_ids: string[];
   banners: { text: string; link: string | null; bg_color: string }[];
+  bg_color?: string;
+  font_color?: string;
+  font_family?: string;
 };
 
 export type NavConfig = {
