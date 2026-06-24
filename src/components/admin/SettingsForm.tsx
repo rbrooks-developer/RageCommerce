@@ -211,7 +211,6 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
       contact_info: {
         email: g("contact_email") || undefined,
         phone: g("contact_phone") || undefined,
-        address: g("contact_address") || undefined,
       },
       shipping_countries: shippingCountries,
       store_address: {
@@ -398,7 +397,6 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
           <div><Label htmlFor="contact_email">Email</Label><Input id="contact_email" name="contact_email" type="email" defaultValue={contact?.email ?? ""} /></div>
           <div><Label htmlFor="contact_phone">Phone</Label><Input id="contact_phone" name="contact_phone" defaultValue={contact?.phone ?? ""} /></div>
         </div>
-        <div><Label htmlFor="contact_address">Address</Label><Textarea id="contact_address" name="contact_address" rows={2} defaultValue={contact?.address ?? ""} /></div>
       </Section>
 
       <Section title="Store Address (for EasyPost shipping rates)">

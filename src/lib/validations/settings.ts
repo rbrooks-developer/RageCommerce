@@ -58,7 +58,6 @@ export const siteSettingsSchema = z.object({
   contact_info: z.object({
     email: z.string().email().nullable().optional(),
     phone: z.string().nullable().optional(),
-    address: z.string().nullable().optional(),
   }),
   shipping_countries: z.array(z.string()).min(1, "Select at least one shipping country"),
   store_address: z.object({

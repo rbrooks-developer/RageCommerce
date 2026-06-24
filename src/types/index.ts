@@ -77,7 +77,6 @@ export type FooterConfig = {
 export type ContactInfo = {
   email: string | null;
   phone: string | null;
-  address: string | null;
 };
 
 export type UserAddress = {
