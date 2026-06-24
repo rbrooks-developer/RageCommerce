@@ -140,6 +140,21 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [bgColor, setBgColor] = useState((defaultValues as any)?.bg_color ?? "#ffffff");
   const [fontColor, setFontColor] = useState((defaultValues as any)?.font_color ?? "#111827");
   const [fontFamily, setFontFamily] = useState((defaultValues as any)?.font_family ?? "default");
+
+  useEffect(() => {
+    if (!fontFamily || fontFamily === "default") return;
+    const url = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}:wght@400;700&display=swap`;
+    const existing = document.getElementById("admin-font-preview-link") as HTMLLinkElement | null;
+    if (existing) {
+      existing.href = url;
+    } else {
+      const link = document.createElement("link");
+      link.id = "admin-font-preview-link";
+      link.rel = "stylesheet";
+      link.href = url;
+      document.head.appendChild(link);
+    }
+  }, [fontFamily]);
   const [taxMode, setTaxMode] = useState(defaultValues?.tax_mode ?? "none");
 
   const homepage = defaultValues?.homepage_config as HomepageConfig | null;
@@ -301,6 +316,12 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
               <option value="Kalam">Kalam</option>
             </optgroup>
           </select>
+          <p
+            className="mt-2 rounded border border-gray-200 bg-gray-50 px-3 py-2 text-base text-gray-800"
+            style={{ fontFamily: fontFamily !== "default" ? `'${fontFamily}', sans-serif` : undefined }}
+          >
+            The quick brown fox jumps over the lazy dog
+          </p>
         </div>
       </Section>
 
