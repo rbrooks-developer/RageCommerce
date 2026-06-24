@@ -8,28 +8,32 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "My Store",
-    template: "%s | My Store",
-  },
-  description: "Welcome to our store.",
-};
-
 const GOOGLE_FONT_FAMILIES = [
-  // Sans-serif
   "Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins",
   "Raleway", "Oswald", "Nunito", "DM Sans", "Josefin Sans", "Outfit",
   "Urbanist", "Plus Jakarta Sans", "Figtree", "Mulish", "Quicksand",
-  // Serif
   "Playfair Display", "Merriweather", "PT Serif", "Source Sans 3",
   "Lora", "Crimson Text", "EB Garamond", "Libre Baskerville",
-  // Comic & Display
   "Bangers", "Comic Neue", "Permanent Marker", "Boogaloo", "Fredoka One",
   "Pacifico", "Caveat", "Patrick Hand", "Indie Flower", "Shadows Into Light",
   "Architects Daughter", "Kalam", "Amatic SC", "Creepster", "Lilita One",
   "Titan One", "Righteous", "Russo One", "Bebas Neue", "Press Start 2P",
 ];
+
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSettings();
+  const faviconUrl = settings?.favicon_url;
+  return {
+    title: {
+      default: settings?.site_title ?? "My Store",
+      template: `%s | ${settings?.site_title ?? "My Store"}`,
+    },
+    description: settings?.meta_description ?? "Welcome to our store.",
+    icons: {
+      icon: faviconUrl ?? "/favicon.ico",
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -40,7 +44,6 @@ export default async function RootLayout({
   const bgColor = (settings as any)?.bg_color ?? "#ffffff";
   const fontColor = (settings as any)?.font_color ?? "#111827";
   const fontFamily = (settings as any)?.font_family ?? "default";
-  const faviconUrl = settings?.favicon_url ?? null;
 
   const isGoogleFont = GOOGLE_FONT_FAMILIES.includes(fontFamily);
   const googleFontUrl = isGoogleFont
@@ -54,7 +57,6 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       <head>
-        {faviconUrl && <link rel="icon" href={faviconUrl} />}
         {googleFontUrl && (
           <>
             <link rel="preconnect" href="https://fonts.googleapis.com" />
