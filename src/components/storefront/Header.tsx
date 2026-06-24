@@ -17,6 +17,11 @@ interface HeaderProps {
   fontColor?: string;
 }
 
+// Bare anchors like "#services" become "/#services" so they always target the homepage
+function resolveNavHref(link: string) {
+  return link.startsWith("#") ? `/${link}` : link;
+}
+
 export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = false, bgColor = "#ffffff", fontColor = "#111827" }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { itemCount } = useCart();
@@ -42,7 +47,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
             {navItems.map((item) => (
               <Link
                 key={item.link}
-                href={item.link}
+                href={resolveNavHref(item.link)}
                 className="text-sm font-medium transition-opacity hover:opacity-70"
                 style={{ color: fontColor }}
               >
@@ -111,7 +116,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
           {navItems.map((item) => (
             <Link
               key={item.link}
-              href={item.link}
+              href={resolveNavHref(item.link)}
               onClick={() => setMenuOpen(false)}
               className="py-2.5 text-sm font-medium transition-opacity hover:opacity-70"
               style={{ color: fontColor }}
