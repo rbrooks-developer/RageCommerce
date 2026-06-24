@@ -1,12 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/data/settings";
 import { ProductCard } from "@/components/storefront/ProductCard";
-import Link from "next/link";
+import { CategorySidebar } from "@/components/storefront/CategorySidebar";
 import type { Metadata } from "next";
-import type { Product, Category } from "@/types";
+import type { Product, Category, HomepageConfig } from "@/types";
 
 type ProductRow = Pick<Product, "id" | "slug" | "name" | "price" | "images"> & { category_id: string | null };
-type CategoryRow = Pick<Category, "id" | "slug" | "name">;
+type CategoryRow = Pick<Category, "id" | "slug" | "name"> & { parent_id: string | null };
+
+/** Collects a category's ID plus all descendant IDs (recursive). */
+function collectIds(rootId: string, all: CategoryRow[]): string[] {
+  const children = all.filter((c) => c.parent_id === rootId);
+  return [rootId, ...children.flatMap((c) => collectIds(c.id, all))];
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();
@@ -21,61 +27,54 @@ export default async function ProductsPage({
   const { category } = await searchParams;
   const supabase = await createClient();
 
-  const [productsRes, categoriesRes] = await Promise.all([
+  const [productsRes, categoriesRes, settings] = await Promise.all([
     supabase
       .from("products")
       .select("id, slug, name, price, images, category_id")
       .eq("is_published", true)
       .order("created_at", { ascending: false }),
-    supabase.from("categories").select("id, slug, name").order("name"),
+    supabase.from("categories").select("id, slug, name, parent_id").order("name"),
+    getSettings(),
   ]);
+
+  const homepage = settings?.homepage_config as HomepageConfig | null;
+  const fontColor = homepage?.font_color ?? "#111827";
+  const bgColor = homepage?.bg_color ?? "#ffffff";
 
   const products = (productsRes.data ?? []) as ProductRow[];
   const categories = (categoriesRes.data ?? []) as CategoryRow[];
 
-  const filtered = category
-    ? products.filter((p) => {
-        const cat = categories.find((c) => c.slug === category);
-        return cat ? p.category_id === cat.id : true;
-      })
+  // When a category is selected, also include products in all descendant categories
+  const selectedCat = category ? categories.find((c) => c.slug === category) : null;
+  const filterIds = selectedCat ? collectIds(selectedCat.id, categories) : null;
+  const filtered = filterIds
+    ? products.filter((p) => p.category_id && filterIds.includes(p.category_id))
     : products;
+
+  const heading = selectedCat?.name ?? "All Products";
 
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col gap-6 md:flex-row">
+      <div className="flex flex-col gap-8 md:flex-row">
         {categories.length > 0 && (
-          <aside className="md:w-48 lg:w-56 shrink-0">
-            <h2 className="text-sm font-semibold text-gray-900 mb-3">Categories</h2>
-            <nav className="flex flex-row flex-wrap gap-2 md:flex-col md:gap-1">
-              <Link
-                href="/products"
-                className={`text-sm px-3 py-1.5 rounded-md ${!category ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"}`}
-              >
-                All
-              </Link>
-              {categories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={`/products?category=${cat.slug}`}
-                  className={`text-sm px-3 py-1.5 rounded-md ${category === cat.slug ? "bg-gray-900 text-white" : "text-gray-600 hover:bg-gray-100"}`}
-                >
-                  {cat.name}
-                </Link>
-              ))}
-            </nav>
+          <aside className="md:w-52 shrink-0">
+            <CategorySidebar
+              categories={categories}
+              activeSlug={category}
+              fontColor={fontColor}
+              bgColor={bgColor}
+            />
           </aside>
         )}
 
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-5">
-            <h1 className="text-xl font-bold text-gray-900">
-              {category ? categories.find((c) => c.slug === category)?.name ?? "Products" : "All Products"}
-            </h1>
-            <span className="text-sm text-gray-400">{filtered.length} products</span>
+            <h1 className="text-xl font-bold">{heading}</h1>
+            <span className="text-sm" style={{ opacity: 0.5 }}>{filtered.length} products</span>
           </div>
 
           {filtered.length === 0 ? (
-            <p className="text-center py-20 text-gray-400">No products found.</p>
+            <p className="text-center py-20" style={{ opacity: 0.4 }}>No products found.</p>
           ) : (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filtered.map((product) => (
