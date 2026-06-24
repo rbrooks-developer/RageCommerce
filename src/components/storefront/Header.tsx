@@ -28,7 +28,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
       style={{ backgroundColor: bgColor, color: fontColor }}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-16 items-center justify-between pt-2">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg" style={{ color: fontColor }}>
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
