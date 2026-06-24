@@ -7,7 +7,7 @@ import { formatPrice } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { SUBDIVISIONS, getSubdivisionLabel, getCountryName } from "@/lib/data/countries";
 import type { Country } from "@/lib/data/countries";
-import type { EasyPostRate, ShippingAddress } from "@/types";
+import type { EasyPostRate, ShippingAddress, UserAddress } from "@/types";
 
 type Step = "address" | "shipping" | "review";
 
@@ -34,7 +34,7 @@ const btnPrimaryStyle: React.CSSProperties = {
 
 const inputClass = "w-full rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-current";
 
-export function CheckoutFlow({ allowedCountries }: { allowedCountries: Country[] }) {
+export function CheckoutFlow({ allowedCountries, defaultShipping }: { allowedCountries: Country[]; defaultShipping: UserAddress | null }) {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
 
@@ -42,8 +42,13 @@ export function CheckoutFlow({ allowedCountries }: { allowedCountries: Country[]
 
   const [step, setStep] = useState<Step>("address");
   const [address, setAddress] = useState<ShippingAddress>({
-    name: "", address_line1: "", address_line2: "",
-    city: "", state: "", zip: "", country: defaultCountry,
+    name: defaultShipping ? `${defaultShipping.first_name} ${defaultShipping.last_name}`.trim() : "",
+    address_line1: defaultShipping?.address_line1 ?? "",
+    address_line2: defaultShipping?.address_line2 ?? "",
+    city: defaultShipping?.city ?? "",
+    state: defaultShipping?.state ?? "",
+    zip: defaultShipping?.zip ?? "",
+    country: defaultShipping?.country ?? defaultCountry,
   });
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ShippingAddress, string>>>({});
   const [rates, setRates] = useState<EasyPostRate[]>([]);
