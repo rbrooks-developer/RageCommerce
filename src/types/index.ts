@@ -62,6 +62,7 @@ export type HomepageConfig = {
   hero_display_name?: string;
   hero_tagline?: string;
   hero_font?: string;
+  service_images?: string[];
 };
 
 export type NavConfig = {

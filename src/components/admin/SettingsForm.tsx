@@ -170,6 +170,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [socialLinks, setSocialLinks] = useState(footer?.social ?? [{ platform: "", url: "" }]);
   const [featuredProducts, setFeaturedProducts] = useState<string[]>(homepage?.featured_product_ids ?? []);
   const [featuredCategories, setFeaturedCategories] = useState<string[]>(homepage?.featured_category_ids ?? []);
+  const [serviceImages, setServiceImages] = useState<string[]>(homepage?.service_images ?? []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -201,6 +202,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         hero_display_name: g("hero_display_name") || undefined,
         hero_tagline: g("hero_tagline") || undefined,
         hero_font: g("hero_font") || "Playfair Display",
+        service_images: serviceImages,
       },
       nav_config: { items: navItems.filter((i) => i.label && i.link) },
       footer_config: {
@@ -358,6 +360,17 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
             <option value="Russo One">Russo One</option>
           </select>
         </div>
+      </Section>
+
+      <Section title="Services">
+        <p className="text-sm text-gray-500">Upload up to 3 images for the Services section on the homepage. With 2–3 images they display side-by-side; a single image shows at natural size centered.</p>
+        <ImageUpload
+          value={serviceImages}
+          onChange={setServiceImages}
+          max={3}
+          bucket="site-assets"
+          pathPrefix="services"
+        />
       </Section>
 
       <Section title="Homepage">

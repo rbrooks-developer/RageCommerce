@@ -46,6 +46,7 @@ export const siteSettingsSchema = z.object({
     hero_display_name: z.string().optional(),
     hero_tagline: z.string().optional(),
     hero_font: z.string().default("Playfair Display"),
+    service_images: z.array(z.string().url()).default([]),
   }),
   nav_config: z.object({
     items: z.array(navItemSchema),

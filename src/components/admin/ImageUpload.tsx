@@ -9,9 +9,11 @@ interface ImageUploadProps {
   value: string[];
   onChange: (urls: string[]) => void;
   max?: number;
+  bucket?: string;
+  pathPrefix?: string;
 }
 
-export function ImageUpload({ value, onChange, max = 10 }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, max = 10, bucket = "product-images", pathPrefix = "products" }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,10 +42,10 @@ export function ImageUpload({ value, onChange, max = 10 }: ImageUploadProps) {
       }
 
       const ext = file.name.split(".").pop();
-      const path = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const path = `${pathPrefix}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("product-images")
+        .from(bucket)
         .upload(path, file);
 
       if (uploadError) {
@@ -51,7 +53,7 @@ export function ImageUpload({ value, onChange, max = 10 }: ImageUploadProps) {
         continue;
       }
 
-      const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
       uploaded.push(data.publicUrl);
     }
 

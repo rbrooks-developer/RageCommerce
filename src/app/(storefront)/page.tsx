@@ -36,6 +36,7 @@ export default async function HomePage() {
   // Gold gradient for the hero title: lighter → base → darker using the admin font color
   const goldGradient = `linear-gradient(180deg, color-mix(in srgb, ${fontColor} 60%, white) 0%, ${fontColor} 50%, color-mix(in srgb, ${fontColor} 70%, black) 100%)`;
 
+  const serviceImages       = homepage?.service_images         ?? [];
   const featuredProductIds  = homepage?.featured_product_ids  ?? [];
   const featuredCategoryIds = homepage?.featured_category_ids ?? [];
 
@@ -165,13 +166,36 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Fallback if no featured content */}
-      {featuredProducts.length === 0 && featuredCategories.length === 0 && (
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <h2 className="text-2xl font-bold">Browse our products</h2>
-          <div className="mt-6">
-            <Link href="/products" className="btn-hero">Shop Now</Link>
-          </div>
+      {/* Services section */}
+      {serviceImages.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+          {serviceImages.length === 1 ? (
+            // Single image: natural size, centered
+            <div className="flex justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={serviceImages[0]}
+                alt="Services"
+                className="max-w-full h-auto block"
+              />
+            </div>
+          ) : (
+            // 2–3 images: equal-width columns, proportionally scaled to fit
+            <div
+              className="grid gap-6"
+              style={{ gridTemplateColumns: `repeat(${serviceImages.length}, 1fr)` }}
+            >
+              {serviceImages.map((url, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={i}
+                  src={url}
+                  alt={`Service ${i + 1}`}
+                  className="w-full h-auto block"
+                />
+              ))}
+            </div>
+          )}
         </section>
       )}
     </div>
