@@ -39,15 +39,20 @@ export function AddressForm({ address, addressType, allowedCountries, onClose, o
 
   const selectClass = (hasError?: boolean) =>
     cn(
-      "flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent",
-      hasError && "border-red-500 focus:ring-red-500"
+      "flex h-11 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current focus:border-transparent",
+      hasError && "border-red-500"
     );
+
+  const selectStyle: React.CSSProperties = {
+    backgroundColor: "var(--input-bg, var(--checkout-input-bg, white))",
+    color: "var(--input-text, var(--site-fg, #111827))",
+  };
 
   const typeLabel = addressType === "shipping" ? "Shipping" : "Billing";
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
-      <h3 className="text-sm font-semibold text-gray-900 mb-4">
+    <div className="rounded-lg p-5" style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", backgroundColor: "var(--checkout-section-bg, color-mix(in srgb, var(--site-fg) 5%, var(--site-bg)))" }}>
+      <h3 className="text-sm font-semibold mb-4">
         {address ? `Edit ${typeLabel} Address` : `Add ${typeLabel} Address`}
       </h3>
 
@@ -88,6 +93,7 @@ export function AddressForm({ address, addressType, allowedCountries, onClose, o
             onChange={(e) => setSelectedCountry(e.target.value)}
             required
             className={selectClass()}
+            style={selectStyle}
           >
             {allowedCountries.map((c) => (
               <option key={c.code} value={c.code}>{c.name}</option>
@@ -124,6 +130,7 @@ export function AddressForm({ address, addressType, allowedCountries, onClose, o
                 defaultValue={address?.state ?? ""}
                 required
                 className={selectClass(!!errors?.state?.[0])}
+                style={selectStyle}
               >
                 <option value="" disabled>Select…</option>
                 {subdivisions.map((s) => (

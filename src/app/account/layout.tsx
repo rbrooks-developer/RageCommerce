@@ -33,7 +33,13 @@ export default async function AccountLayout({ children }: { children: React.Reac
         fontColor={fontColor}
       />
       <main className="flex-1">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8">
+        <div
+          className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8"
+          style={{
+            "--input-bg": "var(--checkout-input-bg, color-mix(in srgb, var(--site-fg) 8%, var(--site-bg)))",
+            "--input-text": "var(--site-fg, #111827)",
+          } as React.CSSProperties}
+        >
           {children}
         </div>
       </main>

@@ -13,6 +13,15 @@ import type { Order, UserAddress } from "@/types";
 
 type OrderRow = Pick<Order, "id" | "status" | "total_price" | "created_at" | "tracking_number">;
 
+const panelStyle: React.CSSProperties = {
+  border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)",
+  backgroundColor: "var(--checkout-section-bg, color-mix(in srgb, var(--site-fg) 5%, var(--site-bg)))",
+};
+
+const dividerStyle: React.CSSProperties = {
+  borderColor: "color-mix(in srgb, var(--site-fg) 12%, transparent)",
+};
+
 function SectionHeading({ title, description }: { title: string; description?: string }) {
   return (
     <div className="mb-4">
@@ -44,7 +53,6 @@ export default async function AccountPage() {
 
   if (profileError) console.error("[account] profile SELECT error:", profileError.message);
 
-  // Prefer DB row; fall back to auth metadata (set during signUp) if columns missing or RLS blocked
   const meta = user.user_metadata as Record<string, string | null> | null;
   const profile = {
     first_name: (profileRaw as any)?.first_name ?? meta?.first_name ?? null,
@@ -61,16 +69,11 @@ export default async function AccountPage() {
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">
-            {displayName ?? "My Account"}
-          </h1>
+          <h1 className="text-2xl font-bold">{displayName ?? "My Account"}</h1>
           <p className="text-sm opacity-60 mt-0.5">{user.email}</p>
         </div>
         <form action={logout}>
-          <button
-            type="submit"
-            className="text-sm opacity-70 hover:opacity-100 transition-opacity whitespace-nowrap"
-          >
+          <button type="submit" className="text-sm opacity-70 hover:opacity-100 transition-opacity whitespace-nowrap">
             Sign out
           </button>
         </form>
@@ -79,7 +82,7 @@ export default async function AccountPage() {
       {/* ── Profile ─────────────────────────────────── */}
       <section>
         <SectionHeading title="Profile" description="Your name and contact details." />
-        <div className="rounded-lg border border-gray-200 bg-white text-gray-900 p-5">
+        <div className="rounded-lg p-5" style={panelStyle}>
           <ProfileForm
             firstName={profile?.first_name ?? null}
             lastName={profile?.last_name ?? null}
@@ -91,11 +94,8 @@ export default async function AccountPage() {
 
       {/* ── Addresses ───────────────────────────────── */}
       <section>
-        <SectionHeading
-          title="Saved Addresses"
-          description="Manage your shipping and billing addresses."
-        />
-        <div className="rounded-lg border border-gray-200 bg-white text-gray-900 p-5">
+        <SectionHeading title="Saved Addresses" description="Manage your shipping and billing addresses." />
+        <div className="rounded-lg p-5" style={panelStyle}>
           <AddressManager addresses={addresses} allowedCountries={allowedCountries} />
         </div>
       </section>
@@ -105,11 +105,12 @@ export default async function AccountPage() {
         <SectionHeading title="Order History" />
 
         {orders.length === 0 ? (
-          <div className="rounded-lg border border-gray-200 bg-white text-gray-900 p-12 text-center">
-            <p className="text-gray-400 text-sm mb-4">No orders yet.</p>
+          <div className="rounded-lg p-12 text-center" style={panelStyle}>
+            <p className="text-sm mb-4" style={{ opacity: 0.4 }}>No orders yet.</p>
             <Link
               href="/products"
-              className="inline-block rounded-md bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-gray-700 transition-colors"
+              className="inline-block rounded-md px-5 py-2.5 text-sm font-semibold transition-opacity hover:opacity-80"
+              style={{ backgroundColor: "var(--site-fg)", color: "var(--site-bg)" }}
             >
               Start Shopping
             </Link>
@@ -122,24 +123,21 @@ export default async function AccountPage() {
                 <Link
                   key={order.id}
                   href={`/account/orders/${order.id}`}
-                  className="block rounded-lg border border-gray-200 bg-white text-gray-900 p-4 hover:border-gray-300 transition-colors"
+                  className="block rounded-lg p-4 transition-opacity hover:opacity-80"
+                  style={panelStyle}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-mono text-sm font-medium text-gray-900">
-                        #{order.id.slice(0, 8).toUpperCase()}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">{formatDate(order.created_at)}</p>
+                      <p className="font-mono text-sm font-medium">#{order.id.slice(0, 8).toUpperCase()}</p>
+                      <p className="text-xs mt-0.5" style={{ opacity: 0.45 }}>{formatDate(order.created_at)}</p>
                     </div>
                     <div className="text-right shrink-0">
                       <OrderStatusBadge status={order.status} />
-                      <p className="text-sm font-semibold text-gray-900 mt-1">
-                        {formatPrice(Number(order.total_price) * 100)}
-                      </p>
+                      <p className="text-sm font-semibold mt-1">{formatPrice(Number(order.total_price) * 100)}</p>
                     </div>
                   </div>
                   {order.tracking_number && (
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs mt-2" style={{ opacity: 0.45 }}>
                       Tracking: <span className="font-mono">{order.tracking_number}</span>
                     </p>
                   )}
@@ -148,34 +146,28 @@ export default async function AccountPage() {
             </div>
 
             {/* Desktop */}
-            <div className="hidden md:block rounded-lg border border-gray-200 bg-white text-gray-900 overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50 text-gray-500">
-                  <tr>
-                    <th className="px-5 py-3 text-left font-medium">Order</th>
-                    <th className="px-5 py-3 text-left font-medium">Date</th>
-                    <th className="px-5 py-3 text-left font-medium">Status</th>
-                    <th className="px-5 py-3 text-left font-medium">Total</th>
-                    <th className="px-5 py-3 text-left font-medium">Tracking</th>
+            <div className="hidden md:block rounded-lg overflow-hidden" style={panelStyle}>
+              <table className="min-w-full text-sm" style={{ borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ backgroundColor: "color-mix(in srgb, var(--site-fg) 10%, var(--checkout-section-bg, var(--site-bg)))", borderBottom: "1px solid color-mix(in srgb, var(--site-fg) 15%, transparent)" }}>
+                    <th className="px-5 py-3 text-left font-medium" style={{ opacity: 0.6 }}>Order</th>
+                    <th className="px-5 py-3 text-left font-medium" style={{ opacity: 0.6 }}>Date</th>
+                    <th className="px-5 py-3 text-left font-medium" style={{ opacity: 0.6 }}>Status</th>
+                    <th className="px-5 py-3 text-left font-medium" style={{ opacity: 0.6 }}>Total</th>
+                    <th className="px-5 py-3 text-left font-medium" style={{ opacity: 0.6 }}>Tracking</th>
                     <th className="px-5 py-3" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="px-5 py-3 font-mono text-xs font-medium text-gray-900">
-                        #{order.id.slice(0, 8).toUpperCase()}
-                      </td>
-                      <td className="px-5 py-3 text-gray-500 text-xs">{formatDate(order.created_at)}</td>
+                    <tr key={order.id} style={{ borderBottom: "1px solid color-mix(in srgb, var(--site-fg) 10%, transparent)" }}>
+                      <td className="px-5 py-3 font-mono text-xs font-medium">#{order.id.slice(0, 8).toUpperCase()}</td>
+                      <td className="px-5 py-3 text-xs" style={{ opacity: 0.5 }}>{formatDate(order.created_at)}</td>
                       <td className="px-5 py-3"><OrderStatusBadge status={order.status} /></td>
-                      <td className="px-5 py-3 font-medium text-gray-900">
-                        {formatPrice(Number(order.total_price) * 100)}
-                      </td>
-                      <td className="px-5 py-3 font-mono text-xs text-gray-500">
-                        {order.tracking_number ?? "—"}
-                      </td>
+                      <td className="px-5 py-3 font-medium">{formatPrice(Number(order.total_price) * 100)}</td>
+                      <td className="px-5 py-3 font-mono text-xs" style={{ opacity: 0.5 }}>{order.tracking_number ?? "—"}</td>
                       <td className="px-5 py-3 text-right">
-                        <Link href={`/account/orders/${order.id}`} className="text-blue-600 hover:underline text-xs">
+                        <Link href={`/account/orders/${order.id}`} className="text-xs underline underline-offset-2 transition-opacity hover:opacity-70" style={{ opacity: 0.6 }}>
                           View
                         </Link>
                       </td>
@@ -191,7 +183,7 @@ export default async function AccountPage() {
       {/* ── Security ────────────────────────────────── */}
       <section>
         <SectionHeading title="Security" description="Update your password." />
-        <div className="rounded-lg border border-gray-200 bg-white text-gray-900 p-5">
+        <div className="rounded-lg p-5" style={panelStyle}>
           <PasswordForm />
         </div>
       </section>
