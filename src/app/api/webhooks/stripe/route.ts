@@ -68,18 +68,24 @@ export async function POST(request: NextRequest) {
 
   // Decrement inventory
   for (const item of orderItems) {
-    await supabase.rpc("decrement_inventory", {
+    const { error: rpcError } = await supabase.rpc("decrement_inventory", {
       product_id: item.product_id,
       amount: item.quantity,
-    }).then(({ error }) => {
-      if (error) {
-        // Fallback: manual update
-        return supabase
-          .from("products")
-          .update({ inventory: 0 })
-          .eq("id", item.product_id);
-      }
     });
+    if (rpcError) {
+      console.error(`decrement_inventory failed for ${item.product_id}:`, rpcError.message);
+      // Fallback: fetch current inventory and subtract manually
+      const { data: prod } = await supabase
+        .from("products")
+        .select("inventory")
+        .eq("id", item.product_id)
+        .maybeSingle();
+      const current = (prod as { inventory: number } | null)?.inventory ?? 0;
+      await supabase
+        .from("products")
+        .update({ inventory: Math.max(0, current - item.quantity) })
+        .eq("id", item.product_id);
+    }
   }
 
   // Get customer email
