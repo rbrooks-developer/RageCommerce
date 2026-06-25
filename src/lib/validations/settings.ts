@@ -49,6 +49,8 @@ export const siteSettingsSchema = z.object({
     service_images: z.array(z.string().url()).default([]),
     font_gradient_enabled: z.boolean().default(false),
     og_image_url: z.string().url().nullable().optional(),
+    checkout_section_color: hexColor.optional(),
+    checkout_textbox_color: hexColor.optional(),
   }),
   nav_config: z.object({
     items: z.array(navItemSchema),

@@ -144,6 +144,8 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [fontColor, setFontColor] = useState(homepage?.font_color ?? "#111827");
   const [fontFamily, setFontFamily] = useState(homepage?.font_family ?? "default");
   const [fontGradient, setFontGradient] = useState(homepage?.font_gradient_enabled ?? false);
+  const [checkoutSectionColor, setCheckoutSectionColor] = useState(homepage?.checkout_section_color ?? "#1a1a1a");
+  const [checkoutTextboxColor, setCheckoutTextboxColor] = useState(homepage?.checkout_textbox_color ?? "#2a2a2a");
 
   useEffect(() => {
     const id = "admin-font-preview-link";
@@ -207,6 +209,8 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         hero_font: g("hero_font") || "Playfair Display",
         service_images: serviceImages,
         og_image_url: ogImageUrl[0] ?? null,
+        checkout_section_color: checkoutSectionColor,
+        checkout_textbox_color: checkoutTextboxColor,
       },
       nav_config: { items: navItems.filter((i) => i.label && i.link) },
       footer_config: {
@@ -394,6 +398,15 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
           bucket="site-assets"
           pathPrefix="services"
         />
+      </Section>
+
+      <Section title="Cart / Checkout">
+        <p className="text-sm text-gray-500">Colors for the cart, checkout, and account pages.</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <ColorPicker id="checkout_section_color" label="Section Color" value={checkoutSectionColor} onChange={setCheckoutSectionColor} />
+          <ColorPicker id="checkout_textbox_color" label="Textbox Color" value={checkoutTextboxColor} onChange={setCheckoutTextboxColor} />
+        </div>
+        <p className="text-xs text-gray-400">Section Color = background of panels/cards. Textbox Color = background of input fields and dropdowns.</p>
       </Section>
 
       <Section title="Homepage">

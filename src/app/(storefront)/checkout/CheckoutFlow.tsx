@@ -13,11 +13,11 @@ type Step = "address" | "shipping" | "review";
 
 const panelStyle: React.CSSProperties = {
   border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)",
-  backgroundColor: "color-mix(in srgb, var(--site-fg) 5%, var(--site-bg))",
+  backgroundColor: "var(--checkout-section-bg, color-mix(in srgb, var(--site-fg) 5%, var(--site-bg)))",
 };
 
 const inputStyle: React.CSSProperties = {
-  backgroundColor: "color-mix(in srgb, var(--site-fg) 8%, var(--site-bg))",
+  backgroundColor: "var(--checkout-input-bg, color-mix(in srgb, var(--site-fg) 8%, var(--site-bg)))",
   color: "var(--site-fg)",
   border: "1px solid color-mix(in srgb, var(--site-fg) 25%, transparent)",
 };

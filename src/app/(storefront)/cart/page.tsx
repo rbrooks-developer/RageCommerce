@@ -36,7 +36,7 @@ export default function CartPage() {
             <div
               key={item.productId}
               className="flex gap-4 rounded-lg p-4"
-              style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", backgroundColor: "color-mix(in srgb, var(--site-fg) 5%, var(--site-bg))" }}
+              style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", backgroundColor: "var(--checkout-section-bg, color-mix(in srgb, var(--site-fg) 5%, var(--site-bg)))" }}
             >
               {item.image ? (
                 <div className="relative h-20 w-20 shrink-0 rounded-md overflow-hidden">
@@ -95,7 +95,7 @@ export default function CartPage() {
         <div className="lg:w-72 shrink-0">
           <div
             className="rounded-lg p-6 space-y-4 sticky top-24"
-            style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", backgroundColor: "color-mix(in srgb, var(--site-fg) 5%, var(--site-bg))" }}
+            style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", backgroundColor: "var(--checkout-section-bg, color-mix(in srgb, var(--site-fg) 5%, var(--site-bg)))" }}
           >
             <h2 className="font-semibold">Order Summary</h2>
 

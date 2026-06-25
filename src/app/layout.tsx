@@ -42,6 +42,8 @@ export default async function RootLayout({
   const heroFont          = homepage?.hero_font             ?? "Playfair Display";
   const fontGradient      = homepage?.font_gradient_enabled ?? false;
   const faviconUrl        = settings?.favicon_url           ?? null;
+  const checkoutSectionColor = homepage?.checkout_section_color ?? null;
+  const checkoutTextboxColor = homepage?.checkout_textbox_color ?? null;
 
   // Same gradient formula as the hero: light → base → dark, driven by fontColor
   const siteGradient = `linear-gradient(180deg, color-mix(in srgb, ${fontColor} 60%, white) 0%, ${fontColor} 50%, color-mix(in srgb, ${fontColor} 70%, black) 100%)`;
@@ -81,6 +83,8 @@ export default async function RootLayout({
           '--site-fg': fontColor,
           '--site-bg': bgColor,
           '--site-fg-gradient': siteGradient,
+          ...(checkoutSectionColor ? { '--checkout-section-bg': checkoutSectionColor } : {}),
+          ...(checkoutTextboxColor ? { '--checkout-input-bg': checkoutTextboxColor } : {}),
         } as React.CSSProperties}
       >
         {children}

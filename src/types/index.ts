@@ -65,6 +65,8 @@ export type HomepageConfig = {
   service_images?: string[];
   font_gradient_enabled?: boolean;
   og_image_url?: string | null;
+  checkout_section_color?: string;
+  checkout_textbox_color?: string;
 };
 
 export type NavConfig = {
