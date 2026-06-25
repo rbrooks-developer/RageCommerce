@@ -69,7 +69,7 @@ export default async function AccountPage() {
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">My Account</h1>
         <form action={logout}>
-          <Button type="submit" size="sm" style={{ backgroundColor: "var(--site-fg)", color: "var(--site-bg)" }}>Sign Out</Button>
+          <Button type="submit" size="sm" className="font-semibold" style={{ backgroundColor: "var(--site-fg)", color: "var(--site-bg)", fontFamily: "inherit" }}>Sign Out</Button>
         </form>
       </div>
 
