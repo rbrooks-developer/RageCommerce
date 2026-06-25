@@ -63,9 +63,10 @@ export function ProfileForm({ firstName, lastName, phone, email }: ProfileFormPr
           id="profile_email"
           value={email}
           disabled
-          className="bg-gray-50 text-gray-500 cursor-not-allowed"
+          className="cursor-not-allowed"
+          style={{ opacity: 0.5 }}
         />
-        <p className="mt-1 text-xs text-gray-400">Email cannot be changed here.</p>
+        <p className="mt-1 text-xs" style={{ opacity: 0.45 }}>Email cannot be changed here.</p>
       </div>
 
       <div>

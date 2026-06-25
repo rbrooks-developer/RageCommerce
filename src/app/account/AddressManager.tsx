@@ -44,15 +44,22 @@ function AddressSection({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">{title}</h3>
+      <h3 className="text-sm font-semibold uppercase tracking-wide" style={{ opacity: 0.6 }}>{title}</h3>
 
       {addresses.length === 0 && !showForm && (
-        <p className="text-sm text-gray-400">No {type} addresses saved yet.</p>
+        <p className="text-sm" style={{ opacity: 0.4 }}>No {type} addresses saved yet.</p>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {addresses.map((addr) => (
-          <div key={addr.id} className="relative rounded-lg p-4 flex flex-col gap-3" style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", backgroundColor: "var(--checkout-input-bg, color-mix(in srgb, var(--site-fg) 8%, var(--site-bg)))" }}>
+          <div
+            key={addr.id}
+            className="relative rounded-lg p-4 flex flex-col gap-3"
+            style={{
+              border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)",
+              backgroundColor: "var(--checkout-input-bg, color-mix(in srgb, var(--site-fg) 8%, var(--site-bg)))",
+            }}
+          >
             {/* Header */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">
@@ -65,7 +72,8 @@ function AddressSection({
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => { setShowForm(false); setEditingId(addr.id); setConfirmDeleteId(null); }}
-                  className="p-1.5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                  className="p-1.5 rounded transition-opacity hover:opacity-70"
+                  style={{ opacity: 0.45 }}
                   aria-label="Edit address"
                 >
                   <Pencil className="h-3.5 w-3.5" />
@@ -73,18 +81,28 @@ function AddressSection({
                 {!addr[defaultField] && (
                   confirmDeleteId === addr.id ? (
                     <span className="flex items-center gap-1">
-                      <button onClick={() => { onDelete(addr.id); setConfirmDeleteId(null); }} disabled={isPending}
-                        className="text-xs font-medium text-red-600 hover:text-red-700 px-1">
+                      <button
+                        onClick={() => { onDelete(addr.id); setConfirmDeleteId(null); }}
+                        disabled={isPending}
+                        className="text-xs font-medium text-red-600 hover:text-red-700 px-1"
+                      >
                         {isPending ? "…" : "Delete?"}
                       </button>
-                      <button onClick={() => setConfirmDeleteId(null)} className="text-xs text-gray-400 hover:text-gray-600 px-1">
+                      <button
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="text-xs px-1 transition-opacity hover:opacity-70"
+                        style={{ opacity: 0.45 }}
+                      >
                         Cancel
                       </button>
                     </span>
                   ) : (
-                    <button onClick={() => setConfirmDeleteId(addr.id)}
-                      className="p-1.5 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                      aria-label="Delete address">
+                    <button
+                      onClick={() => setConfirmDeleteId(addr.id)}
+                      className="p-1.5 rounded transition-colors hover:text-red-600"
+                      style={{ opacity: 0.45 }}
+                      aria-label="Delete address"
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   )
@@ -93,14 +111,14 @@ function AddressSection({
             </div>
 
             {/* Address details */}
-            <div className="text-sm text-gray-700 leading-relaxed">
+            <div className="text-sm leading-relaxed">
               <p className="font-medium">{addr.first_name} {addr.last_name}</p>
-              {addr.company && <p className="text-gray-500">{addr.company}</p>}
+              {addr.company && <p style={{ opacity: 0.55 }}>{addr.company}</p>}
               <p>{addr.address_line1}</p>
               {addr.address_line2 && <p>{addr.address_line2}</p>}
               <p>{addr.city}{addr.state ? `, ${addr.state}` : ""} {addr.zip}</p>
-              {addr.country !== "US" && <p className="text-gray-500">{getCountryName(addr.country)}</p>}
-              {addr.phone && <p className="text-gray-500 mt-0.5">{addr.phone}</p>}
+              {addr.country !== "US" && <p style={{ opacity: 0.55 }}>{getCountryName(addr.country)}</p>}
+              {addr.phone && <p className="mt-0.5" style={{ opacity: 0.55 }}>{addr.phone}</p>}
             </div>
 
             {/* Make Default link */}
@@ -108,7 +126,8 @@ function AddressSection({
               <button
                 onClick={() => onSetDefault(addr.id, type)}
                 disabled={isPending}
-                className="self-start text-xs text-gray-400 hover:text-gray-700 underline underline-offset-2 transition-colors disabled:opacity-50"
+                className="self-start text-xs underline underline-offset-2 transition-opacity hover:opacity-100 disabled:opacity-30"
+                style={{ opacity: 0.5 }}
               >
                 Make Default
               </button>
@@ -142,7 +161,8 @@ function AddressSection({
       {!showForm && !editingId && (
         <button
           onClick={() => { setShowForm(true); setConfirmDeleteId(null); }}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm font-medium transition-opacity hover:opacity-100"
+          style={{ opacity: 0.55 }}
         >
           <Plus className="h-4 w-4" />
           Add {type === "shipping" ? "Shipping" : "Billing"} Address
