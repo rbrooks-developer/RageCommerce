@@ -162,10 +162,10 @@ export function AddressForm({ address, addressType, allowedCountries, onClose, o
         </div>
 
         <div className="flex gap-3 pt-1">
-          <Button type="submit" loading={isPending}>
+          <Button type="submit" loading={isPending} className="font-semibold" style={{ backgroundColor: "var(--site-fg)", color: "var(--site-bg)", fontFamily: "inherit" }}>
             {address ? "Save Changes" : `Add ${typeLabel} Address`}
           </Button>
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={onClose} className="font-semibold" style={{ fontFamily: "inherit", borderColor: "color-mix(in srgb, var(--site-fg) 30%, transparent)", color: "var(--site-fg)" }}>Cancel</Button>
         </div>
       </form>
     </div>
