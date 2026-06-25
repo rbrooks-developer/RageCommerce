@@ -88,14 +88,22 @@ export async function POST(request: NextRequest) {
       }
 
       // Send confirmation email
-      const { data: profileRaw } = await supabase
+      console.log(`[webhook] order ${orderId} paid — looking up email for user ${order.user_id}`);
+
+      const { data: profileRaw, error: profileErr } = await supabase
         .from("profiles")
         .select("email")
         .eq("id", order.user_id)
         .maybeSingle();
 
+      if (profileErr) console.error("[webhook] profile lookup error:", profileErr.message);
+      console.log("[webhook] profile email:", (profileRaw as any)?.email ?? "(none)");
+      console.log("[webhook] session customer_email:", session.customer_email ?? "(none)");
+
       const customerEmail =
         (profileRaw as { email: string } | null)?.email ?? session.customer_email ?? null;
+
+      console.log("[webhook] resolved customerEmail:", customerEmail ?? "(null — skipping email)");
 
       if (customerEmail) {
         const settings = await getSettings();
@@ -106,6 +114,7 @@ export async function POST(request: NextRequest) {
           order.shipping_country,
         ].filter(Boolean);
 
+        console.log(`[webhook] sending confirmation email to ${customerEmail}`);
         await sendOrderConfirmation({
           to: customerEmail,
           orderNumber: orderId.slice(0, 8).toUpperCase(),
@@ -121,7 +130,8 @@ export async function POST(request: NextRequest) {
           shippingName: order.shipping_name ?? "",
           shippingAddress: shippingAddressParts.join(", "),
           siteTitle: settings?.site_title ?? "My Store",
-        }).catch((err) => console.error("Failed to send order confirmation email:", err));
+        }).then(() => console.log("[webhook] confirmation email sent successfully"))
+          .catch((err) => console.error("[webhook] failed to send confirmation email:", err.message, err));
       }
 
       break;
