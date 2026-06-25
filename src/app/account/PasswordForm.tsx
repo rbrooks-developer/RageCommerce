@@ -51,7 +51,7 @@ export function PasswordForm() {
         />
       </div>
 
-      <Button type="submit" loading={isPending}>Update Password</Button>
+      <Button type="submit" loading={isPending} style={{ backgroundColor: "var(--site-fg)", color: "var(--site-bg)" }}>Update Password</Button>
     </form>
   );
 }

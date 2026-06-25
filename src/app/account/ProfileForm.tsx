@@ -81,7 +81,7 @@ export function ProfileForm({ firstName, lastName, phone, email }: ProfileFormPr
       </div>
 
       <div>
-        <Button type="submit" loading={isPending}>Save Profile</Button>
+        <Button type="submit" loading={isPending} style={{ backgroundColor: "var(--site-fg)", color: "var(--site-bg)" }}>Save Profile</Button>
       </div>
     </form>
   );
