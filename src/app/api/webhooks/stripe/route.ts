@@ -3,7 +3,7 @@ import { getStripeClient } from "@/lib/stripe/client";
 import { createServiceClient } from "@/lib/supabase/server";
 import { sendOrderConfirmation } from "@/lib/emails/orderConfirmation";
 import { getSettings } from "@/lib/data/settings";
-import type { Order, OrderItem, Product } from "@/types";
+import type { Order, OrderItem } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -24,105 +24,161 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  if (event.type !== "checkout.session.completed") {
-    return Response.json({ received: true });
-  }
-
-  const session = event.data.object as { id: string; metadata?: { order_id?: string }; customer_email?: string | null };
-  const orderId = session.metadata?.order_id;
-
-  if (!orderId) {
-    console.error("No order_id in Stripe session metadata");
-    return Response.json({ error: "Missing order_id" }, { status: 400 });
-  }
-
   const supabase = createServiceClient();
 
-  // Load the order
-  const { data: orderRaw } = await supabase
-    .from("orders")
-    .select("*")
-    .eq("id", orderId)
-    .maybeSingle();
+  switch (event.type) {
+    // ── Payment completed ──────────────────────────────────────────────────
+    case "checkout.session.completed": {
+      const session = event.data.object as {
+        id: string;
+        metadata?: { order_id?: string };
+        customer_email?: string | null;
+      };
+      const orderId = session.metadata?.order_id;
 
-  if (!orderRaw) {
-    console.error("Order not found:", orderId);
-    return Response.json({ error: "Order not found" }, { status: 404 });
-  }
+      if (!orderId) {
+        console.error("checkout.session.completed: no order_id in metadata");
+        break;
+      }
 
-  const order = orderRaw as Order;
-
-  // Update order to paid and save stripe_session_id (belt + suspenders)
-  await supabase
-    .from("orders")
-    .update({ status: "paid", stripe_session_id: session.id })
-    .eq("id", orderId);
-
-  // Load order items with product info
-  const { data: rawItems } = await supabase
-    .from("order_items")
-    .select("*, products(name)")
-    .eq("order_id", orderId);
-
-  const orderItems = (rawItems ?? []) as (OrderItem & { products: { name: string } | null })[];
-
-  // Decrement inventory
-  for (const item of orderItems) {
-    const { error: rpcError } = await supabase.rpc("decrement_inventory", {
-      product_id: item.product_id,
-      amount: item.quantity,
-    });
-    if (rpcError) {
-      console.error(`decrement_inventory failed for ${item.product_id}:`, rpcError.message);
-      // Fallback: fetch current inventory and subtract manually
-      const { data: prod } = await supabase
-        .from("products")
-        .select("inventory")
-        .eq("id", item.product_id)
+      const { data: orderRaw } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("id", orderId)
         .maybeSingle();
-      const current = (prod as { inventory: number } | null)?.inventory ?? 0;
+
+      if (!orderRaw) {
+        console.error("checkout.session.completed: order not found:", orderId);
+        break;
+      }
+
+      const order = orderRaw as Order;
+
       await supabase
-        .from("products")
-        .update({ inventory: Math.max(0, current - item.quantity) })
-        .eq("id", item.product_id);
+        .from("orders")
+        .update({ status: "paid", stripe_session_id: session.id })
+        .eq("id", orderId);
+
+      const { data: rawItems } = await supabase
+        .from("order_items")
+        .select("*, products(name)")
+        .eq("order_id", orderId);
+
+      const orderItems = (rawItems ?? []) as (OrderItem & { products: { name: string } | null })[];
+
+      // Decrement inventory for each item
+      for (const item of orderItems) {
+        const { error: rpcError } = await supabase.rpc("decrement_inventory", {
+          product_id: item.product_id,
+          amount: item.quantity,
+        });
+        if (rpcError) {
+          console.error(`decrement_inventory failed for ${item.product_id}:`, rpcError.message);
+          const { data: prod } = await supabase
+            .from("products")
+            .select("inventory")
+            .eq("id", item.product_id)
+            .maybeSingle();
+          const current = (prod as { inventory: number } | null)?.inventory ?? 0;
+          await supabase
+            .from("products")
+            .update({ inventory: Math.max(0, current - item.quantity) })
+            .eq("id", item.product_id);
+        }
+      }
+
+      // Send confirmation email
+      const { data: profileRaw } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", order.user_id)
+        .maybeSingle();
+
+      const customerEmail =
+        (profileRaw as { email: string } | null)?.email ?? session.customer_email ?? null;
+
+      if (customerEmail) {
+        const settings = await getSettings();
+        const shippingAddressParts = [
+          order.shipping_address_line1,
+          order.shipping_address_line2,
+          `${order.shipping_city}, ${order.shipping_state} ${order.shipping_zip}`,
+          order.shipping_country,
+        ].filter(Boolean);
+
+        await sendOrderConfirmation({
+          to: customerEmail,
+          orderNumber: orderId.slice(0, 8).toUpperCase(),
+          items: orderItems.map((i) => ({
+            name: i.products?.name ?? "Product",
+            quantity: i.quantity,
+            price: Number(i.price),
+          })),
+          subtotal: Number(order.subtotal),
+          shippingCost: Number(order.shipping_cost),
+          taxAmount: Number(order.tax_amount),
+          totalPrice: Number(order.total_price),
+          shippingName: order.shipping_name ?? "",
+          shippingAddress: shippingAddressParts.join(", "),
+          siteTitle: settings?.site_title ?? "My Store",
+        }).catch((err) => console.error("Failed to send order confirmation email:", err));
+      }
+
+      break;
     }
-  }
 
-  // Get customer email
-  const { data: profileRaw } = await supabase
-    .from("profiles")
-    .select("email")
-    .eq("id", order.user_id)
-    .maybeSingle();
+    // ── Checkout abandoned / timed out ────────────────────────────────────
+    case "checkout.session.expired": {
+      const session = event.data.object as { metadata?: { order_id?: string } };
+      const orderId = session.metadata?.order_id;
 
-  const customerEmail = (profileRaw as { email: string } | null)?.email ?? session.customer_email ?? null;
+      if (!orderId) break;
 
-  if (customerEmail) {
-    const settings = await getSettings();
-    const siteTitle = settings?.site_title ?? "My Store";
-    const shippingAddressParts = [
-      order.shipping_address_line1,
-      order.shipping_address_line2,
-      `${order.shipping_city}, ${order.shipping_state} ${order.shipping_zip}`,
-      order.shipping_country,
-    ].filter(Boolean);
+      // Only cancel if still pending — don't touch paid orders
+      await supabase
+        .from("orders")
+        .update({ status: "cancelled" })
+        .eq("id", orderId)
+        .eq("status", "pending");
 
-    await sendOrderConfirmation({
-      to: customerEmail,
-      orderNumber: orderId.slice(0, 8).toUpperCase(),
-      items: orderItems.map((i) => ({
-        name: i.products?.name ?? "Product",
-        quantity: i.quantity,
-        price: Number(i.price),
-      })),
-      subtotal: Number(order.subtotal),
-      shippingCost: Number(order.shipping_cost),
-      taxAmount: Number(order.tax_amount),
-      totalPrice: Number(order.total_price),
-      shippingName: order.shipping_name ?? "",
-      shippingAddress: shippingAddressParts.join(", "),
-      siteTitle,
-    }).catch((err) => console.error("Failed to send order confirmation email:", err));
+      console.log("checkout.session.expired: cancelled order", orderId);
+      break;
+    }
+
+    // ── Refund issued ─────────────────────────────────────────────────────
+    case "charge.refunded": {
+      const charge = event.data.object as {
+        payment_intent?: string | null;
+        amount_refunded: number;
+        amount: number;
+      };
+
+      if (!charge.payment_intent) break;
+
+      // Look up the checkout session for this payment intent to get our order_id
+      const sessions = await stripe.checkout.sessions.list({
+        payment_intent: charge.payment_intent,
+        limit: 1,
+      });
+      const orderId = sessions.data[0]?.metadata?.order_id;
+
+      if (!orderId) {
+        console.error("charge.refunded: no order found for payment_intent", charge.payment_intent);
+        break;
+      }
+
+      const isFullRefund = charge.amount_refunded >= charge.amount;
+      await supabase
+        .from("orders")
+        .update({ status: isFullRefund ? "refunded" : "partially_refunded" })
+        .eq("id", orderId);
+
+      console.log(`charge.refunded: order ${orderId} → ${isFullRefund ? "refunded" : "partially_refunded"}`);
+      break;
+    }
+
+    default:
+      break;
   }
 
   return Response.json({ received: true });

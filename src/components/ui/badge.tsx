@@ -33,6 +33,8 @@ export function OrderStatusBadge({ status }: { status: string }) {
     shipped: "default",
     fulfilled: "success",
     cancelled: "destructive",
+    refunded: "destructive",
+    partially_refunded: "warning",
   };
   return <Badge variant={map[status] ?? "default"}>{status}</Badge>;
 }
