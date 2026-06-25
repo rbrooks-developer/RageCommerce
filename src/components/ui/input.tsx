@@ -12,11 +12,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           className={cn(
-            "flex h-11 w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-11 w-full rounded-md border px-3 py-2 text-sm placeholder:opacity-40 focus:outline-none focus:ring-2 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50",
             error && "border-red-500 focus:ring-red-500",
             className
           )}
-          style={{ backgroundColor: "var(--input-bg, white)", color: "var(--input-text, #111827)", ...(props.style ?? {}) }}
+          style={{
+            backgroundColor: "var(--input-bg, white)",
+            color: "var(--input-text, #111827)",
+            borderColor: error ? undefined : "color-mix(in srgb, var(--site-fg, #111827) 30%, transparent)",
+            ...(props.style ?? {}),
+          }}
           {...props}
         />
         {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
