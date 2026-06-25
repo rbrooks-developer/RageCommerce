@@ -247,24 +247,21 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-8 items-start pb-10">
-      {/* Sticky save button — right column */}
-      <div className="hidden lg:block w-44 shrink-0 sticky top-6">
-        <Button type="submit" size="lg" className="w-full" loading={saving}>Save Settings</Button>
-        {message && (
-          <div className={`mt-3 rounded-md p-3 text-sm ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
-            {message.text}
-          </div>
-        )}
+    <form onSubmit={handleSubmit} className="pb-10">
+      {/* Sticky header: title + save button */}
+      <div className="sticky top-0 z-10 bg-gray-50 flex items-center justify-between gap-4 py-3 mb-5 border-b border-gray-200 -mx-4 md:-mx-6 lg:-mx-8 px-4 md:px-6 lg:px-8">
+        <h1 className="text-2xl font-bold text-gray-900">Site Settings</h1>
+        <div className="flex items-center gap-3">
+          {message && (
+            <span className={`text-sm ${message.type === "success" ? "text-green-700" : "text-red-700"}`}>
+              {message.text}
+            </span>
+          )}
+          <Button type="submit" loading={saving}>Save Settings</Button>
+        </div>
       </div>
 
-      {/* Sections — left column */}
-      <div className="flex-1 min-w-0 space-y-5">
-      {message && (
-        <div className={`lg:hidden rounded-md p-3 text-sm ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
-          {message.text}
-        </div>
-      )}
+      <div className="space-y-5 max-w-3xl">
 
       <Section title="General">
         <div><Label htmlFor="site_title" required>Site Title</Label><Input id="site_title" name="site_title" defaultValue={defaultValues?.site_title ?? ""} required /></div>
@@ -561,7 +558,6 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         )}
       </Section>
 
-        <Button type="submit" size="lg" className="w-full lg:hidden" loading={saving}>Save Settings</Button>
       </div>
     </form>
   );
