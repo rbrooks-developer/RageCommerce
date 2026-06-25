@@ -32,7 +32,7 @@ export function RegisterForm() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Create account</h1>
+        <h1 className="text-2xl font-bold">Create Account</h1>
         <p className="mt-1 text-sm opacity-70">
           Already have an account?{" "}
           <Link href="/login" className="opacity-100 underline underline-offset-2">Sign in</Link>
@@ -92,7 +92,7 @@ export function RegisterForm() {
         </div>
 
         <Button type="submit" size="lg" className="w-full" loading={isPending}>
-          Create account
+          Create Account
         </Button>
       </form>
     </div>
