@@ -62,16 +62,11 @@ export default async function AccountPage() {
   const addresses = (addressesRaw ?? []) as UserAddress[];
   const orders = (ordersRaw ?? []) as OrderRow[];
 
-  const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || null;
-
   return (
     <div className="space-y-10 pb-16">
       {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">{displayName ?? "My Account"}</h1>
-          <p className="text-sm opacity-60 mt-0.5">{user.email}</p>
-        </div>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold">My Account</h1>
         <form action={logout}>
           <button type="submit" className="text-sm opacity-70 hover:opacity-100 transition-opacity whitespace-nowrap">
             Sign out
