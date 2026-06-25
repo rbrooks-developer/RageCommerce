@@ -16,7 +16,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-bold text-gray-900">Site Settings</h1>
+      <h1 className="text-2xl font-bold text-gray-900 sticky top-0 py-2 bg-gray-50 z-10">Site Settings</h1>
       <SettingsForm
         defaultValues={settings}
         products={products ?? []}
