@@ -52,7 +52,7 @@ function AddressSection({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {addresses.map((addr) => (
-          <div key={addr.id} className="relative rounded-lg p-4 flex flex-col gap-3" style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", backgroundColor: "var(--checkout-section-bg, color-mix(in srgb, var(--site-fg) 5%, var(--site-bg)))" }}>
+          <div key={addr.id} className="relative rounded-lg p-4 flex flex-col gap-3" style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", backgroundColor: "var(--checkout-input-bg, color-mix(in srgb, var(--site-fg) 8%, var(--site-bg)))" }}>
             {/* Header */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">
