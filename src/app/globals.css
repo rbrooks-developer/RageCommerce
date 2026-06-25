@@ -46,7 +46,7 @@ body {
 /* Gradient text — applied to text elements when admin enables the gradient toggle.
    Uses background-image (not background shorthand) to avoid clobbering background-color.
    -webkit-text-fill-color: transparent overrides inline color styles in all modern browsers. */
-[data-text-gradient] :is(h1, h2, h3, h4, h5, h6, p, li, label) {
+[data-text-gradient] :is(h1, h2, h3, h4, h5, h6, p, label) {
   background-image: var(--site-fg-gradient);
   -webkit-background-clip: text;
   background-clip: text;
