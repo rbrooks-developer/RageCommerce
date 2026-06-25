@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { sendWelcomeEmail } from "@/lib/emails/welcomeEmail";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -81,12 +80,6 @@ export async function register(_prevState: unknown, formData: FormData) {
       console.error("[register] profile upsert failed:", profileError.message);
     }
   }
-
-  sendWelcomeEmail(
-    email,
-    process.env.NEXT_PUBLIC_SITE_TITLE ?? "My Store",
-    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
-  ).catch((err) => console.error("Failed to send welcome email:", err));
 
   // When email confirmation is disabled Supabase returns a session immediately —
   // redirect the now-logged-in user instead of showing "check your email"
