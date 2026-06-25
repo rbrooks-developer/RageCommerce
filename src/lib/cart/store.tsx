@@ -3,7 +3,8 @@
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import type { CartItem } from "@/types";
 
-const CART_KEY = "ec_cart";
+const cartKey = (userId?: string | null) =>
+  userId ? `ec_cart_${userId}` : "ec_cart_guest";
 
 interface CartContextValue {
   items: CartItem[];
@@ -17,23 +18,29 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({ userId, children }: { userId?: string | null; children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [activeKey, setActiveKey] = useState(() => cartKey(userId));
 
+  // When userId changes (login / logout), reload cart from the correct key
   useEffect(() => {
+    const key = cartKey(userId);
+    setActiveKey(key);
     try {
-      const stored = localStorage.getItem(CART_KEY);
-      if (stored) setItems(JSON.parse(stored));
-    } catch {}
+      const stored = localStorage.getItem(key);
+      setItems(stored ? JSON.parse(stored) : []);
+    } catch {
+      setItems([]);
+    }
     setHydrated(true);
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (hydrated) {
-      localStorage.setItem(CART_KEY, JSON.stringify(items));
+      localStorage.setItem(activeKey, JSON.stringify(items));
     }
-  }, [items, hydrated]);
+  }, [items, hydrated, activeKey]);
 
   const addItem = useCallback((item: CartItem) => {
     setItems((prev) => {

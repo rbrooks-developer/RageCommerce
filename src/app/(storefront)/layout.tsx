@@ -20,7 +20,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
   const fontGradient = homepage?.font_gradient_enabled ?? false;
 
   return (
-    <CartProvider>
+    <CartProvider userId={user?.id}>
       <div {...(fontGradient ? { "data-text-gradient": "true" } : {})} className="min-h-screen flex flex-col">
       <Header
         siteTitle={settings?.site_title ?? "My Store"}

@@ -22,7 +22,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   const fontColor = homepage?.font_color ?? "#111827";
 
   return (
-    <CartProvider>
+    <CartProvider userId={user?.id}>
       <Header
         siteTitle={settings?.site_title ?? "My Store"}
         logoUrl={settings?.logo_url ?? null}
