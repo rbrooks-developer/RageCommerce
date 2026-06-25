@@ -248,7 +248,17 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-8 items-start pb-10">
-      {/* Sections — left column */}
+      {/* Sticky save button — left column */}
+      <div className="hidden lg:flex flex-col gap-3 w-44 shrink-0 sticky top-0">
+        <Button type="submit" size="lg" className="w-full" loading={saving}>Save Settings</Button>
+        {message && (
+          <div className={`rounded-md p-3 text-sm ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+            {message.text}
+          </div>
+        )}
+      </div>
+
+      {/* Sections — right column */}
       <div className="flex-1 min-w-0 space-y-5">
       {message && (
         <div className={`lg:hidden rounded-md p-3 text-sm ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
@@ -554,15 +564,6 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         <Button type="submit" size="lg" className="w-full lg:hidden" loading={saving}>Save Settings</Button>
       </div>
 
-      {/* Sticky save button — right column */}
-      <div className="hidden lg:flex flex-col gap-3 w-44 shrink-0 sticky top-0">
-        <Button type="submit" size="lg" className="w-full" loading={saving}>Save Settings</Button>
-        {message && (
-          <div className={`rounded-md p-3 text-sm ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
-            {message.text}
-          </div>
-        )}
-      </div>
     </form>
   );
 }
