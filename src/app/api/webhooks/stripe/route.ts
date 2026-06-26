@@ -110,6 +110,10 @@ export async function POST(request: NextRequest) {
 
       if (customerEmail) {
         const settings = await getSettings();
+        const homepage = settings?.homepage_config as import("@/types").HomepageConfig | null;
+        const footer   = settings?.footer_config   as import("@/types").FooterConfig   | null;
+        const displayName = homepage?.hero_display_name || footer?.display_name || null;
+
         const shippingAddressParts = [
           order.shipping_address_line1,
           order.shipping_address_line2,
@@ -133,6 +137,7 @@ export async function POST(request: NextRequest) {
           shippingName: order.shipping_name ?? "",
           shippingAddress: shippingAddressParts.join(", "),
           siteTitle: settings?.site_title ?? "My Store",
+          displayName,
         }).then(() => console.log("[webhook] confirmation email sent successfully"))
           .catch((err) => console.error("[webhook] failed to send confirmation email:", err.message, err));
       }

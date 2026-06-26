@@ -17,9 +17,12 @@ interface SendOrderConfirmationOptions {
   shippingName: string;
   shippingAddress: string;
   siteTitle: string;
+  displayName?: string | null;
 }
 
 export async function sendOrderConfirmation(opts: SendOrderConfirmationOptions) {
+  const headerName = opts.displayName ?? opts.siteTitle;
+  const fromField = opts.displayName ? `${opts.displayName} <${FROM_EMAIL}>` : FROM_EMAIL;
   const itemRows = opts.items
     .map(
       (i) => `
@@ -38,7 +41,7 @@ export async function sendOrderConfirmation(opts: SendOrderConfirmationOptions) 
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;margin:0;padding:24px">
   <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb">
     <div style="background:#111827;padding:24px;text-align:center">
-      <h1 style="color:#fff;margin:0;font-size:20px">${opts.siteTitle}</h1>
+      <h1 style="color:#fff;margin:0;font-size:20px">${headerName}</h1>
     </div>
     <div style="padding:32px 24px">
       <h2 style="margin:0 0 8px;font-size:18px;color:#111827">Order Confirmed!</h2>
@@ -85,7 +88,7 @@ export async function sendOrderConfirmation(opts: SendOrderConfirmationOptions) 
 </html>`;
 
   return getResendClient().emails.send({
-    from: FROM_EMAIL,
+    from: fromField,
     to: opts.to,
     subject: `Order Confirmed – #${opts.orderNumber}`,
     html,
