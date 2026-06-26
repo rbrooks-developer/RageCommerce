@@ -67,6 +67,7 @@ export const siteSettingsSchema = z.object({
     email: z.string().email().nullable().optional(),
     phone: z.string().nullable().optional(),
   }),
+  handling_fee: z.number().min(0, "Handling fee cannot be negative").nullable().optional(),
   shipping_countries: z.array(z.string()).min(1, "Select at least one shipping country"),
   store_address: z.object({
     name: z.string().min(1, "Store name is required"),

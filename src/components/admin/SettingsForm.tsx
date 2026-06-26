@@ -225,6 +225,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         email: g("contact_email") || undefined,
         phone: g("contact_phone") || undefined,
       },
+      handling_fee: parseFloat(g("handling_fee")) || 0,
       shipping_countries: shippingCountries,
       store_address: {
         name: g("store_name"),
@@ -510,6 +511,22 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
           <div><Label htmlFor="store_state" required>State (2-letter)</Label><Input id="store_state" name="store_state" maxLength={2} defaultValue={storeAddress?.state ?? ""} placeholder="CA" required /></div>
           <div><Label htmlFor="store_zip" required>ZIP</Label><Input id="store_zip" name="store_zip" defaultValue={storeAddress?.zip ?? ""} required /></div>
           <div><Label htmlFor="store_country">Country</Label><Input id="store_country" name="store_country" defaultValue={storeAddress?.country ?? "US"} /></div>
+        </div>
+      </Section>
+
+      <Section title="Handling Fee">
+        <div className="max-w-xs">
+          <Label htmlFor="handling_fee">Per-order handling fee ($)</Label>
+          <Input
+            id="handling_fee"
+            name="handling_fee"
+            type="number"
+            step="0.01"
+            min="0"
+            defaultValue={(defaultValues as any)?.handling_fee ?? ""}
+            placeholder="0.00"
+          />
+          <p className="mt-1.5 text-xs text-gray-400">Added to every shipping rate from EasyPost to cover boxes, tape, and packing materials. Not shown as a separate line item.</p>
         </div>
       </Section>
 

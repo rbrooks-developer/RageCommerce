@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
 
   const settings = await getSettings();
   const storeAddress = settings?.store_address as StoreAddress | null;
+  const handlingFee = Number((settings as any)?.handling_fee ?? 0);
 
   if (!storeAddress?.street1) {
     return Response.json({ error: "Store shipping address not configured. Please update Site Settings." }, { status: 422 });
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
       id: r.id,
       carrier: r.carrier,
       service: r.service,
-      rate: r.rate,
+      rate: (parseFloat(r.rate) + handlingFee).toFixed(2),
       delivery_days: r.delivery_days ?? null,
       delivery_date: r.delivery_date ?? null,
     }));
