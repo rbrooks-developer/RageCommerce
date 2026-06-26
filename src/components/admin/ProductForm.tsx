@@ -92,11 +92,15 @@ export function ProductForm({
         <Textarea id="description" name="description" defaultValue={defaultValues?.description ?? ""} placeholder="Describe the product..." rows={4} error={errors?.description?.[0]} />
       </div>
 
-      {/* Price + Inventory + Category */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {/* Price + Cost + Inventory + Category */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <div>
           <Label htmlFor="price" required>Price ($)</Label>
           <Input id="price" name="price" type="number" step="0.01" min="0" defaultValue={defaultValues?.price} placeholder="0.00" error={errors?.price?.[0]} required />
+        </div>
+        <div>
+          <Label htmlFor="cost">Cost ($)</Label>
+          <Input id="cost" name="cost" type="number" step="0.01" min="0" defaultValue={defaultValues?.cost ?? ""} placeholder="0.00" error={errors?.cost?.[0]} />
         </div>
         <div>
           <Label htmlFor="inventory" required>Inventory</Label>

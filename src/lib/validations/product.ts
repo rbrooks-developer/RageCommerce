@@ -5,6 +5,7 @@ export const productSchema = z.object({
   slug: z.string().min(1, "Slug is required").max(255).regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers, and hyphens only"),
   description: z.string().optional(),
   price: z.number().positive("Price must be greater than 0"),
+  cost: z.number().min(0, "Cost cannot be negative").nullable().optional(),
   inventory: z.number().int().min(0, "Inventory cannot be negative"),
   category_id: z.string().uuid().nullable().optional(),
   weight_oz: z.number().positive("Weight must be greater than 0"),

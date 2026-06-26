@@ -35,6 +35,7 @@ export interface Database {
           slug: string;
           description: string | null;
           price: number;
+          cost: number | null;
           inventory: number;
           images: string[];
           category_id: string | null;
@@ -54,6 +55,7 @@ export interface Database {
           slug: string;
           description?: string | null;
           price: number;
+          cost?: number | null;
           inventory?: number;
           images?: string[];
           category_id?: string | null;
@@ -72,6 +74,7 @@ export interface Database {
           slug?: string;
           description?: string | null;
           price?: number;
+          cost?: number | null;
           inventory?: number;
           images?: string[];
           category_id?: string | null;

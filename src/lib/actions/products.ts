@@ -12,6 +12,7 @@ function parseProductFormData(formData: FormData) {
     slug: formData.get("slug") as string,
     description: (formData.get("description") as string) || undefined,
     price: parseFloat(formData.get("price") as string),
+    cost: formData.get("cost") ? parseFloat(formData.get("cost") as string) : null,
     inventory: parseInt(formData.get("inventory") as string, 10),
     category_id: (formData.get("category_id") as string) || null,
     weight_oz: (parseFloat(formData.get("weight_lbs") as string) || 0) * 16
