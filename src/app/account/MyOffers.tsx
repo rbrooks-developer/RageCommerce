@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/cart/store";
-import { deleteOffer } from "@/lib/actions/offers";
+import { deleteOffer, checkOfferInventory } from "@/lib/actions/offers";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
@@ -35,11 +35,12 @@ function daysLeft(expiresAt: string): number {
 
 function StatusBadge({ status, expiresAt }: { status: string; expiresAt: string | null }) {
   const map: Record<string, { label: string; bg: string; color: string }> = {
-    pending:   { label: "Pending Review", bg: "#fef9c3", color: "#854d0e" },
-    approved:  { label: "Approved",       bg: "#dcfce7", color: "#166534" },
-    declined:  { label: "Declined",       bg: "#fee2e2", color: "#991b1b" },
-    purchased: { label: "Purchased",      bg: "#e0e7ff", color: "#3730a3" },
-    expired:   { label: "Expired",        bg: "#f3f4f6", color: "#6b7280" },
+    pending:      { label: "Pending Review", bg: "#fef9c3", color: "#854d0e" },
+    approved:     { label: "Approved",       bg: "#dcfce7", color: "#166534" },
+    declined:     { label: "Declined",       bg: "#fee2e2", color: "#991b1b" },
+    purchased:    { label: "Purchased",      bg: "#e0e7ff", color: "#3730a3" },
+    expired:      { label: "Expired",        bg: "#f3f4f6", color: "#6b7280" },
+    out_of_stock: { label: "Out of Stock",   bg: "#fff7ed", color: "#9a3412" },
   };
   const s = map[status] ?? { label: status, bg: "#f3f4f6", color: "#6b7280" };
   return (
@@ -61,6 +62,15 @@ export function MyOffers({ offers }: { offers: OfferRow[] }) {
   async function handleAddToCart(offer: OfferRow) {
     if (!offer.products) return;
     setBusy(offer.id);
+
+    const { ok } = await checkOfferInventory(offer.id);
+    if (!ok) {
+      // Offer marked out_of_stock server-side; refresh to show updated status
+      setBusy(null);
+      router.refresh();
+      return;
+    }
+
     addItem({
       productId: offer.product_id,
       name: offer.products.name,
@@ -85,11 +95,11 @@ export function MyOffers({ offers }: { offers: OfferRow[] }) {
   }
 
   const active   = offers.filter(o => ["pending", "approved"].includes(o.status));
-  const history  = offers.filter(o => ["declined", "purchased", "expired"].includes(o.status));
+  const history  = offers.filter(o => ["declined", "purchased", "expired", "out_of_stock"].includes(o.status));
 
   function OfferCard({ offer }: { offer: OfferRow }) {
     const isApproved = offer.status === "approved" && offer.expires_at && daysLeft(offer.expires_at) > 0;
-    const canDelete  = ["pending", "approved", "declined", "expired"].includes(offer.status);
+    const canDelete  = ["pending", "approved", "declined", "expired", "out_of_stock"].includes(offer.status);
 
     return (
       <div className="rounded-lg p-4 space-y-3"

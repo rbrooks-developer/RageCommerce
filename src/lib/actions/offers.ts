@@ -58,7 +58,7 @@ export async function submitOffer(productId: string, quantity: number, offerPric
     .select("*", { count: "exact", head: true })
     .eq("user_id", user.id)
     .eq("product_id", productId)
-    .in("status", ["pending", "approved", "declined", "purchased"]);
+    .in("status", ["pending", "approved", "declined", "purchased", "out_of_stock"]);
 
   if ((count ?? 0) >= MAX_OFFERS) {
     return { error: `You've reached the maximum of ${MAX_OFFERS} offers for this product` };
@@ -175,4 +175,33 @@ export async function markOfferPurchased(offerId: string) {
     .update({ status: "purchased", updated_at: new Date().toISOString() })
     .eq("id", offerId);
   revalidatePath("/account");
+}
+
+// Called before adding an approved offer to cart. Returns ok=true if inventory
+// is sufficient, or marks the offer as out_of_stock and returns ok=false.
+export async function checkOfferInventory(offerId: string): Promise<{ ok: boolean }> {
+  const sb = createServiceClient();
+
+  const { data: offerRaw } = await sb
+    .from("product_offers")
+    .select("id, quantity, status, products(inventory)")
+    .eq("id", offerId)
+    .eq("status", "approved")
+    .maybeSingle();
+
+  if (!offerRaw) return { ok: false };
+
+  const offer = offerRaw as { id: string; quantity: number; status: string; products: { inventory: number } | null };
+  const inventory = offer.products?.inventory ?? 0;
+
+  if (inventory < offer.quantity) {
+    await sb
+      .from("product_offers")
+      .update({ status: "out_of_stock", updated_at: new Date().toISOString() })
+      .eq("id", offerId);
+    revalidatePath("/account");
+    return { ok: false };
+  }
+
+  return { ok: true };
 }

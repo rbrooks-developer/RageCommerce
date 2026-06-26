@@ -35,7 +35,7 @@ export type ProductOffer = {
   product_id: string;
   quantity: number;
   offer_price: number;
-  status: "pending" | "approved" | "declined" | "purchased" | "expired";
+  status: "pending" | "approved" | "declined" | "purchased" | "expired" | "out_of_stock";
   decline_reason: string | null;
   expires_at: string | null;
   created_at: string;

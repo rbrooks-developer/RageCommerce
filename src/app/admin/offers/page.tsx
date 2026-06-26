@@ -91,12 +91,13 @@ export default async function AdminOffersPage() {
                     <OfferActions offerId={offer.id} />
                   ) : (
                     <span className={`text-xs font-semibold rounded-full px-2.5 py-1 ${
-                      offer.status === "approved"  ? "bg-green-100 text-green-700" :
-                      offer.status === "purchased" ? "bg-indigo-100 text-indigo-700" :
-                      offer.status === "declined"  ? "bg-red-100 text-red-700" :
+                      offer.status === "approved"      ? "bg-green-100 text-green-700" :
+                      offer.status === "purchased"     ? "bg-indigo-100 text-indigo-700" :
+                      offer.status === "declined"      ? "bg-red-100 text-red-700" :
+                      offer.status === "out_of_stock"  ? "bg-orange-100 text-orange-700" :
                       "bg-gray-100 text-gray-600"
                     }`}>
-                      {offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}
+                      {offer.status === "out_of_stock" ? "Out of Stock" : offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}
                     </span>
                   )}
                 </div>

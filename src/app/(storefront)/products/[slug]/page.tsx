@@ -78,7 +78,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id)
         .eq("product_id", product.id)
-        .in("status", ["pending", "approved", "declined", "purchased"]),
+        .in("status", ["pending", "approved", "declined", "purchased", "out_of_stock"]),
     ]);
 
     offersUsed = countResult.count ?? 0;
