@@ -50,28 +50,39 @@ export default async function AccountPage() {
     .eq("status", "approved")
     .lt("expires_at", new Date().toISOString());
 
-  // Check remaining approved offers: mark out_of_stock if product gone or inventory insufficient
+  // Check remaining approved offers: mark out_of_stock if product gone or inventory insufficient.
+  // Two separate queries to avoid Supabase join returning arrays instead of objects.
   const { data: approvedOffers } = await supabase
     .from("product_offers")
-    .select("id, quantity, products(id, inventory, is_published)")
+    .select("id, product_id, quantity")
     .eq("user_id", user.id)
-    .eq("status", "approved")
-    .gt("expires_at", new Date().toISOString());
+    .eq("status", "approved");
 
-  const outOfStockIds = ((approvedOffers ?? []) as {
-    id: string;
-    quantity: number;
-    products: { inventory: number; is_published: boolean } | null;
-  }[])
-    .filter(o => !o.products || !o.products.is_published || o.products.inventory < o.quantity)
-    .map(o => o.id);
+  if (approvedOffers && approvedOffers.length > 0) {
+    const productIds = [...new Set(approvedOffers.map((o: any) => o.product_id as string))];
+    const { data: products } = await supabase
+      .from("products")
+      .select("id, inventory, is_published")
+      .in("id", productIds);
 
-  if (outOfStockIds.length > 0) {
-    const sb = createServiceClient();
-    await sb
-      .from("product_offers")
-      .update({ status: "out_of_stock", updated_at: new Date().toISOString() })
-      .in("id", outOfStockIds);
+    const productMap = Object.fromEntries(
+      ((products ?? []) as { id: string; inventory: number; is_published: boolean }[]).map(p => [p.id, p])
+    );
+
+    const outOfStockIds = (approvedOffers as { id: string; product_id: string; quantity: number }[])
+      .filter(o => {
+        const p = productMap[o.product_id];
+        return !p || !p.is_published || p.inventory < o.quantity;
+      })
+      .map(o => o.id);
+
+    if (outOfStockIds.length > 0) {
+      const sb = createServiceClient();
+      await sb
+        .from("product_offers")
+        .update({ status: "out_of_stock", updated_at: new Date().toISOString() })
+        .in("id", outOfStockIds);
+    }
   }
 
   const [{ data: profileRaw, error: profileError }, { data: addressesRaw }, { data: ordersRaw }, { data: offersRaw }] = await Promise.all([
