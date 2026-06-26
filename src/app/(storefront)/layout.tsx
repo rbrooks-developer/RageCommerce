@@ -9,10 +9,13 @@ export default async function StorefrontLayout({ children }: { children: React.R
   const [settings, supabase] = await Promise.all([getSettings(), createClient()]);
   const { data: { user } } = await supabase.auth.getUser();
 
-  const isAdmin = user
-    ? ((await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle())
-        .data as { role: string } | null)?.role === "admin"
-    : false;
+  const [profileResult, approvedOffersResult] = await Promise.all([
+    user ? supabase.from("profiles").select("role").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
+    user ? supabase.from("product_offers").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "approved") : Promise.resolve({ count: 0 }),
+  ]);
+
+  const isAdmin = ((profileResult.data as { role: string } | null)?.role === "admin");
+  const approvedOffersCount = approvedOffersResult.count ?? 0;
 
   const homepage = settings?.homepage_config as HomepageConfig | null;
   const bgColor = homepage?.bg_color ?? "#ffffff";
@@ -30,6 +33,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
         isAdmin={isAdmin}
         bgColor={bgColor}
         fontColor={fontColor}
+        approvedOffersCount={approvedOffersCount}
       />
       <main className="flex-1">{children}</main>
       <Footer

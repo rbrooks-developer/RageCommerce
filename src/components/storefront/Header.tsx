@@ -15,6 +15,7 @@ interface HeaderProps {
   isAdmin?: boolean;
   bgColor?: string;
   fontColor?: string;
+  approvedOffersCount?: number;
 }
 
 // Bare anchors like "#services" become "/#services" so they always target the homepage
@@ -22,7 +23,12 @@ function resolveNavHref(link: string) {
   return link.startsWith("#") ? `/${link}` : link;
 }
 
-export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = false, bgColor = "#ffffff", fontColor = "#111827" }: HeaderProps) {
+function isOffersLink(link: string) {
+  const n = link.replace(/^\//, "");
+  return n === "account#offers" || n.startsWith("account#offers");
+}
+
+export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = false, bgColor = "#ffffff", fontColor = "#111827", approvedOffersCount = 0 }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { itemCount } = useCart();
   const navItems = navConfig?.items ?? [];
@@ -44,16 +50,24 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.link}
-                href={resolveNavHref(item.link)}
-                className="text-base font-bold transition-opacity hover:opacity-70"
-                style={{ color: fontColor }}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const showBadge = isOffersLink(item.link) && approvedOffersCount > 0;
+              return (
+                <Link
+                  key={item.link}
+                  href={resolveNavHref(item.link)}
+                  className="relative text-base font-bold transition-opacity hover:opacity-70"
+                  style={{ color: fontColor }}
+                >
+                  {item.label}
+                  {showBadge && (
+                    <span className="absolute -top-2 -right-4 flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold" style={{ color: "white", WebkitTextFillColor: "white" }}>
+                      {approvedOffersCount > 9 ? "9+" : approvedOffersCount}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
             {isAdmin && (
               <Link href="/admin" className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
                 Admin
@@ -113,17 +127,25 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
         style={{ backgroundColor: bgColor }}
       >
         <nav className="flex flex-col px-4 py-3 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.link}
-              href={resolveNavHref(item.link)}
-              onClick={() => setMenuOpen(false)}
-              className="py-2.5 text-sm font-medium transition-opacity hover:opacity-70"
-              style={{ color: fontColor }}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const showBadge = isOffersLink(item.link) && approvedOffersCount > 0;
+            return (
+              <Link
+                key={item.link}
+                href={resolveNavHref(item.link)}
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 py-2.5 text-sm font-medium transition-opacity hover:opacity-70"
+                style={{ color: fontColor }}
+              >
+                {item.label}
+                {showBadge && (
+                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-900 text-[10px] font-bold" style={{ color: "white", WebkitTextFillColor: "white" }}>
+                    {approvedOffersCount > 9 ? "9+" : approvedOffersCount}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
           <Link
             href={isLoggedIn ? "/account" : "/login"}
             onClick={() => setMenuOpen(false)}
