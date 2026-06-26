@@ -26,6 +26,20 @@ export type CartItem = {
   length_in: number;
   width_in: number;
   height_in: number;
+  offerId?: string; // present = quantity locked, price = accepted offer price
+};
+
+export type ProductOffer = {
+  id: string;
+  user_id: string;
+  product_id: string;
+  quantity: number;
+  offer_price: number;
+  status: "pending" | "approved" | "declined" | "purchased" | "expired";
+  decline_reason: string | null;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type ShippingAddress = {

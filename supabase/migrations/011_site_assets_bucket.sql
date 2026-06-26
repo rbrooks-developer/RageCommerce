@@ -11,8 +11,8 @@ VALUES (
   'site-assets',
   'site-assets',
   true,
-  2097152,  -- 2 MB
-  ARRAY['image/png', 'image/svg+xml', 'image/x-icon', 'image/webp', 'image/vnd.microsoft.icon']
+  20971520,  -- 20 MB
+  ARRAY['image/png', 'image/jpeg', 'image/svg+xml', 'image/x-icon', 'image/webp', 'image/vnd.microsoft.icon']
 )
 ON CONFLICT (id) DO NOTHING;
 

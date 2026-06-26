@@ -11,6 +11,7 @@ import {
   FolderOpen,
   ShoppingCart,
   Settings,
+  Tag,
   Menu,
   X,
   LogOut,
@@ -18,11 +19,12 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard, exact: true },
-  { label: "Products", href: "/admin/products", icon: Package },
+  { label: "Dashboard",  href: "/admin",            icon: LayoutDashboard, exact: true },
+  { label: "Products",   href: "/admin/products",   icon: Package },
   { label: "Categories", href: "/admin/categories", icon: FolderOpen },
-  { label: "Orders", href: "/admin/orders", icon: ShoppingCart },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
+  { label: "Orders",     href: "/admin/orders",     icon: ShoppingCart },
+  { label: "Offers",     href: "/admin/offers",     icon: Tag },
+  { label: "Settings",   href: "/admin/settings",   icon: Settings },
 ];
 
 function NavLink({ item, onClick }: { item: typeof navItems[0]; onClick?: () => void }) {

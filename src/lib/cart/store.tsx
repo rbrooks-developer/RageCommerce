@@ -29,6 +29,7 @@ function toCartItem(row: Record<string, unknown>): CartItem {
     length_in:  Number(row.length_in ?? 0),
     width_in:   Number(row.width_in ?? 0),
     height_in:  Number(row.height_in ?? 0),
+    offerId:    row.offer_id ? String(row.offer_id) : undefined,
   };
 }
 
@@ -44,6 +45,7 @@ function toRow(userId: string, item: CartItem) {
     length_in:  item.length_in,
     width_in:   item.width_in,
     height_in:  item.height_in,
+    offer_id:   item.offerId ?? null,
     updated_at: new Date().toISOString(),
   };
 }

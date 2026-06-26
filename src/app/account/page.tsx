@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { AddressManager } from "./AddressManager";
 import { ProfileForm } from "./ProfileForm";
 import { PasswordForm } from "./PasswordForm";
+import { MyOffers } from "./MyOffers";
 import type { Order, UserAddress } from "@/types";
 
 type OrderRow = Pick<Order, "id" | "status" | "total_price" | "created_at" | "tracking_number">;
@@ -41,7 +42,15 @@ export default async function AccountPage() {
   const allowedCodes = ((settings as any)?.shipping_countries as string[] | null) ?? ["US"];
   const allowedCountries = COUNTRIES.filter((c) => allowedCodes.includes(c.code));
 
-  const [{ data: profileRaw, error: profileError }, { data: addressesRaw }, { data: ordersRaw }] = await Promise.all([
+  // Mark expired approved offers before rendering
+  await supabase
+    .from("product_offers")
+    .update({ status: "expired" })
+    .eq("user_id", user.id)
+    .eq("status", "approved")
+    .lt("expires_at", new Date().toISOString());
+
+  const [{ data: profileRaw, error: profileError }, { data: addressesRaw }, { data: ordersRaw }, { data: offersRaw }] = await Promise.all([
     supabase.from("profiles").select("first_name, last_name, phone").eq("id", user.id).maybeSingle(),
     supabase.from("user_addresses").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
     supabase
@@ -49,6 +58,11 @@ export default async function AccountPage() {
       .select("id, status, total_price, created_at, tracking_number")
       .eq("user_id", user.id)
       .neq("status", "pending")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("product_offers")
+      .select("id, product_id, quantity, offer_price, status, decline_reason, expires_at, created_at, products(name, images, weight_oz, length_in, width_in, height_in)")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
   ]);
 
@@ -61,7 +75,8 @@ export default async function AccountPage() {
     phone:      (profileRaw as any)?.phone       ?? meta?.phone      ?? null,
   };
   const addresses = (addressesRaw ?? []) as UserAddress[];
-  const orders = (ordersRaw ?? []) as OrderRow[];
+  const orders    = (ordersRaw    ?? []) as OrderRow[];
+  const offers    = (offersRaw    ?? []) as any[];
 
   return (
     <div className="space-y-10 pb-16">
@@ -91,6 +106,14 @@ export default async function AccountPage() {
         <SectionHeading title="Saved Addresses" description="Manage your shipping and billing addresses." />
         <div className="rounded-lg p-5" style={panelStyle}>
           <AddressManager addresses={addresses} allowedCountries={allowedCountries} />
+        </div>
+      </section>
+
+      {/* ── My Offers ───────────────────────────────── */}
+      <section>
+        <SectionHeading title="My Offers" description="Offers you've submitted on products." />
+        <div className="rounded-lg p-5" style={panelStyle}>
+          <MyOffers offers={offers} />
         </div>
       </section>
 

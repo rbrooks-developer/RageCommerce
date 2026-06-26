@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { formatPrice } from "@/lib/utils";
 import { ProductImages } from "./ProductImages";
 import { AddToCartButton } from "@/components/storefront/AddToCartButton";
+import { MakeOfferForm } from "./MakeOfferForm";
 import type { Metadata } from "next";
 import type { Product } from "@/types";
 
@@ -36,6 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { data } = await supabase
     .from("products")
@@ -47,6 +49,19 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   if (!data) notFound();
   const product = data as ProductWithCategory;
   const images = product.images as string[];
+
+  // Check if user has an active offer on this product
+  let existingOfferStatus: string | null = null;
+  if (user && product.inventory > 0) {
+    const { data: existingOffer } = await supabase
+      .from("product_offers")
+      .select("status")
+      .eq("user_id", user.id)
+      .eq("product_id", product.id)
+      .in("status", ["pending", "approved"])
+      .maybeSingle();
+    existingOfferStatus = (existingOffer as { status: string } | null)?.status ?? null;
+  }
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -86,6 +101,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             )}
 
             <AddToCartButton product={product} />
+            {product.inventory > 0 && user && (
+              <MakeOfferForm
+                productId={product.id}
+                listPrice={Number(product.price)}
+                maxQuantity={product.inventory}
+                existingStatus={existingOfferStatus}
+              />
+            )}
           </div>
         </div>
       </div>

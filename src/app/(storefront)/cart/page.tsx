@@ -53,26 +53,37 @@ export default function CartPage() {
                 >
                   {item.name}
                 </Link>
-                <p className="text-sm mt-0.5" style={{ opacity: 0.55 }}>{formatPrice(item.price * 100)} each</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-sm" style={{ opacity: 0.55 }}>{formatPrice(item.price * 100)} each</p>
+                  {item.offerId && (
+                    <span className="text-xs font-semibold rounded-full px-2 py-0.5 bg-green-100 text-green-700" style={{ WebkitTextFillColor: "#15803d" }}>Offer Price</span>
+                  )}
+                </div>
 
                 <div className="flex items-center gap-3 mt-3">
-                  <div className="flex items-center rounded-md overflow-hidden" style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 25%, transparent)" }}>
-                    <button
-                      onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                      className="w-8 h-8 flex items-center justify-center text-sm transition-opacity hover:opacity-60"
-                      aria-label="Decrease quantity"
-                    >
-                      −
-                    </button>
-                    <span className="w-8 text-center text-sm">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                      className="w-8 h-8 flex items-center justify-center text-sm transition-opacity hover:opacity-60"
-                      aria-label="Increase quantity"
-                    >
-                      +
-                    </button>
-                  </div>
+                  {item.offerId ? (
+                    <span className="text-sm px-3 py-1 rounded-md" style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", opacity: 0.7 }}>
+                      Qty: {item.quantity} (locked)
+                    </span>
+                  ) : (
+                    <div className="flex items-center rounded-md overflow-hidden" style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 25%, transparent)" }}>
+                      <button
+                        onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                        className="w-8 h-8 flex items-center justify-center text-sm transition-opacity hover:opacity-60"
+                        aria-label="Decrease quantity"
+                      >
+                        −
+                      </button>
+                      <span className="w-8 text-center text-sm">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                        className="w-8 h-8 flex items-center justify-center text-sm transition-opacity hover:opacity-60"
+                        aria-label="Increase quantity"
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
                   <button
                     onClick={() => removeItem(item.productId)}
                     className="p-1.5 transition-colors hover:text-red-500"
