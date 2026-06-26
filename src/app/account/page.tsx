@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/data/settings";
 import { COUNTRIES } from "@/lib/data/countries";
 import { redirect } from "next/navigation";
@@ -42,13 +42,37 @@ export default async function AccountPage() {
   const allowedCodes = ((settings as any)?.shipping_countries as string[] | null) ?? ["US"];
   const allowedCountries = COUNTRIES.filter((c) => allowedCodes.includes(c.code));
 
-  // Mark expired approved offers before rendering
+  // Mark expired approved offers
   await supabase
     .from("product_offers")
     .update({ status: "expired" })
     .eq("user_id", user.id)
     .eq("status", "approved")
     .lt("expires_at", new Date().toISOString());
+
+  // Check remaining approved offers: mark out_of_stock if product gone or inventory insufficient
+  const { data: approvedOffers } = await supabase
+    .from("product_offers")
+    .select("id, quantity, products(id, inventory, is_published)")
+    .eq("user_id", user.id)
+    .eq("status", "approved")
+    .gt("expires_at", new Date().toISOString());
+
+  const outOfStockIds = ((approvedOffers ?? []) as {
+    id: string;
+    quantity: number;
+    products: { inventory: number; is_published: boolean } | null;
+  }[])
+    .filter(o => !o.products || !o.products.is_published || o.products.inventory < o.quantity)
+    .map(o => o.id);
+
+  if (outOfStockIds.length > 0) {
+    const sb = createServiceClient();
+    await sb
+      .from("product_offers")
+      .update({ status: "out_of_stock", updated_at: new Date().toISOString() })
+      .in("id", outOfStockIds);
+  }
 
   const [{ data: profileRaw, error: profileError }, { data: addressesRaw }, { data: ordersRaw }, { data: offersRaw }] = await Promise.all([
     supabase.from("profiles").select("first_name, last_name, phone").eq("id", user.id).maybeSingle(),
