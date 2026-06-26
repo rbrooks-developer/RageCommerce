@@ -12,6 +12,7 @@ interface CartContextValue {
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
+  reloadCart: () => Promise<void>;
   itemCount: number;
   subtotal: number;
 }
@@ -164,11 +165,17 @@ export function CartProvider({ userId, children }: { userId?: string | null; chi
     if (userId) sb.from("cart_items").delete().eq("user_id", userId);
   }, [userId, sb]);
 
+  const reloadCart = useCallback(async () => {
+    if (!userId) return;
+    const { data } = await sb.from("cart_items").select("*").eq("user_id", userId);
+    setItems((data ?? []).map(toCartItem));
+  }, [userId, sb]);
+
   const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
   const subtotal  = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, itemCount, subtotal }}>
+    <CartContext.Provider value={{ items, addItem, removeItem, updateQuantity, clearCart, reloadCart, itemCount, subtotal }}>
       {children}
     </CartContext.Provider>
   );

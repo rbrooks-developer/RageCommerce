@@ -177,31 +177,114 @@ export async function markOfferPurchased(offerId: string) {
   revalidatePath("/account");
 }
 
+// Checks inventory and, if sufficient, inserts the offer item directly into
+// cart_items so the DB write is complete before the client navigates to /cart.
+export async function addOfferToCart(offerId: string): Promise<{ ok: boolean; item?: {
+  productId: string; name: string; price: number; quantity: number;
+  image: string | null; weight_oz: number; length_in: number;
+  width_in: number; height_in: number; offerId: string;
+} }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false };
+
+  const sb = createServiceClient();
+
+  const { data: offerRaw, error: offerErr } = await sb
+    .from("product_offers")
+    .select("id, product_id, quantity, offer_price, status, products(id, name, images, inventory, weight_oz, length_in, width_in, height_in)")
+    .eq("id", offerId)
+    .eq("user_id", user.id)
+    .eq("status", "approved")
+    .maybeSingle();
+
+  console.log("[addOfferToCart] offer:", JSON.stringify(offerRaw), "error:", offerErr?.message);
+  if (!offerRaw) return { ok: false };
+
+  const offer = offerRaw as any;
+  const product = Array.isArray(offer.products) ? offer.products[0] : offer.products;
+
+  console.log("[addOfferToCart] product:", JSON.stringify(product));
+  if (!product || product.inventory < offer.quantity) {
+    await sb.from("product_offers")
+      .update({ status: "out_of_stock", updated_at: new Date().toISOString() })
+      .eq("id", offerId);
+    return { ok: false };
+  }
+
+  const cartRow = {
+    user_id:    user.id,
+    product_id: offer.product_id,
+    name:       product.name,
+    price:      Number(offer.offer_price),
+    quantity:   offer.quantity,
+    image:      product.images?.[0] ?? null,
+    weight_oz:  product.weight_oz,
+    length_in:  product.length_in,
+    width_in:   product.width_in,
+    height_in:  product.height_in,
+    offer_id:   offerId,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error: upsertErr } = await sb
+    .from("cart_items")
+    .upsert(cartRow, { onConflict: "user_id,product_id" });
+
+  console.log("[addOfferToCart] upsert error:", upsertErr?.message ?? "none");
+  if (upsertErr) return { ok: false };
+
+  return {
+    ok: true,
+    item: {
+      productId:  offer.product_id,
+      name:       product.name,
+      price:      Number(offer.offer_price),
+      quantity:   offer.quantity,
+      image:      product.images?.[0] ?? null,
+      weight_oz:  product.weight_oz,
+      length_in:  product.length_in,
+      width_in:   product.width_in,
+      height_in:  product.height_in,
+      offerId,
+    },
+  };
+}
+
 // Called before adding an approved offer to cart. Returns ok=true if inventory
 // is sufficient, or marks the offer as out_of_stock and returns ok=false.
 export async function checkOfferInventory(offerId: string): Promise<{ ok: boolean }> {
+  console.log("[checkOfferInventory] checking offer:", offerId);
   const sb = createServiceClient();
 
-  const { data: offerRaw } = await sb
+  const { data: offerRaw, error: offerErr } = await sb
     .from("product_offers")
     .select("id, quantity, status, products(inventory)")
     .eq("id", offerId)
     .eq("status", "approved")
     .maybeSingle();
 
+  console.log("[checkOfferInventory] offerRaw:", JSON.stringify(offerRaw), "error:", offerErr?.message);
+
   if (!offerRaw) return { ok: false };
 
-  const offer = offerRaw as { id: string; quantity: number; status: string; products: { inventory: number } | null };
-  const inventory = offer.products?.inventory ?? 0;
+  const offer = offerRaw as { id: string; quantity: number; status: string; products: { inventory: number } | null | any[] };
+  // products may come back as array from Supabase join
+  const productsData = Array.isArray(offer.products) ? offer.products[0] : offer.products;
+  const inventory = (productsData as { inventory: number } | null)?.inventory ?? 0;
+
+  console.log("[checkOfferInventory] inventory:", inventory, "required quantity:", offer.quantity);
 
   if (inventory < offer.quantity) {
-    await sb
+    const { error: updateErr } = await sb
       .from("product_offers")
       .update({ status: "out_of_stock", updated_at: new Date().toISOString() })
       .eq("id", offerId);
+    console.log("[checkOfferInventory] marked out_of_stock, error:", updateErr?.message);
     revalidatePath("/account");
     return { ok: false };
   }
 
+  console.log("[checkOfferInventory] inventory ok, returning ok: true");
   return { ok: true };
 }

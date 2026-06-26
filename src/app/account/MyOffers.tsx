@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/cart/store";
-import { deleteOffer, checkOfferInventory } from "@/lib/actions/offers";
+import { deleteOffer, addOfferToCart } from "@/lib/actions/offers";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
@@ -51,7 +51,7 @@ function StatusBadge({ status, expiresAt }: { status: string; expiresAt: string 
 }
 
 export function MyOffers({ offers }: { offers: OfferRow[] }) {
-  const { addItem } = useCart();
+  const { reloadCart } = useCart();
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -60,29 +60,16 @@ export function MyOffers({ offers }: { offers: OfferRow[] }) {
   }
 
   async function handleAddToCart(offer: OfferRow) {
-    if (!offer.products) return;
     setBusy(offer.id);
-
-    const { ok } = await checkOfferInventory(offer.id);
-    if (!ok) {
-      // Offer marked out_of_stock server-side; refresh to show updated status
+    // Server action writes to DB first so the item is committed before we navigate
+    const result = await addOfferToCart(offer.id);
+    if (!result.ok) {
       setBusy(null);
       router.refresh();
       return;
     }
-
-    addItem({
-      productId: offer.product_id,
-      name: offer.products.name,
-      price: offer.offer_price,
-      quantity: offer.quantity,
-      image: offer.products.images?.[0] ?? null,
-      weight_oz: offer.products.weight_oz,
-      length_in: offer.products.length_in,
-      width_in: offer.products.width_in,
-      height_in: offer.products.height_in,
-      offerId: offer.id,
-    });
+    // Re-fetch cart from DB so context is in sync before navigating
+    await reloadCart();
     setBusy(null);
     router.push("/cart");
   }
