@@ -5,7 +5,7 @@ import { CategorySidebar } from "@/components/storefront/CategorySidebar";
 import type { Metadata } from "next";
 import type { Product, Category, HomepageConfig } from "@/types";
 
-type ProductRow = Pick<Product, "id" | "slug" | "name" | "price" | "images"> & { category_id: string | null };
+type ProductRow = Pick<Product, "id" | "slug" | "name" | "price" | "images" | "inventory"> & { category_id: string | null };
 type CategoryRow = Pick<Category, "id" | "slug" | "name"> & { parent_id: string | null };
 
 /** Collects a category's ID plus all descendant IDs (recursive). */
@@ -30,7 +30,7 @@ export default async function ProductsPage({
   const [productsRes, categoriesRes, settings] = await Promise.all([
     supabase
       .from("products")
-      .select("id, slug, name, price, images, category_id")
+      .select("id, slug, name, price, images, inventory, category_id")
       .eq("is_published", true)
       .order("created_at", { ascending: false }),
     supabase.from("categories").select("id, slug, name, parent_id").order("name"),

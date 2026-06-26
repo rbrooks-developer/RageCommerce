@@ -44,14 +44,14 @@ export default async function HomePage() {
 
   const [productsRes, categoriesRes] = await Promise.all([
     featuredProductIds.length
-      ? supabase.from("products").select("id, slug, name, price, images").in("id", featuredProductIds).eq("is_published", true)
+      ? supabase.from("products").select("id, slug, name, price, images, inventory").in("id", featuredProductIds).eq("is_published", true)
       : Promise.resolve({ data: [] as Pick<Product, "id" | "slug" | "name" | "price" | "images">[] }),
     featuredCategoryIds.length
       ? supabase.from("categories").select("id, slug, name").in("id", featuredCategoryIds)
       : Promise.resolve({ data: [] as Pick<Category, "id" | "slug" | "name">[] }),
   ]);
 
-  const featuredProducts   = productsRes.data   as Pick<Product, "id" | "slug" | "name" | "price" | "images">[];
+  const featuredProducts   = productsRes.data   as Pick<Product, "id" | "slug" | "name" | "price" | "images" | "inventory">[];
   const featuredCategories = categoriesRes.data as Pick<Category, "id" | "slug" | "name">[];
 
   return (
