@@ -32,7 +32,7 @@ export function MakeOfferForm({ productId, listPrice, maxQuantity, existingStatu
   if (existingStatus === "pending") {
     return (
       <div className="text-sm rounded-md px-4 py-3 space-y-1" style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", opacity: 0.75 }}>
-        <p>Your offer is pending review. Check <a href="/account" className="underline">My Offers</a> for updates.</p>
+        <p>Your offer is pending review. Check <a href="/account#offers" className="underline">My Offers</a> for updates.</p>
         <p className="text-xs" style={{ opacity: 0.7 }}>{remainingLabel} for this product.</p>
       </div>
     );
@@ -41,7 +41,7 @@ export function MakeOfferForm({ productId, listPrice, maxQuantity, existingStatu
   if (existingStatus === "approved") {
     return (
       <p className="text-sm rounded-md px-4 py-3" style={{ backgroundColor: "color-mix(in srgb, #22c55e 10%, var(--site-bg))", border: "1px solid #86efac" }}>
-        Your offer was approved! Go to <a href="/account" className="underline font-semibold">My Offers</a> to purchase.
+        Your offer was approved! Go to <a href="/account#offers" className="underline font-semibold">My Offers</a> to purchase.
       </p>
     );
   }

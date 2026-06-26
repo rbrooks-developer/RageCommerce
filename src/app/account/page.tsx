@@ -110,7 +110,7 @@ export default async function AccountPage() {
       </section>
 
       {/* ── My Offers ───────────────────────────────── */}
-      <section>
+      <section id="offers">
         <SectionHeading title="My Offers" description="Offers you've submitted on products." />
         <div className="rounded-lg p-5" style={panelStyle}>
           <MyOffers offers={offers} />
