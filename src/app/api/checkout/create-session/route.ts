@@ -162,16 +162,12 @@ export async function POST(request: NextRequest) {
   const orderId = (orderData as { id: string }).id;
 
   // Insert order items using resolved prices
-  const orderItems = items.map((item) => {
-    const product = products.find((p) => p.id === item.productId)!;
-    return {
-      order_id: orderId,
-      product_id: item.productId,
-      quantity: item.quantity,
-      price: resolvePrice(item),
-      name: product.name,
-    };
-  });
+  const orderItems = items.map((item) => ({
+    order_id: orderId,
+    product_id: item.productId,
+    quantity: item.quantity,
+    price: resolvePrice(item),
+  }));
 
   await supabase.from("order_items").insert(orderItems);
 
