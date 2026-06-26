@@ -33,7 +33,9 @@ export async function submitOffer(productId: string, quantity: number, offerPric
   if (quantity < 1) return { error: "Quantity must be at least 1" };
   if (quantity > product.inventory) return { error: `Only ${product.inventory} unit${product.inventory === 1 ? "" : "s"} available` };
 
-  // One active offer per product per user
+  const MAX_OFFERS = 4;
+
+  // Block if a pending or approved offer exists
   const { data: existing } = await supabase
     .from("product_offers")
     .select("id, status")
@@ -48,6 +50,18 @@ export async function submitOffer(productId: string, quantity: number, offerPric
         ? "You already have a pending offer on this product"
         : "You already have an approved offer on this product — check My Offers",
     };
+  }
+
+  // Enforce per-product offer limit (expired offers don't count)
+  const { count } = await supabase
+    .from("product_offers")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("product_id", productId)
+    .in("status", ["pending", "approved", "declined", "purchased"]);
+
+  if ((count ?? 0) >= MAX_OFFERS) {
+    return { error: `You've reached the maximum of ${MAX_OFFERS} offers for this product` };
   }
 
   const { error: insertError } = await supabase

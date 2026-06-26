@@ -15,20 +15,26 @@ interface Props {
   maxQuantity: number;
   existingStatus: string | null;
   existingDeclineReason: string | null;
+  offersUsed: number;
+  maxOffers: number;
 }
 
-export function MakeOfferForm({ productId, listPrice, maxQuantity, existingStatus, existingDeclineReason }: Props) {
+export function MakeOfferForm({ productId, listPrice, maxQuantity, existingStatus, existingDeclineReason, offersUsed, maxOffers }: Props) {
   const [open, setOpen] = useState(false);
   const [offerPrice, setOfferPrice] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  const remaining = Math.max(0, maxOffers - offersUsed);
+  const remainingLabel = remaining === 1 ? "1 offer remaining" : `${remaining} offers remaining`;
+
   if (existingStatus === "pending") {
     return (
-      <p className="text-sm rounded-md px-4 py-3" style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", opacity: 0.75 }}>
-        Your offer is pending review. Check <a href="/account" className="underline">My Offers</a> for updates.
-      </p>
+      <div className="text-sm rounded-md px-4 py-3 space-y-1" style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", opacity: 0.75 }}>
+        <p>Your offer is pending review. Check <a href="/account" className="underline">My Offers</a> for updates.</p>
+        <p className="text-xs" style={{ opacity: 0.7 }}>{remainingLabel} for this product.</p>
+      </div>
     );
   }
 
@@ -36,6 +42,14 @@ export function MakeOfferForm({ productId, listPrice, maxQuantity, existingStatu
     return (
       <p className="text-sm rounded-md px-4 py-3" style={{ backgroundColor: "color-mix(in srgb, #22c55e 10%, var(--site-bg))", border: "1px solid #86efac" }}>
         Your offer was approved! Go to <a href="/account" className="underline font-semibold">My Offers</a> to purchase.
+      </p>
+    );
+  }
+
+  if (remaining === 0) {
+    return (
+      <p className="text-sm rounded-md px-4 py-3" style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", opacity: 0.65 }}>
+        You've reached the maximum of {maxOffers} offers for this product.
       </p>
     );
   }
@@ -69,7 +83,7 @@ export function MakeOfferForm({ productId, listPrice, maxQuantity, existingStatu
           {existingDeclineReason && (
             <p style={{ opacity: 0.8 }}>Reason: {existingDeclineReason}</p>
           )}
-          <p style={{ opacity: 0.7 }}>You're welcome to submit a new offer below.</p>
+          <p style={{ opacity: 0.7 }}>You're welcome to submit a new offer. {remainingLabel} for this product.</p>
         </div>
       )}
 

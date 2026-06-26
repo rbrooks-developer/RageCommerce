@@ -50,35 +50,44 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const product = data as ProductWithCategory;
   const images = product.images as string[];
 
-  // Two separate queries: blocking statuses (pending/approved) take priority; then check for declined notice
+  const MAX_OFFERS = 4;
   let existingOfferStatus: string | null = null;
   let existingDeclineReason: string | null = null;
-  if (user && product.inventory > 0) {
-    const { data: blocking } = await supabase
-      .from("product_offers")
-      .select("status")
-      .eq("user_id", user.id)
-      .eq("product_id", product.id)
-      .in("status", ["pending", "approved"])
-      .maybeSingle();
+  let offersUsed = 0;
 
-    if (blocking) {
-      existingOfferStatus = (blocking as { status: string }).status;
-    } else {
-      // No blocking offer — check for most recent decline to show notice
-      const { data: declined } = await supabase
+  if (user && product.inventory > 0) {
+    const [blockingResult, declinedResult, countResult] = await Promise.all([
+      supabase
         .from("product_offers")
-        .select("status, decline_reason")
+        .select("status")
+        .eq("user_id", user.id)
+        .eq("product_id", product.id)
+        .in("status", ["pending", "approved"])
+        .maybeSingle(),
+      supabase
+        .from("product_offers")
+        .select("decline_reason")
         .eq("user_id", user.id)
         .eq("product_id", product.id)
         .eq("status", "declined")
         .order("created_at", { ascending: false })
         .limit(1)
-        .maybeSingle();
-      if (declined) {
-        existingOfferStatus = "declined";
-        existingDeclineReason = (declined as { decline_reason: string | null }).decline_reason;
-      }
+        .maybeSingle(),
+      supabase
+        .from("product_offers")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("product_id", product.id)
+        .in("status", ["pending", "approved", "declined", "purchased"]),
+    ]);
+
+    offersUsed = countResult.count ?? 0;
+
+    if (blockingResult.data) {
+      existingOfferStatus = (blockingResult.data as { status: string }).status;
+    } else if (declinedResult.data) {
+      existingOfferStatus = "declined";
+      existingDeclineReason = (declinedResult.data as { decline_reason: string | null }).decline_reason;
     }
   }
 
@@ -127,6 +136,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 maxQuantity={product.inventory}
                 existingStatus={existingOfferStatus}
                 existingDeclineReason={existingDeclineReason}
+                offersUsed={offersUsed}
+                maxOffers={MAX_OFFERS}
               />
             )}
           </div>
