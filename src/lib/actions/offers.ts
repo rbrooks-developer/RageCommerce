@@ -192,7 +192,7 @@ export async function addOfferToCart(offerId: string): Promise<{ ok: boolean; it
 
   const { data: offerRaw, error: offerErr } = await sb
     .from("product_offers")
-    .select("id, product_id, quantity, offer_price, status, products(id, name, images, inventory, weight_oz, length_in, width_in, height_in)")
+    .select("id, product_id, quantity, offer_price, status, products(id, slug, name, images, inventory, weight_oz, length_in, width_in, height_in)")
     .eq("id", offerId)
     .eq("user_id", user.id)
     .eq("status", "approved")
@@ -212,6 +212,7 @@ export async function addOfferToCart(offerId: string): Promise<{ ok: boolean; it
   const cartRow = {
     user_id:    user.id,
     product_id: offer.product_id,
+    slug:       product.slug,
     name:       product.name,
     price:      Number(offer.offer_price),
     quantity:   offer.quantity,

@@ -83,7 +83,7 @@ export async function addProductToCart(productId: string, quantity: number): Pro
 
   const { data: product } = await supabase
     .from("products")
-    .select("id, name, price, images, inventory, is_published, weight_oz, length_in, width_in, height_in")
+    .select("id, slug, name, price, images, inventory, is_published, weight_oz, length_in, width_in, height_in")
     .eq("id", productId)
     .eq("is_published", true)
     .maybeSingle();
@@ -91,7 +91,7 @@ export async function addProductToCart(productId: string, quantity: number): Pro
   if (!product) return { ok: false, error: "This product is no longer available." };
 
   const p = product as {
-    id: string; name: string; price: number; images: string[];
+    id: string; slug: string; name: string; price: number; images: string[];
     inventory: number; weight_oz: number; length_in: number; width_in: number; height_in: number;
   };
 
@@ -103,7 +103,7 @@ export async function addProductToCart(productId: string, quantity: number): Pro
     return {
       ok: true,
       guestItem: {
-        productId: p.id, name: p.name, price: Number(p.price), quantity,
+        productId: p.id, slug: p.slug, name: p.name, price: Number(p.price), quantity,
         image: p.images?.[0] ?? null,
         weight_oz: Number(p.weight_oz), length_in: Number(p.length_in),
         width_in: Number(p.width_in), height_in: Number(p.height_in),
@@ -130,7 +130,7 @@ export async function addProductToCart(productId: string, quantity: number): Pro
 
   const sb = createServiceClient();
   const { error } = await sb.from("cart_items").upsert({
-    user_id: user.id, product_id: p.id, name: p.name,
+    user_id: user.id, product_id: p.id, slug: p.slug, name: p.name,
     price: Number(p.price), quantity: totalQty,
     image: p.images?.[0] ?? null,
     weight_oz: Number(p.weight_oz), length_in: Number(p.length_in),

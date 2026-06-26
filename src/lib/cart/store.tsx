@@ -23,6 +23,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 function toCartItem(row: Record<string, unknown>): CartItem {
   return {
     productId:  String(row.product_id),
+    slug:       String(row.slug ?? ""),
     name:       String(row.name),
     price:      Number(row.price),
     quantity:   Number(row.quantity),
@@ -39,6 +40,7 @@ function toRow(userId: string, item: CartItem) {
   return {
     user_id:    userId,
     product_id: item.productId,
+    slug:       item.slug,
     name:       item.name,
     price:      item.price,
     quantity:   item.quantity,
