@@ -58,9 +58,13 @@ export function CartProvider({ userId, children }: { userId?: string | null; chi
   const [items, setItems] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const sb = useRef(createClient()).current;
+  // Tracks whether clearCart() was called during an in-flight DB fetch so the
+  // fetch result doesn't overwrite the empty state after a purchase.
+  const clearedDuringFetch = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
+    clearedDuringFetch.current = false;
 
     const load = async () => {
       if (userId) {
@@ -73,7 +77,7 @@ export function CartProvider({ userId, children }: { userId?: string | null; chi
 
         // Fetch DB cart
         const { data } = await sb.from("cart_items").select("*").eq("user_id", userId);
-        if (cancelled) return;
+        if (cancelled || clearedDuringFetch.current) return;
 
         const dbItems: CartItem[] = (data ?? []).map(toCartItem);
 
@@ -94,9 +98,9 @@ export function CartProvider({ userId, children }: { userId?: string | null; chi
             { onConflict: "user_id,product_id" }
           );
           localStorage.removeItem(GUEST_KEY);
-          if (!cancelled) setItems(merged);
+          if (!cancelled && !clearedDuringFetch.current) setItems(merged);
         } else {
-          if (!cancelled) setItems(dbItems);
+          if (!cancelled && !clearedDuringFetch.current) setItems(dbItems);
         }
       } else {
         // Guest — localStorage only
@@ -162,6 +166,7 @@ export function CartProvider({ userId, children }: { userId?: string | null; chi
   }, [userId, sb]);
 
   const clearCart = useCallback(() => {
+    clearedDuringFetch.current = true;
     setItems([]);
     if (userId) clearCartAction();
   }, [userId]);
