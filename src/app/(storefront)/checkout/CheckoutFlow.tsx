@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart/store";
+import { validateAndSyncCart } from "@/lib/actions/cart";
 import { formatPrice } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { SUBDIVISIONS, getSubdivisionLabel, getCountryName } from "@/lib/data/countries";
@@ -36,7 +37,7 @@ const inputClass = "w-full rounded-md px-3 py-2.5 text-sm focus:outline-none foc
 
 export function CheckoutFlow({ allowedCountries, defaultShipping }: { allowedCountries: Country[]; defaultShipping: UserAddress | null }) {
   const router = useRouter();
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal, clearCart, reloadCart } = useCart();
 
   const defaultCountry = allowedCountries[0]?.code ?? "US";
 
@@ -88,6 +89,17 @@ export function CheckoutFlow({ allowedCountries, defaultShipping }: { allowedCou
     setLoading(true);
     setError(null);
     try {
+      const { valid, issues } = await validateAndSyncCart();
+      if (!valid) {
+        await reloadCart();
+        setError(issues.map(i =>
+          i.issue === "removed"
+            ? `"${i.name}" is no longer available and was removed.`
+            : `"${i.name}" quantity reduced to ${i.newQuantity}.`
+        ).join(" "));
+        setLoading(false);
+        return;
+      }
       const res = await fetch("/api/shipping/rates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -116,6 +128,17 @@ export function CheckoutFlow({ allowedCountries, defaultShipping }: { allowedCou
     setLoading(true);
     setError(null);
     try {
+      const { valid, issues } = await validateAndSyncCart();
+      if (!valid) {
+        await reloadCart();
+        setError(issues.map(i =>
+          i.issue === "removed"
+            ? `"${i.name}" is no longer available and was removed.`
+            : `"${i.name}" quantity reduced to ${i.newQuantity}.`
+        ).join(" ") + " Please review your cart before continuing.");
+        setLoading(false);
+        return;
+      }
       const res = await fetch("/api/checkout/create-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { clearCartAction, removeCartItemAction } from "@/lib/actions/cart";
 import type { CartItem } from "@/types";
 
 const GUEST_KEY = "ec_cart_guest";
@@ -136,11 +137,9 @@ export function CartProvider({ userId, children }: { userId?: string | null; chi
   }, [userId, sb]);
 
   const removeItem = useCallback((productId: string) => {
-    setItems(prev => {
-      if (userId) sb.from("cart_items").delete().eq("user_id", userId).eq("product_id", productId);
-      return prev.filter(i => i.productId !== productId);
-    });
-  }, [userId, sb]);
+    setItems(prev => prev.filter(i => i.productId !== productId));
+    if (userId) removeCartItemAction(productId);
+  }, [userId]);
 
   const updateQuantity = useCallback((productId: string, quantity: number) => {
     if (quantity <= 0) {
@@ -162,8 +161,8 @@ export function CartProvider({ userId, children }: { userId?: string | null; chi
 
   const clearCart = useCallback(() => {
     setItems([]);
-    if (userId) sb.from("cart_items").delete().eq("user_id", userId);
-  }, [userId, sb]);
+    if (userId) clearCartAction();
+  }, [userId]);
 
   const reloadCart = useCallback(async () => {
     if (!userId) return;

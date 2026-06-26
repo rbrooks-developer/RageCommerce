@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useCart } from "@/lib/cart/store";
+import { addProductToCart } from "@/lib/actions/cart";
 import type { Product } from "@/types";
 
 type ProductProps = Pick<
@@ -10,24 +11,33 @@ type ProductProps = Pick<
 >;
 
 export function AddToCartButton({ product }: { product: ProductProps }) {
-  const { addItem } = useCart();
+  const { addItem, reloadCart } = useCart();
   const [qty, setQty] = useState(1);
-  const [added, setAdded] = useState(false);
+  const [status, setStatus] = useState<"idle" | "loading" | "added" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  function handleAdd() {
-    addItem({
-      productId: product.id,
-      name: product.name,
-      price: Number(product.price),
-      quantity: qty,
-      image: ((product.images as string[]) ?? [])[0] ?? null,
-      weight_oz: Number(product.weight_oz),
-      length_in: Number(product.length_in),
-      width_in: Number(product.width_in),
-      height_in: Number(product.height_in),
-    });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+  async function handleAdd() {
+    setStatus("loading");
+    setErrorMsg(null);
+    const result = await addProductToCart(product.id, qty);
+
+    if (!result.ok) {
+      setStatus("error");
+      setErrorMsg(result.error ?? "Could not add to cart.");
+      setTimeout(() => setStatus("idle"), 3000);
+      return;
+    }
+
+    if (result.guestItem) {
+      // Guest user — validated server-side, add to local cart
+      addItem(result.guestItem as any);
+    } else {
+      // Logged-in — item written to DB; sync context
+      await reloadCart();
+    }
+
+    setStatus("added");
+    setTimeout(() => setStatus("idle"), 2000);
   }
 
   if (product.inventory === 0) {
@@ -69,15 +79,17 @@ export function AddToCartButton({ product }: { product: ProductProps }) {
         <span className="text-xs" style={{ opacity: 0.45 }}>{product.inventory} available</span>
       </div>
 
+      {errorMsg && (
+        <p className="text-xs text-red-400">{errorMsg}</p>
+      )}
+
       <button
         onClick={handleAdd}
-        className="w-full rounded-md py-4 text-sm font-semibold transition-opacity hover:opacity-85"
-        style={{
-          backgroundColor: "var(--site-fg)",
-          color: "var(--site-bg)",
-        }}
+        disabled={status === "loading"}
+        className="w-full rounded-md py-4 text-sm font-semibold transition-opacity hover:opacity-85 disabled:opacity-50"
+        style={{ backgroundColor: "var(--site-fg)", color: "var(--site-bg)" }}
       >
-        {added ? "Added to Cart!" : "Add to Cart"}
+        {status === "loading" ? "Adding…" : status === "added" ? "Added to Cart!" : "Add to Cart"}
       </button>
     </div>
   );

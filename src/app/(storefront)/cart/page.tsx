@@ -1,13 +1,36 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart/store";
+import { validateAndSyncCart } from "@/lib/actions/cart";
 import { formatPrice } from "@/lib/utils";
 import { Trash2 } from "lucide-react";
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, subtotal, itemCount } = useCart();
+  const router = useRouter();
+  const { items, removeItem, updateQuantity, subtotal, itemCount, reloadCart } = useCart();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [cartIssues, setCartIssues] = useState<string[]>([]);
+
+  async function handleProceedToCheckout() {
+    setCheckoutLoading(true);
+    setCartIssues([]);
+    const { valid, issues } = await validateAndSyncCart();
+    if (!valid) {
+      await reloadCart();
+      setCartIssues(issues.map(i =>
+        i.issue === "removed"
+          ? `"${i.name}" is no longer available and was removed from your cart.`
+          : `"${i.name}" quantity was reduced to ${i.newQuantity} (limited stock).`
+      ));
+      setCheckoutLoading(false);
+      return;
+    }
+    router.push("/checkout");
+  }
 
   if (itemCount === 0) {
     return (
@@ -126,13 +149,21 @@ export default function CartPage() {
               <span>{formatPrice(subtotal * 100)}</span>
             </div>
 
-            <Link
-              href="/checkout"
-              className="block w-full rounded-md py-3.5 text-center text-sm font-semibold transition-opacity hover:opacity-80"
+            {cartIssues.length > 0 && (
+              <div className="space-y-1">
+                {cartIssues.map((msg, i) => (
+                  <p key={i} className="text-xs rounded px-3 py-2" style={{ backgroundColor: "color-mix(in srgb, #ef4444 10%, var(--site-bg))", border: "1px solid #fca5a5" }}>{msg}</p>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={handleProceedToCheckout}
+              disabled={checkoutLoading}
+              className="block w-full rounded-md py-3.5 text-center text-sm font-semibold transition-opacity hover:opacity-80 disabled:opacity-50"
               style={{ background: "var(--site-fg)", backgroundClip: "border-box", WebkitBackgroundClip: "border-box", color: "var(--site-bg)", WebkitTextFillColor: "var(--site-bg)" }}
             >
-              Proceed to Checkout
-            </Link>
+              {checkoutLoading ? "Checking…" : "Proceed to Checkout"}
+            </button>
 
             <Link
               href="/products"

@@ -57,16 +57,12 @@ export default async function AccountPage() {
     .eq("user_id", user.id)
     .eq("status", "approved");
 
-  console.log("[account] approvedOffers:", JSON.stringify(approvedOffers), "error:", approvedErr?.message);
-
   if (approvedOffers && approvedOffers.length > 0) {
     const productIds = [...new Set(approvedOffers.map((o: any) => o.product_id as string))];
-    const { data: products, error: productsErr } = await supabase
+    const { data: products } = await supabase
       .from("products")
       .select("id, inventory, is_published")
       .in("id", productIds);
-
-    console.log("[account] products for offers:", JSON.stringify(products), "error:", productsErr?.message);
 
     const productMap = Object.fromEntries(
       ((products ?? []) as { id: string; inventory: number; is_published: boolean }[]).map(p => [p.id, p])
@@ -75,20 +71,16 @@ export default async function AccountPage() {
     const outOfStockIds = (approvedOffers as { id: string; product_id: string; quantity: number }[])
       .filter(o => {
         const p = productMap[o.product_id];
-        console.log(`[account] offer ${o.id}: qty=${o.quantity}, product inventory=${p?.inventory}, is_published=${p?.is_published}`);
         return !p || !p.is_published || p.inventory < o.quantity;
       })
       .map(o => o.id);
 
-    console.log("[account] outOfStockIds:", outOfStockIds);
-
     if (outOfStockIds.length > 0) {
       const sb = createServiceClient();
-      const { error: updateErr } = await sb
+      await sb
         .from("product_offers")
         .update({ status: "out_of_stock", updated_at: new Date().toISOString() })
         .in("id", outOfStockIds);
-      console.log("[account] out_of_stock update error:", updateErr?.message ?? "none");
     }
   }
 
