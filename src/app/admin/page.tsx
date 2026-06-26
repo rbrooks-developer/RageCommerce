@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
-import { Package, FolderOpen, ShoppingCart, DollarSign } from "lucide-react";
+import { Package, FolderOpen, ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
 import type { Order, Product } from "@/types";
 
 async function getStats() {
@@ -14,9 +14,49 @@ async function getStats() {
   const orderRows = (orders.data ?? []) as Pick<Order, "id" | "total_price" | "status">[];
   const productRows = (products.data ?? []) as Pick<Product, "id" | "is_published">[];
 
+  const paidOrderIds = orderRows
+    .filter((o) => o.status !== "cancelled" && o.status !== "pending")
+    .map((o) => o.id);
+
   const revenue = orderRows
     .filter((o) => o.status !== "cancelled")
     .reduce((sum, o) => sum + Number(o.total_price), 0);
+
+  // Profit: fetch order items for paid orders, then product costs separately
+  let profit: number | null = null;
+  let profitProductCount = 0;
+
+  if (paidOrderIds.length > 0) {
+    const { data: itemsRaw } = await supabase
+      .from("order_items")
+      .select("price, quantity, product_id")
+      .in("order_id", paidOrderIds);
+
+    const items = (itemsRaw ?? []) as { price: number; quantity: number; product_id: string }[];
+
+    if (items.length > 0) {
+      const productIds = [...new Set(items.map((i) => i.product_id))];
+      const { data: costRows } = await supabase
+        .from("products")
+        .select("id, cost")
+        .in("id", productIds)
+        .not("cost", "is", null);
+
+      const costMap = Object.fromEntries(
+        ((costRows ?? []) as { id: string; cost: number }[]).map((p) => [p.id, p.cost])
+      );
+
+      profitProductCount = Object.keys(costMap).length;
+
+      if (profitProductCount > 0) {
+        profit = items.reduce((sum, item) => {
+          const cost = costMap[item.product_id];
+          if (cost == null) return sum;
+          return sum + (Number(item.price) - Number(cost)) * item.quantity;
+        }, 0);
+      }
+    }
+  }
 
   return {
     productCount: products.count ?? 0,
@@ -24,6 +64,8 @@ async function getStats() {
     categoryCount: categories.count ?? 0,
     orderCount: orders.count ?? 0,
     revenue,
+    profit,
+    profitProductCount,
   };
 }
 
@@ -42,10 +84,20 @@ async function getRecentOrders(): Promise<RecentOrder[]> {
 export default async function AdminDashboard() {
   const [stats, recentOrders] = await Promise.all([getStats(), getRecentOrders()]);
 
+  const profitValue = stats.profit === null
+    ? "—"
+    : formatPrice(stats.profit * 100);
+  const profitSub = stats.profit === null
+    ? "Add cost to products"
+    : stats.profitProductCount > 0
+      ? `${stats.profitProductCount} product${stats.profitProductCount === 1 ? "" : "s"} with cost data`
+      : undefined;
+
   const statCards = [
     { label: "Total Products", value: stats.productCount, sub: `${stats.publishedCount} published`, icon: Package },
     { label: "Categories", value: stats.categoryCount, icon: FolderOpen },
     { label: "Total Orders", value: stats.orderCount, icon: ShoppingCart },
+    { label: "Profit", value: profitValue, sub: profitSub, icon: TrendingUp, negative: typeof stats.profit === "number" && stats.profit < 0 },
     { label: "Revenue", value: formatPrice(stats.revenue * 100), icon: DollarSign },
   ];
 
@@ -53,7 +105,7 @@ export default async function AdminDashboard() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {statCards.map((card) => {
           const Icon = card.icon;
           return (
@@ -62,7 +114,9 @@ export default async function AdminDashboard() {
                 <span className="text-sm text-gray-500">{card.label}</span>
                 <Icon className="h-4 w-4 text-gray-400" />
               </div>
-              <p className="mt-2 text-2xl font-bold text-gray-900">{card.value}</p>
+              <p className={`mt-2 text-2xl font-bold ${"negative" in card && card.negative ? "text-red-600" : "text-gray-900"}`}>
+                {card.value}
+              </p>
               {card.sub && <p className="mt-0.5 text-xs text-gray-400">{card.sub}</p>}
             </div>
           );
