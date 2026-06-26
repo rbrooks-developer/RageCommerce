@@ -105,7 +105,7 @@ export function CheckoutFlow({ allowedCountries, defaultShipping }: { allowedCou
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           address,
-          items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+          items: items.map((i) => ({ productId: i.productId, quantity: i.quantity, offerId: i.offerId ?? null })),
         }),
       });
       const data = await res.json();
@@ -143,7 +143,7 @@ export function CheckoutFlow({ allowedCountries, defaultShipping }: { allowedCou
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+          items: items.map((i) => ({ productId: i.productId, quantity: i.quantity, offerId: i.offerId ?? null })),
           shippingAddress: address,
           shippingRate: selectedRate,
         }),

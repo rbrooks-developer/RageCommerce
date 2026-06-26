@@ -10,6 +10,7 @@ const requestSchema = z.object({
     z.object({
       productId: z.string(),
       quantity: z.number().int().positive(),
+      offerId: z.string().nullable().optional(),
     })
   ),
   shippingAddress: z.object({
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
 
   const { items, shippingAddress, shippingRate } = parsed.data;
 
-  // Fetch products from DB to validate prices + inventory
+  // Fetch products from DB to validate availability
   const productIds = items.map((i) => i.productId);
   const { data: rawProducts } = await supabase
     .from("products")
@@ -62,7 +63,25 @@ export async function POST(request: NextRequest) {
     "id" | "name" | "price" | "images" | "inventory" | "is_published"
   >[];
 
-  // Validate all items are published and in stock
+  // Fetch approved offers server-side for any offer items (never trust client price)
+  const offerIds = items.map((i) => i.offerId).filter(Boolean) as string[];
+  type OfferRow = { id: string; user_id: string; product_id: string; quantity: number; offer_price: number; status: string };
+  let offerMap: Record<string, OfferRow> = {};
+
+  if (offerIds.length > 0) {
+    const { data: rawOffers } = await supabase
+      .from("product_offers")
+      .select("id, user_id, product_id, quantity, offer_price, status")
+      .in("id", offerIds)
+      .eq("user_id", user.id)
+      .eq("status", "approved");
+
+    offerMap = Object.fromEntries(
+      ((rawOffers ?? []) as OfferRow[]).map((o) => [o.id, o])
+    );
+  }
+
+  // Validate all items
   for (const item of items) {
     const product = products.find((p) => p.id === item.productId);
     if (!product || !product.is_published) {
@@ -74,13 +93,31 @@ export async function POST(request: NextRequest) {
         { status: 422 }
       );
     }
+    if (item.offerId) {
+      const offer = offerMap[item.offerId];
+      if (!offer) {
+        return Response.json(
+          { error: `Offer for "${product.name}" is no longer valid` },
+          { status: 422 }
+        );
+      }
+    }
   }
 
-  // Calculate totals from DB prices (never trust client)
-  const subtotal = items.reduce((sum, item) => {
+  // Resolve the price per item: offer price if applicable, otherwise product price
+  function resolvePrice(item: typeof items[number]): number {
+    if (item.offerId && offerMap[item.offerId]) {
+      return Number(offerMap[item.offerId].offer_price);
+    }
     const product = products.find((p) => p.id === item.productId)!;
-    return sum + Number(product.price) * item.quantity;
-  }, 0);
+    return Number(product.price);
+  }
+
+  // Calculate totals using resolved prices
+  const subtotal = items.reduce(
+    (sum, item) => sum + resolvePrice(item) * item.quantity,
+    0
+  );
 
   const shippingCost = parseFloat(shippingRate.rate);
 
@@ -124,14 +161,15 @@ export async function POST(request: NextRequest) {
 
   const orderId = (orderData as { id: string }).id;
 
-  // Insert order items
+  // Insert order items using resolved prices
   const orderItems = items.map((item) => {
     const product = products.find((p) => p.id === item.productId)!;
     return {
       order_id: orderId,
       product_id: item.productId,
       quantity: item.quantity,
-      price: Number(product.price),
+      price: resolvePrice(item),
+      name: product.name,
     };
   });
 
@@ -142,19 +180,21 @@ export async function POST(request: NextRequest) {
     quantity: number;
   };
 
-  // Build Stripe line items
+  // Build Stripe line items using resolved prices
   const lineItems: StripeLineItem[] = [
     ...items.map((item) => {
       const product = products.find((p) => p.id === item.productId)!;
       const images = (product.images as string[]) ?? [];
+      const unitPrice = resolvePrice(item);
+      const isOffer = !!item.offerId && !!offerMap[item.offerId];
       return {
         price_data: {
           currency: "usd",
           product_data: {
-            name: product.name,
+            name: isOffer ? `${product.name} (Offer Price)` : product.name,
             ...(images[0] ? { images: [images[0]] } : {}),
           },
-          unit_amount: Math.round(Number(product.price) * 100),
+          unit_amount: Math.round(unitPrice * 100),
         },
         quantity: item.quantity,
       };
