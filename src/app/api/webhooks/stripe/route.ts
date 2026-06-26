@@ -90,6 +90,30 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Mark any offer-priced cart items as purchased now that payment succeeded.
+      // The cart_items rows still exist here — ClearCart runs client-side on the success page.
+      const orderedProductIds = orderItems.map(i => i.product_id);
+      if (orderedProductIds.length > 0) {
+        const { data: offerCartItems } = await supabase
+          .from("cart_items")
+          .select("offer_id")
+          .eq("user_id", order.user_id)
+          .in("product_id", orderedProductIds)
+          .not("offer_id", "is", null);
+
+        const offerIds = ((offerCartItems ?? []) as { offer_id: string }[])
+          .map(r => r.offer_id)
+          .filter(Boolean);
+
+        if (offerIds.length > 0) {
+          await supabase
+            .from("product_offers")
+            .update({ status: "purchased", updated_at: new Date().toISOString() })
+            .in("id", offerIds);
+          console.log(`[webhook] marked ${offerIds.length} offer(s) as purchased`);
+        }
+      }
+
       // Send confirmation email
       console.log(`[webhook] order ${orderId} paid — looking up email for user ${order.user_id}`);
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "@/lib/cart/store";
-import { deleteOffer, markOfferPurchased } from "@/lib/actions/offers";
+import { deleteOffer } from "@/lib/actions/offers";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
@@ -61,7 +61,6 @@ export function MyOffers({ offers }: { offers: OfferRow[] }) {
   async function handleAddToCart(offer: OfferRow) {
     if (!offer.products) return;
     setBusy(offer.id);
-    await markOfferPurchased(offer.id);
     addItem({
       productId: offer.product_id,
       name: offer.products.name,
