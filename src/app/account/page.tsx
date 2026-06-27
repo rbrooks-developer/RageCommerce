@@ -95,7 +95,7 @@ export default async function AccountPage() {
       .order("created_at", { ascending: false }),
     supabase
       .from("product_offers")
-      .select("id, product_id, quantity, offer_price, status, decline_reason, expires_at, created_at, products(name, slug, images, weight_oz, length_in, width_in, height_in)")
+      .select("id, product_id, quantity, offer_price, counter_price, user_counter_count, status, decline_reason, expires_at, created_at, products(name, slug, images, weight_oz, length_in, width_in, height_in, price)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
   ]);

@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { approveOffer, declineOffer } from "@/lib/actions/offers";
+import { approveOffer, declineOffer, counterOffer } from "@/lib/actions/offers";
 import { useRouter } from "next/navigation";
 
-export function OfferActions({ offerId }: { offerId: string }) {
+export function OfferActions({ offerId, listPrice }: { offerId: string; listPrice: number }) {
   const router = useRouter();
-  const [mode, setMode] = useState<"idle" | "declining">("idle");
+  const [mode, setMode] = useState<"idle" | "declining" | "countering">("idle");
   const [reason, setReason] = useState("");
+  const [counterPrice, setCounterPrice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   async function handleApprove() {
     setBusy(true);
@@ -19,6 +21,17 @@ export function OfferActions({ offerId }: { offerId: string }) {
   async function handleDecline() {
     setBusy(true);
     await declineOffer(offerId, reason.trim() || undefined);
+    router.refresh();
+  }
+
+  async function handleCounter() {
+    const price = parseFloat(counterPrice);
+    if (!price || price <= 0) { setErr("Enter a valid price."); return; }
+    if (listPrice > 0 && price >= listPrice) { setErr(`Must be less than list price (${listPrice.toFixed(2)}).`); return; }
+    setBusy(true);
+    setErr(null);
+    const result = await counterOffer(offerId, price) as any;
+    if (result?.error) { setErr(result.error); setBusy(false); return; }
     router.refresh();
   }
 
@@ -33,17 +46,40 @@ export function OfferActions({ offerId }: { offerId: string }) {
           className="w-full rounded border border-gray-300 px-3 py-2 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 resize-none"
         />
         <div className="flex gap-2">
-          <button
-            onClick={handleDecline}
-            disabled={busy}
-            className="flex-1 rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
-          >
+          <button onClick={handleDecline} disabled={busy} className="flex-1 rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors">
             {busy ? "…" : "Confirm Decline"}
           </button>
-          <button
-            onClick={() => setMode("idle")}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-          >
+          <button onClick={() => setMode("idle")} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === "countering") {
+    return (
+      <div className="space-y-2 min-w-[200px]">
+        <div className="relative">
+          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">$</span>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={counterPrice}
+            onChange={e => {
+              const val = e.target.value;
+              if (/^\d*\.?\d{0,2}$/.test(val)) { setCounterPrice(val); setErr(null); }
+            }}
+            placeholder="0.00"
+            className="w-full rounded border border-gray-300 pl-6 pr-3 py-1.5 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+        </div>
+        {err && <p className="text-xs text-red-600">{err}</p>}
+        <div className="flex gap-2">
+          <button onClick={handleCounter} disabled={busy} className="flex-1 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+            {busy ? "…" : "Send Counter"}
+          </button>
+          <button onClick={() => { setMode("idle"); setErr(null); }} className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
             Cancel
           </button>
         </div>
@@ -52,19 +88,14 @@ export function OfferActions({ offerId }: { offerId: string }) {
   }
 
   return (
-    <div className="flex gap-2">
-      <button
-        onClick={handleApprove}
-        disabled={busy}
-        className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
-      >
+    <div className="flex gap-2 flex-wrap">
+      <button onClick={handleApprove} disabled={busy} className="rounded-md bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50 transition-colors">
         Approve
       </button>
-      <button
-        onClick={() => setMode("declining")}
-        disabled={busy}
-        className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
-      >
+      <button onClick={() => setMode("countering")} disabled={busy} className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
+        Counter
+      </button>
+      <button onClick={() => setMode("declining")} disabled={busy} className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors">
         Decline
       </button>
     </div>

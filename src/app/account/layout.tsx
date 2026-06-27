@@ -14,7 +14,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
 
   const [profileResult, approvedOffersResult] = await Promise.all([
     user ? supabase.from("profiles").select("role").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
-    user ? supabase.from("product_offers").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("status", "approved") : Promise.resolve({ count: 0 }),
+    user ? supabase.from("product_offers").select("*", { count: "exact", head: true }).eq("user_id", user.id).in("status", ["approved", "countered"]) : Promise.resolve({ count: 0 }),
   ]);
 
   const isAdmin = ((profileResult.data as { role: string } | null)?.role === "admin");
@@ -23,9 +23,30 @@ export default async function AccountLayout({ children }: { children: React.Reac
   const homepage = settings?.homepage_config as HomepageConfig | null;
   const bgColor = homepage?.bg_color ?? "#ffffff";
   const fontColor = homepage?.font_color ?? "#111827";
+  const striationImageUrl = homepage?.striation_image_url ?? null;
+  const striationOpacity = homepage?.striation_opacity ?? 30;
+  const striationBlendMode = (homepage?.striation_blend_mode ?? "screen") as React.CSSProperties["mixBlendMode"];
+  const striationPosition = homepage?.striation_position ?? "full";
 
   return (
     <CartProvider userId={user?.id}>
+      {striationImageUrl && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 35,
+            pointerEvents: "none",
+            backgroundImage: `url(${striationImageUrl})`,
+            backgroundSize: striationPosition === "full" ? "cover" : striationPosition === "tile" ? "auto" : "auto 100%",
+            backgroundPosition: striationPosition === "left" ? "left center" : striationPosition === "right" ? "right center" : "center",
+            backgroundRepeat: striationPosition === "tile" ? "repeat" : "no-repeat",
+            opacity: striationOpacity / 100,
+            mixBlendMode: striationBlendMode,
+          }}
+        />
+      )}
       <Header
         siteTitle={settings?.site_title ?? "My Store"}
         logoUrl={settings?.logo_url ?? null}

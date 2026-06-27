@@ -28,6 +28,11 @@ function isOffersLink(link: string) {
   return n === "account#offers" || n.startsWith("account#offers");
 }
 
+function isAccountLink(link: string) {
+  const n = link.startsWith("/") ? link : `/${link}`;
+  return n.startsWith("/account");
+}
+
 export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = false, bgColor = "#ffffff", fontColor = "#111827", approvedOffersCount = 0 }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { itemCount } = useCart();
@@ -50,7 +55,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            {navItems.map((item) => {
+            {navItems.filter((item) => isLoggedIn || !isAccountLink(item.link)).map((item) => {
               const showBadge = isOffersLink(item.link) && approvedOffersCount > 0;
               return (
                 <Link
@@ -127,7 +132,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
         style={{ backgroundColor: bgColor }}
       >
         <nav className="flex flex-col px-4 py-3 space-y-1">
-          {navItems.map((item) => {
+          {navItems.filter((item) => isLoggedIn || !isAccountLink(item.link)).map((item) => {
             const showBadge = isOffersLink(item.link) && approvedOffersCount > 0;
             return (
               <Link

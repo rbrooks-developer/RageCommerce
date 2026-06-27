@@ -62,7 +62,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         .select("status")
         .eq("user_id", user.id)
         .eq("product_id", product.id)
-        .in("status", ["pending", "approved"])
+        .in("status", ["pending", "approved", "countered"])
         .maybeSingle(),
       supabase
         .from("product_offers")
@@ -75,13 +75,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         .maybeSingle(),
       supabase
         .from("product_offers")
-        .select("*", { count: "exact", head: true })
+        .select("user_counter_count")
         .eq("user_id", user.id)
         .eq("product_id", product.id)
-        .in("status", ["pending", "approved", "declined", "purchased", "out_of_stock"]),
+        .in("status", ["pending", "approved", "declined", "purchased", "out_of_stock", "countered"]),
     ]);
 
-    offersUsed = countResult.count ?? 0;
+    offersUsed = (countResult.data ?? []).reduce(
+      (sum: number, r: any) => sum + 1 + (r.user_counter_count ?? 0), 0
+    );
 
     if (blockingResult.data) {
       existingOfferStatus = (blockingResult.data as { status: string }).status;

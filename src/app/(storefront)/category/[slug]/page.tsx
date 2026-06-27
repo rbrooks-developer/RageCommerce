@@ -40,12 +40,12 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const ids = collectIds(category.id, allCategories);
   const { data: rawProducts } = await supabase
     .from("products")
-    .select("id, slug, name, price, images")
+    .select("id, slug, name, price, images, inventory")
     .in("category_id", ids)
     .eq("is_published", true)
     .order("created_at", { ascending: false });
 
-  const products = (rawProducts ?? []) as Pick<Product, "id" | "slug" | "name" | "price" | "images">[];
+  const products = (rawProducts ?? []) as Pick<Product, "id" | "slug" | "name" | "price" | "images" | "inventory">[];
 
   const homepage = settings?.homepage_config as HomepageConfig | null;
   const fontColor = homepage?.font_color ?? "#111827";

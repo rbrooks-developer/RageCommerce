@@ -31,12 +31,13 @@ export type CartItem = {
 };
 
 export type ProductOffer = {
+  counter_price?: number | null;
   id: string;
   user_id: string;
   product_id: string;
   quantity: number;
   offer_price: number;
-  status: "pending" | "approved" | "declined" | "purchased" | "expired" | "out_of_stock";
+  status: "pending" | "approved" | "declined" | "purchased" | "expired" | "out_of_stock" | "countered";
   decline_reason: string | null;
   expires_at: string | null;
   created_at: string;
@@ -82,6 +83,10 @@ export type HomepageConfig = {
   og_image_url?: string | null;
   checkout_section_color?: string;
   checkout_textbox_color?: string;
+  striation_image_url?: string | null;
+  striation_opacity?: number;
+  striation_blend_mode?: string;
+  striation_position?: string;
 };
 
 export type NavConfig = {

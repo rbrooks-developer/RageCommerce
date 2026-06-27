@@ -51,6 +51,10 @@ export const siteSettingsSchema = z.object({
     og_image_url: z.string().url().nullable().optional(),
     checkout_section_color: hexColor.optional(),
     checkout_textbox_color: hexColor.optional(),
+    striation_image_url: z.string().url().nullable().optional(),
+    striation_opacity: z.number().min(0).max(100).default(30),
+    striation_blend_mode: z.string().default("screen"),
+    striation_position: z.string().default("full"),
   }),
   nav_config: z.object({
     items: z.array(navItemSchema),

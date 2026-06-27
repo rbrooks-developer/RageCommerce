@@ -80,7 +80,7 @@ export function AddToCartButton({ product }: { product: ProductProps }) {
       </div>
 
       {errorMsg && (
-        <p className="text-xs text-red-400">{errorMsg}</p>
+        <p className="text-xs" style={{ color: "#ef4444", WebkitTextFillColor: "#ef4444" }}>{errorMsg}</p>
       )}
 
       <button

@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { OfferActions } from "./OfferActions";
+import { AdminDeleteButton } from "./AdminDeleteButton";
 import { formatPrice } from "@/lib/utils";
 
 type ProfileData = { first_name: string | null; last_name: string | null; email: string };
@@ -9,6 +10,7 @@ type OfferRow = {
   user_id: string;
   quantity: number;
   offer_price: number;
+  counter_price: number | null;
   status: string;
   decline_reason: string | null;
   expires_at: string | null;
@@ -30,12 +32,12 @@ export default async function AdminOffersPage() {
   // product_offers.user_id → auth.users (not profiles), so we can't join profiles directly
   const { data: offersRaw, error } = await sb
     .from("product_offers")
-    .select("id, user_id, quantity, offer_price, status, decline_reason, expires_at, created_at, products(id, name, price, images)")
+    .select("id, user_id, quantity, offer_price, counter_price, status, decline_reason, expires_at, created_at, products(id, name, price, images)")
     .order("created_at", { ascending: false });
 
   if (error) console.error("AdminOffersPage:", error.message);
 
-  const rawOffers = (offersRaw ?? []) as Omit<OfferRow, "profile">[];
+  const rawOffers = (offersRaw ?? []) as unknown as Omit<OfferRow, "profile">[];
 
   // Fetch profiles separately
   const userIds = [...new Set(rawOffers.map(o => o.user_id))];
@@ -51,8 +53,8 @@ export default async function AdminOffersPage() {
   }
 
   const offers: OfferRow[] = rawOffers.map(o => ({ ...o, profile: profileMap[o.user_id] ?? null }));
-  const pending = offers.filter(o => o.status === "pending");
-  const history = offers.filter(o => o.status !== "pending");
+  const pending  = offers.filter(o => o.status === "pending" || o.status === "countered");
+  const history  = offers.filter(o => o.status !== "pending" && o.status !== "countered");
 
   function OfferTable({ rows }: { rows: OfferRow[] }) {
     if (rows.length === 0) return <p className="text-sm text-gray-400 py-4">None.</p>;
@@ -86,9 +88,13 @@ export default async function AdminOffersPage() {
                 </div>
 
                 {/* Status / actions */}
-                <div className="shrink-0">
+                <div className="shrink-0 flex items-center gap-2">
                   {offer.status === "pending" ? (
-                    <OfferActions offerId={offer.id} />
+                    <OfferActions offerId={offer.id} listPrice={Number(offer.products?.price ?? 0)} />
+                  ) : offer.status === "countered" ? (
+                    <span className="inline-block text-xs font-semibold rounded-full px-2.5 py-1 bg-blue-100 text-blue-700">
+                      Countered at {formatPrice(Number(offer.counter_price) * 100)}
+                    </span>
                   ) : (
                     <span className={`text-xs font-semibold rounded-full px-2.5 py-1 ${
                       offer.status === "approved"      ? "bg-green-100 text-green-700" :
@@ -100,6 +106,7 @@ export default async function AdminOffersPage() {
                       {offer.status === "out_of_stock" ? "Out of Stock" : offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}
                     </span>
                   )}
+                  <AdminDeleteButton offerId={offer.id} />
                 </div>
               </div>
 

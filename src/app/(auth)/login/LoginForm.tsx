@@ -52,7 +52,7 @@ export function LoginForm() {
           <Input id="password" name="password" type="password" autoComplete="current-password" error={errors?.password?.[0]} required />
         </div>
 
-        <Button type="submit" size="lg" className="w-full" loading={isPending}>
+        <Button type="submit" size="lg" className="w-full font-semibold" loading={isPending} style={{ backgroundColor: "var(--site-fg)", color: "var(--site-bg)", fontFamily: "inherit" }}>
           Sign in
         </Button>
       </form>

@@ -143,9 +143,14 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [bgColor, setBgColor] = useState(homepage?.bg_color ?? "#ffffff");
   const [fontColor, setFontColor] = useState(homepage?.font_color ?? "#111827");
   const [fontFamily, setFontFamily] = useState(homepage?.font_family ?? "default");
+  const [heroFont, setHeroFont] = useState(homepage?.hero_font ?? "Playfair Display");
   const [fontGradient, setFontGradient] = useState(homepage?.font_gradient_enabled ?? false);
   const [checkoutSectionColor, setCheckoutSectionColor] = useState(homepage?.checkout_section_color ?? "#1a1a1a");
   const [checkoutTextboxColor, setCheckoutTextboxColor] = useState(homepage?.checkout_textbox_color ?? "#2a2a2a");
+  const [striationUrl, setStriationUrl] = useState<string[]>(homepage?.striation_image_url ? [homepage.striation_image_url] : []);
+  const [striationOpacity, setStriationOpacity] = useState(homepage?.striation_opacity ?? 30);
+  const [striationBlendMode, setStriationBlendMode] = useState(homepage?.striation_blend_mode ?? "screen");
+  const [striationPosition, setStriationPosition] = useState(homepage?.striation_position ?? "full");
 
   useEffect(() => {
     const id = "admin-font-preview-link";
@@ -157,6 +162,17 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
     link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontFamily)}&display=swap`;
     document.head.appendChild(link);
   }, [fontFamily]);
+
+  useEffect(() => {
+    const id = "admin-hero-font-preview-link";
+    document.getElementById(id)?.remove();
+    if (!heroFont) return;
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(heroFont)}&display=swap`;
+    document.head.appendChild(link);
+  }, [heroFont]);
 
   const [taxMode, setTaxMode] = useState(defaultValues?.tax_mode ?? "none");
 
@@ -206,11 +222,15 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         font_gradient_enabled: fontGradient,
         hero_display_name: g("hero_display_name") || undefined,
         hero_tagline: g("hero_tagline") || undefined,
-        hero_font: g("hero_font") || "Playfair Display",
+        hero_font: heroFont || "Playfair Display",
         service_images: serviceImages,
         og_image_url: ogImageUrl[0] ?? null,
         checkout_section_color: checkoutSectionColor,
         checkout_textbox_color: checkoutTextboxColor,
+        striation_image_url: striationUrl[0] ?? null,
+        striation_opacity: striationOpacity,
+        striation_blend_mode: striationBlendMode,
+        striation_position: striationPosition,
       },
       nav_config: { items: navItems.filter((i) => i.label && i.link) },
       footer_config: {
@@ -382,24 +402,70 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
           <Label htmlFor="hero_font">Hero Title Font</Label>
           <select
             id="hero_font"
-            name="hero_font"
-            defaultValue={homepage?.hero_font ?? "Playfair Display"}
+            value={heroFont}
+            onChange={(e) => setHeroFont(e.target.value)}
             className="mt-1 flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
           >
-            <option value="Playfair Display">Playfair Display</option>
-            <option value="Cinzel">Cinzel</option>
-            <option value="Cormorant Garamond">Cormorant Garamond</option>
-            <option value="EB Garamond">EB Garamond</option>
-            <option value="Libre Baskerville">Libre Baskerville</option>
-            <option value="Lora">Lora</option>
-            <option value="Merriweather">Merriweather</option>
-            <option value="Crimson Text">Crimson Text</option>
-            <option value="Raleway">Raleway</option>
-            <option value="Montserrat">Montserrat</option>
-            <option value="Oswald">Oswald</option>
-            <option value="Bebas Neue">Bebas Neue</option>
-            <option value="Russo One">Russo One</option>
+            <optgroup label="Sans-serif">
+              <option value="Inter">Inter</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Open Sans">Open Sans</option>
+              <option value="Lato">Lato</option>
+              <option value="Montserrat">Montserrat</option>
+              <option value="Poppins">Poppins</option>
+              <option value="Raleway">Raleway</option>
+              <option value="Nunito">Nunito</option>
+              <option value="DM Sans">DM Sans</option>
+              <option value="Josefin Sans">Josefin Sans</option>
+              <option value="Oswald">Oswald</option>
+              <option value="Outfit">Outfit</option>
+              <option value="Urbanist">Urbanist</option>
+              <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+              <option value="Figtree">Figtree</option>
+              <option value="Mulish">Mulish</option>
+              <option value="Quicksand">Quicksand</option>
+            </optgroup>
+            <optgroup label="Serif">
+              <option value="Playfair Display">Playfair Display</option>
+              <option value="Merriweather">Merriweather</option>
+              <option value="PT Serif">PT Serif</option>
+              <option value="Source Sans 3">Source Sans 3</option>
+              <option value="Lora">Lora</option>
+              <option value="Crimson Text">Crimson Text</option>
+              <option value="EB Garamond">EB Garamond</option>
+              <option value="Libre Baskerville">Libre Baskerville</option>
+            </optgroup>
+            <optgroup label="Comic &amp; Display">
+              <option value="Bangers">Bangers</option>
+              <option value="Comic Neue">Comic Neue</option>
+              <option value="Boogaloo">Boogaloo</option>
+              <option value="Fredoka One">Fredoka One</option>
+              <option value="Lilita One">Lilita One</option>
+              <option value="Titan One">Titan One</option>
+              <option value="Creepster">Creepster</option>
+              <option value="Righteous">Righteous</option>
+              <option value="Russo One">Russo One</option>
+              <option value="Bebas Neue">Bebas Neue</option>
+              <option value="Amatic SC">Amatic SC</option>
+              <option value="Press Start 2P">Press Start 2P</option>
+            </optgroup>
+            <optgroup label="Handwritten">
+              <option value="Permanent Marker">Permanent Marker</option>
+              <option value="Pacifico">Pacifico</option>
+              <option value="Caveat">Caveat</option>
+              <option value="Patrick Hand">Patrick Hand</option>
+              <option value="Indie Flower">Indie Flower</option>
+              <option value="Shadows Into Light">Shadows Into Light</option>
+              <option value="Architects Daughter">Architects Daughter</option>
+              <option value="Kalam">Kalam</option>
+            </optgroup>
           </select>
+          <p
+            className="mt-2 rounded border border-gray-200 bg-gray-50 px-3 py-2 text-base text-gray-800"
+            style={{ fontFamily: `'${heroFont}', serif` }}
+          >
+            The quick brown fox jumps over the lazy dog
+          </p>
         </div>
       </Section>
 
@@ -421,6 +487,77 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
           <ColorPicker id="checkout_textbox_color" label="Textbox Color" value={checkoutTextboxColor} onChange={setCheckoutTextboxColor} />
         </div>
         <p className="text-xs text-gray-400">Section Color = background of panels/cards. Textbox Color = background of input fields and dropdowns.</p>
+      </Section>
+
+      <Section title="Background Overlay">
+        <p className="text-sm text-gray-500">Upload a texture or striation image to overlay on every page background. Adjust opacity and blend mode to taste — <strong>Screen</strong> works best for light streaks on a dark background.</p>
+        <div>
+          <Label>Overlay Image</Label>
+          <ImageUpload value={striationUrl} onChange={setStriationUrl} max={1} bucket="site-assets" pathPrefix="overlay" />
+        </div>
+        {striationUrl[0] && (
+          <>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="striation_blend_mode">Blend Mode</Label>
+                <select
+                  id="striation_blend_mode"
+                  value={striationBlendMode}
+                  onChange={(e) => setStriationBlendMode(e.target.value)}
+                  className="mt-1 flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  <option value="screen">Screen (light streaks on dark)</option>
+                  <option value="overlay">Overlay (contrast boost)</option>
+                  <option value="normal">Normal (plain opacity)</option>
+                  <option value="multiply">Multiply (darkens)</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="striation_position">Position</Label>
+                <select
+                  id="striation_position"
+                  value={striationPosition}
+                  onChange={(e) => setStriationPosition(e.target.value)}
+                  className="mt-1 flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                >
+                  <option value="full">Full (cover entire background)</option>
+                  <option value="left">Left side</option>
+                  <option value="right">Right side</option>
+                  <option value="tile">Tiled (repeat)</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="striation_opacity">Opacity: {striationOpacity}%</Label>
+              <input
+                id="striation_opacity"
+                type="range"
+                min="0"
+                max="100"
+                value={striationOpacity}
+                onChange={(e) => setStriationOpacity(Number(e.target.value))}
+                className="mt-1 w-full accent-gray-900"
+              />
+            </div>
+            <div className="rounded-md overflow-hidden border border-gray-200">
+              <p className="text-xs text-gray-400 bg-gray-50 px-2 py-1 border-b border-gray-200">Preview</p>
+              <div className="h-24 relative" style={{ backgroundColor: bgColor }}>
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    backgroundImage: `url(${striationUrl[0]})`,
+                    backgroundSize: striationPosition === "full" ? "cover" : striationPosition === "tile" ? "auto" : "auto 100%",
+                    backgroundPosition: striationPosition === "left" ? "left center" : striationPosition === "right" ? "right center" : "center",
+                    backgroundRepeat: striationPosition === "tile" ? "repeat" : "no-repeat",
+                    opacity: striationOpacity / 100,
+                    mixBlendMode: striationBlendMode as React.CSSProperties["mixBlendMode"],
+                  }}
+                />
+              </div>
+            </div>
+          </>
+        )}
       </Section>
 
       {/* Homepage section hidden — not currently in use

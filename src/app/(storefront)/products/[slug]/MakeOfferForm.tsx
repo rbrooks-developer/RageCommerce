@@ -46,6 +46,16 @@ export function MakeOfferForm({ productId, listPrice, maxQuantity, existingStatu
     );
   }
 
+  if (existingStatus === "countered") {
+    return (
+      <div className="text-sm rounded-md px-4 py-3 space-y-1" style={{ backgroundColor: "color-mix(in srgb, #3b82f6 10%, var(--site-bg))", border: "1px solid #93c5fd" }}>
+        <p>You have a counter offer waiting for your response.</p>
+        <p>Go to <a href="/account#offers" className="underline font-semibold">My Offers</a> to accept, decline, or counter back.</p>
+        <p className="text-xs" style={{ opacity: 0.7 }}>{remainingLabel} for this product.</p>
+      </div>
+    );
+  }
+
   if (remaining === 0) {
     return (
       <p className="text-sm rounded-md px-4 py-3" style={{ border: "1px solid color-mix(in srgb, var(--site-fg) 20%, transparent)", opacity: 0.65 }}>
@@ -123,12 +133,13 @@ export function MakeOfferForm({ productId, listPrice, maxQuantity, existingStatu
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ opacity: 0.6 }}>$</span>
               <input
-                type="number"
-                step="0.01"
-                min="0.01"
-                max={listPrice - 0.01}
+                type="text"
+                inputMode="decimal"
                 value={offerPrice}
-                onChange={e => setOfferPrice(e.target.value)}
+                onChange={e => {
+                  const val = e.target.value;
+                  if (/^\d*\.?\d{0,2}$/.test(val)) setOfferPrice(val);
+                }}
                 placeholder="0.00"
                 required
                 className="w-full rounded-md pl-7 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-current"
@@ -143,11 +154,17 @@ export function MakeOfferForm({ productId, listPrice, maxQuantity, existingStatu
                 Quantity (max {maxQuantity})
               </label>
               <input
-                type="number"
-                min="1"
-                max={maxQuantity}
+                type="text"
+                inputMode="numeric"
                 value={quantity}
-                onChange={e => setQuantity(Math.max(1, Math.min(maxQuantity, parseInt(e.target.value) || 1)))}
+                onChange={e => {
+                  const val = e.target.value;
+                  if (/^\d*$/.test(val)) {
+                    const n = parseInt(val) || 0;
+                    if (val === "" || (n >= 1 && n <= maxQuantity)) setQuantity(val === "" ? 1 : n);
+                  }
+                }}
+                placeholder="1"
                 className="w-full rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-current"
                 style={inputStyle}
               />

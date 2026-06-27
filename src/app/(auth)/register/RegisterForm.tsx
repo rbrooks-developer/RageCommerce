@@ -91,7 +91,7 @@ export function RegisterForm() {
           <p className="mt-1 text-xs opacity-60">Minimum 8 characters</p>
         </div>
 
-        <Button type="submit" size="lg" className="w-full" loading={isPending}>
+        <Button type="submit" size="lg" className="w-full font-semibold" loading={isPending} style={{ backgroundColor: "var(--site-fg)", color: "var(--site-bg)", fontFamily: "inherit" }}>
           Create Account
         </Button>
       </form>

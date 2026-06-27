@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { sendOfferReceived } from "@/lib/emails/offerReceived";
 import { sendOfferApproved } from "@/lib/emails/offerApproved";
 import { sendOfferDeclined } from "@/lib/emails/offerDeclined";
+import { sendOfferCountered } from "@/lib/emails/offerCountered";
 import { getSettings } from "@/lib/data/settings";
 import type { HomepageConfig, FooterConfig } from "@/types";
 
@@ -35,32 +36,38 @@ export async function submitOffer(productId: string, quantity: number, offerPric
 
   const MAX_OFFERS = 4;
 
-  // Block if a pending or approved offer exists
+  // Block if an active offer already exists (pending, approved, or being countered)
   const { data: existing } = await supabase
     .from("product_offers")
     .select("id, status")
     .eq("user_id", user.id)
     .eq("product_id", productId)
-    .in("status", ["pending", "approved"])
+    .in("status", ["pending", "approved", "countered"])
     .maybeSingle();
 
   if (existing) {
     return {
       error: existing.status === "pending"
         ? "You already have a pending offer on this product"
+        : existing.status === "countered"
+        ? "You have a counter offer awaiting your response — check My Offers"
         : "You already have an approved offer on this product — check My Offers",
     };
   }
 
-  // Enforce per-product offer limit (expired offers don't count)
-  const { count } = await supabase
+  // Enforce per-product offer limit — each counter-back also consumes a slot via user_counter_count
+  const { data: offerRows } = await supabase
     .from("product_offers")
-    .select("*", { count: "exact", head: true })
+    .select("user_counter_count")
     .eq("user_id", user.id)
     .eq("product_id", productId)
-    .in("status", ["pending", "approved", "declined", "purchased", "out_of_stock"]);
+    .in("status", ["pending", "approved", "declined", "purchased", "out_of_stock", "countered"]);
 
-  if ((count ?? 0) >= MAX_OFFERS) {
+  const count = (offerRows ?? []).reduce(
+    (sum: number, r: any) => sum + 1 + (r.user_counter_count ?? 0), 0
+  );
+
+  if (count >= MAX_OFFERS) {
     return { error: `You've reached the maximum of ${MAX_OFFERS} offers for this product` };
   }
 
@@ -165,6 +172,183 @@ export async function deleteOffer(offerId: string) {
 
   if (error) return { error: error.message };
   revalidatePath("/account");
+  return { success: true };
+}
+
+export async function adminDeleteOffer(offerId: string) {
+  const sb = createServiceClient();
+  const { error } = await sb.from("product_offers").delete().eq("id", offerId);
+  if (error) { console.error("adminDeleteOffer:", error.message); return { error: "Failed to delete offer" }; }
+  revalidatePath("/admin/offers");
+  return { success: true };
+}
+
+export async function counterOffer(offerId: string, counterPrice: number) {
+  const sb = createServiceClient();
+
+  const { data: offer, error } = await sb
+    .from("product_offers")
+    .update({ status: "countered", counter_price: counterPrice, updated_at: new Date().toISOString() })
+    .eq("id", offerId)
+    .select("*, products(name)")
+    .single();
+
+  if (error) { console.error("counterOffer:", error.message); return { error: "Failed to send counter offer" }; }
+
+  const { data: profile } = await sb.from("profiles").select("email").eq("id", offer.user_id).maybeSingle();
+  const customerEmail = (profile as { email: string } | null)?.email;
+  if (customerEmail) {
+    const displayName = await getDisplayName();
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    sendOfferCountered({
+      to: customerEmail,
+      productName: (offer.products as any)?.name ?? "Product",
+      originalPrice: Number(offer.offer_price),
+      counterPrice,
+      displayName,
+      appUrl,
+    }).catch(err => console.error("offerCountered email:", err));
+  }
+
+  revalidatePath("/admin/offers");
+  return { success: true };
+}
+
+// Customer accepts the admin's counter price — approves at counter_price with expiry.
+export async function acceptCounter(offerId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const sb = createServiceClient();
+
+  const { data: offer } = await sb
+    .from("product_offers")
+    .select("id, user_id, quantity, counter_price, products(name)")
+    .eq("id", offerId)
+    .eq("user_id", user.id)
+    .eq("status", "countered")
+    .maybeSingle();
+
+  if (!offer || !(offer as any).counter_price) return { error: "Offer not found" };
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 3);
+
+  const { error } = await sb
+    .from("product_offers")
+    .update({
+      status: "approved",
+      offer_price: (offer as any).counter_price,
+      expires_at: expiresAt.toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", offerId);
+
+  if (error) return { error: "Failed to accept counter offer" };
+
+  // Send approval email at the accepted counter price
+  const { data: profile } = await sb.from("profiles").select("email").eq("id", user.id).maybeSingle();
+  const customerEmail = (profile as { email: string } | null)?.email ?? user.email;
+  if (customerEmail) {
+    const displayName = await getDisplayName();
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+    sendOfferApproved({
+      to: customerEmail,
+      productName: (offer as any).products?.name ?? "Product",
+      quantity: (offer as any).quantity ?? 1,
+      offerPrice: Number((offer as any).counter_price),
+      expiresAt,
+      displayName,
+      appUrl,
+    }).catch(err => console.error("acceptCounter approval email:", err));
+  }
+
+  revalidatePath("/account");
+  return { success: true };
+}
+
+// Customer declines the admin's counter — marks declined.
+export async function declineCounter(offerId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const sb = createServiceClient();
+
+  const { error } = await sb
+    .from("product_offers")
+    .update({ status: "declined", updated_at: new Date().toISOString() })
+    .eq("id", offerId)
+    .eq("user_id", user.id)
+    .eq("status", "countered");
+
+  if (error) { console.error("declineCounter:", error.message); return { error: "Failed to decline counter offer" }; }
+
+  revalidatePath("/account");
+  return { success: true };
+}
+
+// Customer sends back their own counter price — resets to pending so admin sees it again.
+// Increments user_counter_count so each counter-back consumes an offer slot toward the 4-offer limit.
+export async function userCounterBack(offerId: string, newOfferPrice: number) {
+  if (newOfferPrice <= 0) return { error: "Counter price must be greater than $0" };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const sb = createServiceClient();
+
+  // Verify the offer belongs to this user and is in countered state
+  const { data: offer, error: fetchErr } = await sb
+    .from("product_offers")
+    .select("id, user_id, product_id, status")
+    .eq("id", offerId)
+    .eq("user_id", user.id)
+    .eq("status", "countered")
+    .maybeSingle();
+
+  if (fetchErr) { console.error("userCounterBack fetch:", fetchErr.message); return { error: "Failed to load offer" }; }
+  if (!offer) return { error: "Offer not found or already responded to" };
+
+  // Fetch list price separately for validation
+  const { data: product } = await sb
+    .from("products")
+    .select("price")
+    .eq("id", (offer as any).product_id)
+    .maybeSingle();
+
+  const listPrice = Number((product as any)?.price ?? 0);
+  if (listPrice > 0 && newOfferPrice >= listPrice) {
+    return { error: `Counter price must be less than the list price ($${listPrice.toFixed(2)})` };
+  }
+
+  // Fetch current counter count so we can increment it
+  const { data: current } = await sb
+    .from("product_offers")
+    .select("user_counter_count")
+    .eq("id", offerId)
+    .maybeSingle();
+
+  const newCount = ((current as any)?.user_counter_count ?? 0) + 1;
+
+  const { error: updateErr } = await sb
+    .from("product_offers")
+    .update({
+      offer_price: newOfferPrice,
+      counter_price: null,
+      status: "pending",
+      user_counter_count: newCount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", offerId)
+    .eq("user_id", user.id);
+
+  if (updateErr) { console.error("userCounterBack update:", updateErr.message); return { error: "Failed to submit counter offer" }; }
+
+  revalidatePath("/account");
+  revalidatePath("/admin/offers");
   return { success: true };
 }
 
