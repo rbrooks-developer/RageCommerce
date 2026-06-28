@@ -2,16 +2,24 @@
 
 import Script from "next/script";
 
-// IDs are admin-supplied but sanitized to alphanumeric + hyphen to prevent injection.
 function sanitize(id: string) {
   return id.replace(/[^a-zA-Z0-9\-]/g, "");
 }
 
-export function TawkChat({ propertyId, widgetId }: { propertyId: string; widgetId: string }) {
+interface TawkChatProps {
+  propertyId: string;
+  widgetId: string;
+  visitor: { name: string; email: string };
+}
+
+export function TawkChat({ propertyId, widgetId, visitor }: TawkChatProps) {
   const pid = sanitize(propertyId);
   const wid = sanitize(widgetId);
 
   if (!pid || !wid) return null;
+
+  // JSON.stringify handles all escaping — safe to embed in a script tag
+  const visitorJson = JSON.stringify({ name: visitor.name, email: visitor.email });
 
   return (
     <Script
@@ -19,7 +27,9 @@ export function TawkChat({ propertyId, widgetId }: { propertyId: string; widgetI
       strategy="afterInteractive"
       dangerouslySetInnerHTML={{
         __html: `
-          var Tawk_API=Tawk_API||{},Tawk_LoadStart=new Date();
+          var Tawk_API=Tawk_API||{};
+          Tawk_API.visitor=${visitorJson};
+          var Tawk_LoadStart=new Date();
           (function(){
             var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
             s1.async=true;

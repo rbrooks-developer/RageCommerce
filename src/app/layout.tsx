@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { getSettings } from "@/lib/data/settings";
+import { createClient } from "@/lib/supabase/server";
 import { TawkChat } from "@/components/storefront/TawkChat";
 import type { ChatConfig } from "@/types";
 
@@ -51,6 +52,28 @@ export default async function RootLayout({
   const fontGradient      = homepage?.font_gradient_enabled ?? false;
   const faviconUrl        = settings?.favicon_url           ?? null;
   const chatConfig        = (settings as any)?.chat_config as ChatConfig | null;
+
+  // Resolve chat visitor — only when chat is actually enabled
+  let chatVisitor: { name: string; email: string } | null = null;
+  if (chatConfig?.enabled && chatConfig.property_id) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.email) {
+      // Try the default shipping address for first/last name
+      const { data: addr } = await supabase
+        .from("user_addresses")
+        .select("first_name, last_name")
+        .eq("user_id", user.id)
+        .eq("is_default_shipping", true)
+        .maybeSingle();
+
+      const name = addr
+        ? `${addr.first_name ?? ""} ${addr.last_name ?? ""}`.trim()
+        : "";
+
+      chatVisitor = { name: name || user.email, email: user.email };
+    }
+  }
   const checkoutSectionColor = homepage?.checkout_section_color ?? null;
   const checkoutTextboxColor = homepage?.checkout_textbox_color ?? null;
 
@@ -117,8 +140,12 @@ export default async function RootLayout({
         } as React.CSSProperties}
       >
         {children}
-        {chatConfig?.enabled && chatConfig.property_id && (
-          <TawkChat propertyId={chatConfig.property_id} widgetId={chatConfig.widget_id || "default"} />
+        {chatVisitor && (
+          <TawkChat
+            propertyId={chatConfig!.property_id}
+            widgetId={chatConfig!.widget_id || "default"}
+            visitor={chatVisitor}
+          />
         )}
       </body>
     </html>
