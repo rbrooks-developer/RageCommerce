@@ -31,7 +31,11 @@ export async function login(_prevState: unknown, formData: FormData) {
   if (error) return { error: { _form: [error.message] } };
 
   const redirectTo = formData.get("redirect") as string | null;
-  redirect(redirectTo || "/");
+  const safeRedirect =
+    redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+      ? redirectTo
+      : "/";
+  redirect(safeRedirect);
 }
 
 export async function register(_prevState: unknown, formData: FormData) {

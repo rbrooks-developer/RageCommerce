@@ -7,6 +7,7 @@ import { sendOfferApproved } from "@/lib/emails/offerApproved";
 import { sendOfferDeclined } from "@/lib/emails/offerDeclined";
 import { sendOfferCountered } from "@/lib/emails/offerCountered";
 import { getSettings } from "@/lib/data/settings";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
 import type { HomepageConfig, FooterConfig } from "@/types";
 
 async function getDisplayName() {
@@ -95,6 +96,8 @@ export async function submitOffer(productId: string, quantity: number, offerPric
 }
 
 export async function approveOffer(offerId: string) {
+  const auth = await requireAdmin();
+  if (auth.error) return { error: auth.error };
   const sb = createServiceClient();
 
   const expiresAt = new Date();
@@ -130,6 +133,8 @@ export async function approveOffer(offerId: string) {
 }
 
 export async function declineOffer(offerId: string, reason?: string) {
+  const auth = await requireAdmin();
+  if (auth.error) return { error: auth.error };
   const sb = createServiceClient();
 
   const { data: offer, error } = await sb
@@ -176,6 +181,8 @@ export async function deleteOffer(offerId: string) {
 }
 
 export async function adminDeleteOffer(offerId: string) {
+  const auth = await requireAdmin();
+  if (auth.error) return { error: auth.error };
   const sb = createServiceClient();
   const { error } = await sb.from("product_offers").delete().eq("id", offerId);
   if (error) { console.error("adminDeleteOffer:", error.message); return { error: "Failed to delete offer" }; }
@@ -184,6 +191,8 @@ export async function adminDeleteOffer(offerId: string) {
 }
 
 export async function counterOffer(offerId: string, counterPrice: number) {
+  const auth = await requireAdmin();
+  if (auth.error) return { error: auth.error };
   const sb = createServiceClient();
 
   const { data: offer, error } = await sb

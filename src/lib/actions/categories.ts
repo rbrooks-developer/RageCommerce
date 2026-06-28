@@ -2,10 +2,14 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { categorySchema } from "@/lib/validations/category";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export async function createCategory(_prevState: unknown, formData: FormData) {
+  const auth = await requireAdmin();
+  if (auth.error) return { error: { _form: [auth.error] } };
+
   const supabase = await createClient();
 
   const parsed = categorySchema.safeParse({
@@ -27,6 +31,9 @@ export async function createCategory(_prevState: unknown, formData: FormData) {
 }
 
 export async function updateCategory(id: string, _prevState: unknown, formData: FormData) {
+  const auth = await requireAdmin();
+  if (auth.error) return { error: { _form: [auth.error] } };
+
   const supabase = await createClient();
 
   const parsed = categorySchema.safeParse({
@@ -52,6 +59,9 @@ export async function updateCategory(id: string, _prevState: unknown, formData: 
 }
 
 export async function deleteCategory(id: string) {
+  const auth = await requireAdmin();
+  if (auth.error) throw new Error(auth.error);
+
   const supabase = await createClient();
   const { error } = await supabase.from("categories").delete().eq("id", id);
   if (error) throw new Error(error.message);

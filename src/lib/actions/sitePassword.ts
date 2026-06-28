@@ -23,6 +23,7 @@ export async function verifySitePassword(prevState: { error: string } | null, fo
   cookieStore.set("__site_pass", cookieValue, {
     httpOnly: true,
     sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
     path: "/",
   });
 
