@@ -50,7 +50,7 @@ export default async function RootLayout({
   const heroFont          = homepage?.hero_font             ?? "Playfair Display";
   const fontGradient      = homepage?.font_gradient_enabled ?? false;
   const faviconUrl        = settings?.favicon_url           ?? null;
-  const chatConfig        = settings?.chat_config as ChatConfig | null;
+  const chatConfig        = (settings as any)?.chat_config as ChatConfig | null;
   const checkoutSectionColor = homepage?.checkout_section_color ?? null;
   const checkoutTextboxColor = homepage?.checkout_textbox_color ?? null;
 
