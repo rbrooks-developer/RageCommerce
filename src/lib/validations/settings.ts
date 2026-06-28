@@ -23,6 +23,21 @@ const socialSchema = z.object({
 
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color");
 
+const carouselImageSchema = z.object({
+  url: z.string().url(),
+  link: z.string().optional(),
+});
+
+const carouselConfigSchema = z.object({
+  images: z.array(carouselImageSchema).max(25).default([]),
+  speed: z.number().min(5).max(120).default(40),
+  direction: z.enum(["left", "right"]).default("left"),
+  height: z.number().min(100).max(600).default(280),
+  gap: z.number().min(0).max(48).default(16),
+  pause_on_hover: z.boolean().default(true),
+  fade_edges: z.boolean().default(true),
+});
+
 export const siteSettingsSchema = z.object({
   site_title: z.string().min(1, "Site title is required"),
   meta_title: z.string().max(60).nullable().optional(),
@@ -55,6 +70,7 @@ export const siteSettingsSchema = z.object({
     striation_opacity: z.number().min(0).max(100).default(30),
     striation_blend_mode: z.string().default("screen"),
     striation_position: z.string().default("full"),
+    carousel: carouselConfigSchema.optional(),
   }),
   nav_config: z.object({
     items: z.array(navItemSchema),
