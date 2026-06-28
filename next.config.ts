@@ -16,20 +16,20 @@ const securityHeaders = [
       "default-src 'self'",
       // Next.js requires unsafe-inline + unsafe-eval for dev; in prod only unsafe-inline is needed but
       // Turbopack still uses eval — keeping both for now
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://*.tawk.to",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.tawk.to",
       "img-src 'self' blob: data: https:",
-      "font-src 'self' https://fonts.gstatic.com",
+      "font-src 'self' https://fonts.gstatic.com https://*.tawk.to",
       "media-src 'none'",
       "object-src 'none'",
       "base-uri 'self'",
       // Allow form submissions to self + Stripe hosted checkout
       "form-action 'self' https://checkout.stripe.com",
       "frame-ancestors 'none'",
-      // Stripe hosted checkout and 3DS frames
-      "frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com",
-      // API connections: Supabase, Stripe, Resend, EasyPost
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://api.resend.com https://api.easypost.com",
+      // Stripe hosted checkout and 3DS frames; Tawk.to chat widget uses iframes
+      "frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://*.tawk.to",
+      // API connections: Supabase, Stripe, Resend, EasyPost, Tawk.to (including WebSocket for live chat)
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.stripe.com https://checkout.stripe.com https://api.resend.com https://api.easypost.com https://*.tawk.to wss://*.tawk.to",
       "upgrade-insecure-requests",
     ].join("; "),
   },
