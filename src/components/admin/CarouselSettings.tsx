@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { X, Upload } from "lucide-react";
+import { X, Upload, GripVertical } from "lucide-react";
 import type { CarouselConfig, CarouselImage } from "@/types";
 
 const MAX_IMAGES = 25;
@@ -54,10 +54,15 @@ export function CarouselSettings({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const config: CarouselConfig = { ...DEFAULTS, ...value };
+  // Drag-and-drop state
+  const dragIndex = useRef<number | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
+  const config: CarouselConfig = { ...DEFAULTS, ...value };
   const update = (patch: Partial<CarouselConfig>) => onChange({ ...config, ...patch });
 
+  // ── Upload ──────────────────────────────────────────────────────────────
   const handleFiles = async (files: FileList) => {
     const remaining = MAX_IMAGES - config.images.length;
     if (remaining <= 0) return;
@@ -70,22 +75,13 @@ export function CarouselSettings({
     const ALLOWED_EXTS = ["jpg", "jpeg", "png", "gif", "webp", "avif"];
 
     for (const file of allowed) {
-      if (!file.type.startsWith("image/")) {
-        setUploadError("Only image files are allowed");
-        continue;
-      }
-      if (file.size > 12 * 1024 * 1024) {
-        setUploadError("Each image must be under 12MB");
-        continue;
-      }
+      if (!file.type.startsWith("image/")) { setUploadError("Only image files are allowed"); continue; }
+      if (file.size > 12 * 1024 * 1024) { setUploadError("Each image must be under 12MB"); continue; }
       const rawExt = file.name.split(".").pop()?.toLowerCase() ?? "";
       const ext = ALLOWED_EXTS.includes(rawExt) ? rawExt : "bin";
       const path = `carousel/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const { error } = await supabase.storage.from("site-assets").upload(path, file);
-      if (error) {
-        setUploadError(error.message);
-        continue;
-      }
+      if (error) { setUploadError(error.message); continue; }
       const { data } = supabase.storage.from("site-assets").getPublicUrl(path);
       newImages.push({ url: data.publicUrl });
     }
@@ -103,6 +99,39 @@ export function CarouselSettings({
         idx === i ? { ...img, link: link || undefined } : img
       ),
     });
+
+  // ── Drag and drop ────────────────────────────────────────────────────────
+  const handleDragStart = (e: React.DragEvent, i: number) => {
+    dragIndex.current = i;
+    setDraggingIndex(i);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, i: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverIndex !== i) setDragOverIndex(i);
+  };
+
+  const handleDrop = (e: React.DragEvent, i: number) => {
+    e.preventDefault();
+    const from = dragIndex.current;
+    if (from !== null && from !== i) {
+      const newImages = [...config.images];
+      const [moved] = newImages.splice(from, 1);
+      newImages.splice(i, 0, moved);
+      update({ images: newImages });
+    }
+    setDragOverIndex(null);
+    setDraggingIndex(null);
+    dragIndex.current = null;
+  };
+
+  const handleDragEnd = () => {
+    setDragOverIndex(null);
+    setDraggingIndex(null);
+    dragIndex.current = null;
+  };
 
   return (
     <div className="space-y-6">
@@ -155,20 +184,47 @@ export function CarouselSettings({
             {config.images.map((img, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-2"
+                draggable
+                onDragStart={(e) => handleDragStart(e, i)}
+                onDragOver={(e) => handleDragOver(e, i)}
+                onDrop={(e) => handleDrop(e, i)}
+                onDragEnd={handleDragEnd}
+                className={`flex items-center gap-3 rounded-lg border p-2 transition-colors select-none ${
+                  draggingIndex === i
+                    ? "opacity-40 border-gray-300 bg-gray-50"
+                    : dragOverIndex === i
+                    ? "border-blue-400 bg-blue-50"
+                    : "border-gray-200 bg-gray-50"
+                }`}
               >
+                {/* Drag handle */}
+                <div
+                  className="shrink-0 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none"
+                  aria-label="Drag to reorder"
+                >
+                  <GripVertical className="h-5 w-5" />
+                </div>
+
+                {/* Thumbnail */}
                 <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded border border-gray-200 bg-gray-100">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.url} alt="" className="h-full w-full object-cover" />
+                  <img src={img.url} alt="" className="h-full w-full object-cover" draggable={false} />
                 </div>
-                <div className="flex-1 min-w-0">
+
+                {/* Link input — stopPropagation so text-selection drag doesn't fight with row drag */}
+                <div
+                  className="flex-1 min-w-0"
+                  onDragStart={(e) => e.stopPropagation()}
+                >
                   <Input
                     value={img.link ?? ""}
                     onChange={(e) => updateLink(i, e.target.value)}
-                    placeholder="Link URL (optional, e.g. /products or /category/rings)"
+                    placeholder="Link URL (optional, e.g. /products)"
                     className="text-sm"
                   />
                 </div>
+
+                {/* Remove */}
                 <button
                   type="button"
                   onClick={() => removeImage(i)}
@@ -179,6 +235,7 @@ export function CarouselSettings({
                 </button>
               </div>
             ))}
+
             {config.images.length < MAX_IMAGES && (
               <button
                 type="button"
