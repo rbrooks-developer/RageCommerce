@@ -27,7 +27,7 @@ export function ImageCarousel({ config, bgColor }: { config: CarouselConfig; bgC
     <section
       aria-label="Image carousel"
       className="relative overflow-hidden"
-      style={{ height: `${height}px`, "--carousel-speed": `${speed}s` } as React.CSSProperties}
+      style={{ height: `${height}px`, "--carousel-speed": `${speed}s`, zIndex: 2 } as React.CSSProperties}
     >
       {fade_edges && (
         <>

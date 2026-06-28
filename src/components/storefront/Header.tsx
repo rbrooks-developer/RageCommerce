@@ -41,7 +41,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
 
   return (
     <header
-      className="sticky top-0 z-30 border-b border-black/10"
+      className="sticky top-0 z-40 border-b border-black/10"
       style={{ backgroundColor: bgColor, color: fontColor }}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
