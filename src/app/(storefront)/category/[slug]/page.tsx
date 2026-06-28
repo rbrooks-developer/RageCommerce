@@ -78,7 +78,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+    <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8" style={{ zIndex: 2 }}>
       <Breadcrumbs crumbs={[
         { label: "Home", href: "/" },
         { label: category.name },
