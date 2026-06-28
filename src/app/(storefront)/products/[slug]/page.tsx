@@ -134,7 +134,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   const breadcrumbCrumbs = [
     { label: "Home", href: "/" },
-    { label: "Products", href: "/products" },
     ...categoryChain,
     { label: product.name },
   ];
