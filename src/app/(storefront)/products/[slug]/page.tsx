@@ -9,8 +9,14 @@ import { Breadcrumbs } from "@/components/storefront/Breadcrumbs";
 import type { Metadata } from "next";
 import type { Product } from "@/types";
 
+type CategoryNode = {
+  name: string;
+  slug: string;
+  parent: { name: string; slug: string; parent: { name: string; slug: string } | null } | null;
+};
+
 type ProductWithCategory = Product & {
-  categories: { name: string; slug: string } | null;
+  categories: CategoryNode | null;
 };
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -46,7 +52,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   const { data } = await supabase
     .from("products")
-    .select("*, categories(name, slug)")
+    .select("*, categories(name, slug, parent:parent_id(name, slug, parent:parent_id(name, slug)))")
     .eq("slug", slug)
     .eq("is_published", true)
     .maybeSingle();
@@ -113,15 +119,35 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     },
   };
 
+  // Build the full category ancestor chain: grandparent → parent → category
+  const categoryChain: { label: string; href: string }[] = [];
+  if (product.categories) {
+    const cat = product.categories;
+    if (cat.parent?.parent) {
+      categoryChain.push({ label: cat.parent.parent.name, href: `/category/${cat.parent.parent.slug}` });
+    }
+    if (cat.parent) {
+      categoryChain.push({ label: cat.parent.name, href: `/category/${cat.parent.slug}` });
+    }
+    categoryChain.push({ label: cat.name, href: `/category/${cat.slug}` });
+  }
+
+  const breadcrumbCrumbs = [
+    { label: "Home", href: "/" },
+    { label: "Products", href: "/products" },
+    ...categoryChain,
+    { label: product.name },
+  ];
+
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: appUrl || "/" },
-      { "@type": "ListItem", position: 2, name: "Products", item: `${appUrl}/products` },
-      ...(product.categories ? [{ "@type": "ListItem", position: 3, name: product.categories.name, item: `${appUrl}/category/${product.categories.slug}` }] : []),
-      { "@type": "ListItem", position: product.categories ? 4 : 3, name: product.name, item: `${appUrl}/products/${slug}` },
-    ],
+    itemListElement: breadcrumbCrumbs.map((c, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: c.label,
+      ...("href" in c && c.href ? { item: (c.href as string).startsWith("http") ? c.href : `${appUrl}${c.href}` } : {}),
+    })),
   };
 
   return (
@@ -129,13 +155,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <Breadcrumbs crumbs={[
-          { label: "Home", href: "/" },
-          { label: "Products", href: "/products" },
-          ...(product.categories ? [{ label: product.categories.name, href: `/category/${product.categories.slug}` }] : []),
-          { label: product.name },
-        ]} />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8" style={{ zIndex: 2 }}>
+        <Breadcrumbs crumbs={breadcrumbCrumbs} />
         <div className="flex flex-col gap-8 lg:flex-row">
           <div className="lg:w-1/2">
             <ProductImages images={images} name={product.name} />
