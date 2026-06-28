@@ -9,49 +9,40 @@ const BLUR_URL = "data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAA
 
 export function ImageCarousel({ config, bgColor }: { config: CarouselConfig; bgColor: string }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const { images, speed, direction, height, gap, pause_on_hover, fade_edges } = config;
+  const {
+    images, speed, direction, height, gap,
+    image_fit = "contain", image_padding = 0,
+    pause_on_hover, fade_edges,
+  } = config;
 
   if (!images || images.length === 0) return null;
 
-  // Each slide is 4:3 landscape; with object-cover this handles any image ratio cleanly
+  // 4:3 container width — object-contain shows the full image; object-cover fills and may crop
   const itemWidth = Math.round(height * (4 / 3));
 
-  // Double the array — animating by -50% brings us back to the start seamlessly
   const track = [...images, ...images];
 
-  const pause = () => {
-    if (pause_on_hover && trackRef.current) trackRef.current.style.animationPlayState = "paused";
-  };
-  const resume = () => {
-    if (pause_on_hover && trackRef.current) trackRef.current.style.animationPlayState = "running";
-  };
+  const pause  = () => { if (pause_on_hover && trackRef.current) trackRef.current.style.animationPlayState = "paused"; };
+  const resume = () => { if (pause_on_hover && trackRef.current) trackRef.current.style.animationPlayState = "running"; };
 
   return (
     <section
       aria-label="Image carousel"
       className="relative overflow-hidden"
-      style={
-        { height: `${height}px`, "--carousel-speed": `${speed}s` } as React.CSSProperties
-      }
+      style={{ height: `${height}px`, "--carousel-speed": `${speed}s` } as React.CSSProperties}
     >
       {fade_edges && (
         <>
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute left-0 top-0 bottom-0 w-24 z-10"
-            style={{ background: `linear-gradient(to right, ${bgColor}, transparent)` }}
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute right-0 top-0 bottom-0 w-24 z-10"
-            style={{ background: `linear-gradient(to left, ${bgColor}, transparent)` }}
-          />
+          <div aria-hidden="true" className="pointer-events-none absolute left-0 top-0 bottom-0 w-24 z-10"
+            style={{ background: `linear-gradient(to right, ${bgColor}, transparent)` }} />
+          <div aria-hidden="true" className="pointer-events-none absolute right-0 top-0 bottom-0 w-24 z-10"
+            style={{ background: `linear-gradient(to left, ${bgColor}, transparent)` }} />
         </>
       )}
 
       <div
         ref={trackRef}
-        className={`carousel-track flex h-full`}
+        className="carousel-track flex h-full"
         style={{
           width: "max-content",
           animationName: direction === "left" ? "carousel-scroll-left" : "carousel-scroll-right",
@@ -65,19 +56,6 @@ export function ImageCarousel({ config, bgColor }: { config: CarouselConfig; bgC
         onTouchEnd={resume}
       >
         {track.map((item, i) => {
-          const imgEl = (
-            <Image
-              src={item.url}
-              alt=""
-              fill
-              className="object-cover"
-              sizes={`${itemWidth}px`}
-              placeholder="blur"
-              blurDataURL={BLUR_URL}
-              aria-hidden="true"
-            />
-          );
-
           const containerStyle: React.CSSProperties = {
             width: `${itemWidth}px`,
             height: `${height}px`,
@@ -85,7 +63,22 @@ export function ImageCarousel({ config, bgColor }: { config: CarouselConfig; bgC
             flexShrink: 0,
             position: "relative",
             overflow: "hidden",
+            backgroundColor: bgColor,
+            padding: image_padding > 0 ? `${image_padding}px` : undefined,
           };
+
+          const imgEl = (
+            <Image
+              src={item.url}
+              alt=""
+              fill
+              className={image_fit === "cover" ? "object-cover" : "object-contain"}
+              sizes={`${itemWidth}px`}
+              placeholder="blur"
+              blurDataURL={BLUR_URL}
+              aria-hidden="true"
+            />
+          );
 
           return item.link ? (
             <Link

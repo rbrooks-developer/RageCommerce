@@ -34,6 +34,8 @@ const carouselConfigSchema = z.object({
   direction: z.enum(["left", "right"]).default("left"),
   height: z.number().min(100).max(600).default(280),
   gap: z.number().min(0).max(48).default(16),
+  image_fit: z.enum(["contain", "cover"]).default("contain"),
+  image_padding: z.number().min(0).max(32).default(0),
   pause_on_hover: z.boolean().default(true),
   fade_edges: z.boolean().default(true),
 });

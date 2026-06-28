@@ -16,6 +16,8 @@ const DEFAULTS: CarouselConfig = {
   direction: "left",
   height: 280,
   gap: 16,
+  image_fit: "contain",
+  image_padding: 0,
   pause_on_hover: true,
   fade_edges: true,
 };
@@ -344,6 +346,51 @@ export function CarouselSettings({
         <div className="flex justify-between text-xs text-gray-400 mt-0.5">
           <span>0px (edge to edge)</span>
           <span>48px (spaced)</span>
+        </div>
+      </div>
+
+      {/* ── Image Fit ── */}
+      <div>
+        <Label>Image Fit</Label>
+        <div className="flex gap-2 mt-1">
+          {([
+            { value: "contain", label: "Contain", desc: "Show full image" },
+            { value: "cover",   label: "Cover",   desc: "Fill frame, may crop" },
+          ] as const).map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => update({ image_fit: opt.value })}
+              className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                config.image_fit === opt.value
+                  ? "border-gray-900 bg-gray-900 text-white"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              {opt.label}
+              <span className={`block text-xs font-normal mt-0.5 ${config.image_fit === opt.value ? "text-gray-300" : "text-gray-400"}`}>
+                {opt.desc}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Image Padding ── */}
+      <div>
+        <Label>Image Padding: {config.image_padding}px</Label>
+        <input
+          type="range"
+          min="0"
+          max="32"
+          step="4"
+          value={config.image_padding}
+          onChange={(e) => update({ image_padding: Number(e.target.value) })}
+          className="mt-1 w-full accent-gray-900"
+        />
+        <div className="flex justify-between text-xs text-gray-400 mt-0.5">
+          <span>0px (edge to edge)</span>
+          <span>32px (padded)</span>
         </div>
       </div>
 

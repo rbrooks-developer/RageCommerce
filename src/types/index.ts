@@ -101,6 +101,8 @@ export type CarouselConfig = {
   direction: "left" | "right";
   height: number;
   gap: number;
+  image_fit: "contain" | "cover";
+  image_padding: number;
   pause_on_hover: boolean;
   fade_edges: boolean;
 };
