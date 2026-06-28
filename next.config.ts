@@ -16,7 +16,7 @@ const securityHeaders = [
       "default-src 'self'",
       // Next.js requires unsafe-inline + unsafe-eval for dev; in prod only unsafe-inline is needed but
       // Turbopack still uses eval — keeping both for now
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://*.tawk.to",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://*.tawk.to https://cdn.jsdelivr.net",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.tawk.to",
       "img-src 'self' blob: data: https:",
       "font-src 'self' https://fonts.gstatic.com https://*.tawk.to",
