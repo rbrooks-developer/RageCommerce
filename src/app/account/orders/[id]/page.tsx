@@ -4,11 +4,17 @@ import { createClient } from "@/lib/supabase/server";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { OrderStatusBadge } from "@/components/ui/badge";
 import { ChevronLeft } from "lucide-react";
+import type { Metadata } from "next";
 import type { Order, OrderItem, Product } from "@/types";
 
 type ItemWithProduct = OrderItem & {
   products: Pick<Product, "id" | "name" | "images"> | null;
 };
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  return { title: `Order #${id.slice(0, 8).toUpperCase()}` };
+}
 
 export default async function AccountOrderPage({
   params,

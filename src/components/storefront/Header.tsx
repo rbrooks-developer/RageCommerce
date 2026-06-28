@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Menu, X, ShoppingCart, CircleUser, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -47,8 +48,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
         <div className="flex h-16 items-center justify-between pt-2">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg" style={{ color: fontColor }}>
             {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={siteTitle} className="h-12 w-12 object-contain" />
+              <Image src={logoUrl} alt={siteTitle} width={48} height={48} className="object-contain" />
             ) : (
               siteTitle
             )}

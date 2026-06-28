@@ -36,6 +36,7 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const settings = await getSettings();
   const homepage   = settings?.homepage_config as import("@/types").HomepageConfig | null;
+  const contact    = settings?.contact_info as import("@/types").ContactInfo | null;
   const bgColor    = homepage?.bg_color    ?? "#ffffff";
   const fontColor  = homepage?.font_color  ?? "#111827";
   const fontFamily        = homepage?.font_family          ?? "default";
@@ -74,6 +75,26 @@ export default async function RootLayout({
       )}
       {googleFontUrl && <link rel="stylesheet" href={googleFontUrl} precedence="default" />}
       {heroFontUrl   && <link rel="stylesheet" href={heroFontUrl}   precedence="default" />}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: settings?.site_title ?? "My Store",
+            url: process.env.NEXT_PUBLIC_APP_URL ?? "",
+            ...(settings?.logo_url ? { logo: settings.logo_url } : {}),
+            ...(contact?.email || contact?.phone ? {
+              contactPoint: {
+                "@type": "ContactPoint",
+                ...(contact.email ? { email: contact.email } : {}),
+                ...(contact.phone ? { telephone: contact.phone } : {}),
+                contactType: "customer service",
+              },
+            } : {}),
+          }),
+        }}
+      />
       <body
         className="min-h-full flex flex-col"
         style={{

@@ -19,7 +19,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { data } = await supabase.from("categories").select("name").eq("slug", slug).maybeSingle();
   if (!data) return {};
   const settings = await getSettings();
-  return { title: `${(data as Pick<Category, "name">).name} | ${settings?.site_title ?? "Store"}` };
+  const category = data as Pick<Category, "name">;
+  const siteTitle = settings?.site_title ?? "Store";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  return {
+    title: `${category.name} | ${siteTitle}`,
+    description: `Browse ${category.name} products at ${siteTitle}.`,
+    alternates: { canonical: `${appUrl}/category/${slug}` },
+  };
 }
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -50,7 +57,19 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const homepage = settings?.homepage_config as HomepageConfig | null;
   const fontColor = homepage?.font_color ?? "#111827";
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: appUrl || "/" },
+      { "@type": "ListItem", position: 2, name: category.name, item: `${appUrl}/category/${category.slug}` },
+    ],
+  };
+
   return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">{category.name}</h1>
@@ -67,5 +86,6 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
         </div>
       )}
     </div>
+    </>
   );
 }

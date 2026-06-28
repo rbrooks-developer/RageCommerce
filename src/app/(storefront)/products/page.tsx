@@ -16,7 +16,13 @@ function collectIds(rootId: string, all: CategoryRow[]): string[] {
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();
-  return { title: `All Products | ${settings?.site_title ?? "Store"}` };
+  const siteTitle = settings?.site_title ?? "Store";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  return {
+    title: `All Products | ${siteTitle}`,
+    description: settings?.meta_description ?? `Shop all products at ${siteTitle}.`,
+    alternates: { canonical: `${appUrl}/products` },
+  };
 }
 
 export default async function ProductsPage({

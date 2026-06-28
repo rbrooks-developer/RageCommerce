@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/data/settings";
 import { ProductCard } from "@/components/storefront/ProductCard";
@@ -56,7 +57,7 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* ── Hero ── matches reference HTML exactly ── */}
+      {/* ── Hero ── */}
       <section
         aria-labelledby="hero-heading"
         className="relative flex flex-col items-center justify-center overflow-hidden"
@@ -75,13 +76,18 @@ export default async function HomePage() {
         <div className="relative z-10 flex flex-col items-center gap-6 px-4 text-center">
           {/* Logo */}
           {logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={logoUrl}
-              alt={siteTitle}
-              className="w-28 h-28 md:w-36 md:h-36 object-contain"
+            <div
+              className="relative w-28 h-28 md:w-36 md:h-36"
               style={{ filter: `drop-shadow(0 0 24px color-mix(in srgb, ${fontColor} 35%, transparent))` }}
-            />
+            >
+              <Image
+                src={logoUrl}
+                alt={siteTitle}
+                fill
+                sizes="(min-width: 768px) 144px, 112px"
+                className="object-contain"
+              />
+            </div>
           )}
 
           {/* Title */}
@@ -134,8 +140,8 @@ export default async function HomePage() {
 
       {/* Featured Categories */}
       {featuredCategories.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-          <h2 className="text-xl font-bold mb-6">Shop by Category</h2>
+        <section aria-labelledby="categories-heading" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+          <h2 id="categories-heading" className="text-xl font-bold mb-6">Shop by Category</h2>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
             {featuredCategories.map((cat) => (
               <Link
@@ -153,9 +159,9 @@ export default async function HomePage() {
 
       {/* Featured Products */}
       {featuredProducts.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
+        <section aria-labelledby="products-heading" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">Featured Products</h2>
+            <h2 id="products-heading" className="text-xl font-bold">Featured Products</h2>
             <Link href="/products" className="text-sm opacity-60 hover:opacity-100 underline underline-offset-2 transition-opacity">
               View all
             </Link>
@@ -170,9 +176,10 @@ export default async function HomePage() {
 
       {/* Services section */}
       {serviceImages.length > 0 && (
-        <section id="services" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+        <section id="services" aria-labelledby="services-heading" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
           <div className="flex flex-col items-center gap-3 mb-6">
             <h2
+              id="services-heading"
               className="tracking-[0.2em] uppercase"
               style={{
                 fontFamily: `'${heroFont}', serif`,
@@ -190,11 +197,13 @@ export default async function HomePage() {
           {serviceImages.length === 1 ? (
             // Single image: natural size, centered
             <div className="flex justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={serviceImages[0]}
-                alt="Services"
-                className="max-w-full h-auto block"
+                alt={`${displayName} services`}
+                width={1200}
+                height={800}
+                sizes="(min-width: 1280px) 1200px, 100vw"
+                style={{ maxWidth: "100%", height: "auto" }}
               />
             </div>
           ) : (
@@ -204,12 +213,14 @@ export default async function HomePage() {
               style={{ gridTemplateColumns: `repeat(${serviceImages.length}, 1fr)` }}
             >
               {serviceImages.map((url, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   key={i}
                   src={url}
-                  alt={`Service ${i + 1}`}
-                  className="w-full h-auto block"
+                  alt={`${displayName} — service photo ${i + 1}`}
+                  width={1200}
+                  height={800}
+                  sizes={`(min-width: 1280px) ${Math.floor(1200 / serviceImages.length)}px, (min-width: 640px) 50vw, 100vw`}
+                  style={{ width: "100%", height: "auto" }}
                 />
               ))}
             </div>

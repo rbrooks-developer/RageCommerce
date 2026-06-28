@@ -23,9 +23,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!data) return {};
   const product = data as Pick<Product, "name" | "seo_title" | "seo_description" | "images">;
   const settings = await getSettings();
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
   return {
     title: product.seo_title ?? `${product.name} | ${settings?.site_title ?? "Store"}`,
     description: product.seo_description ?? undefined,
+    alternates: { canonical: `${appUrl}/products/${slug}` },
     openGraph: {
       title: product.seo_title ?? product.name,
       description: product.seo_description ?? undefined,
@@ -93,6 +95,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     }
   }
 
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -107,9 +110,21 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     },
   };
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: appUrl || "/" },
+      { "@type": "ListItem", position: 2, name: "Products", item: `${appUrl}/products` },
+      ...(product.categories ? [{ "@type": "ListItem", position: 3, name: product.categories.name, item: `${appUrl}/category/${product.categories.slug}` }] : []),
+      { "@type": "ListItem", position: product.categories ? 4 : 3, name: product.name, item: `${appUrl}/products/${slug}` },
+    ],
+  };
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col gap-8 lg:flex-row">

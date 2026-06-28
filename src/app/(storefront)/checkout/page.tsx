@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { getSettings } from "@/lib/data/settings";
 import { COUNTRIES } from "@/lib/data/countries";
 import { createClient } from "@/lib/supabase/server";
 import { CheckoutFlow } from "./CheckoutFlow";
 import type { UserAddress } from "@/types";
+
+export const metadata: Metadata = {
+  title: "Checkout",
+  robots: { index: false, follow: false },
+};
 
 export default async function CheckoutPage() {
   const [settings, supabase] = await Promise.all([getSettings(), createClient()]);
