@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     case "checkout.session.completed": {
       const session = event.data.object as {
         id: string;
+        payment_intent?: string | null;
         metadata?: { order_id?: string };
         customer_email?: string | null;
       };
@@ -59,7 +60,11 @@ export async function POST(request: NextRequest) {
 
       await supabase
         .from("orders")
-        .update({ status: "paid", stripe_session_id: session.id })
+        .update({
+          status: "paid",
+          stripe_session_id: session.id,
+          stripe_payment_intent_id: session.payment_intent ?? null,
+        })
         .eq("id", orderId);
 
       const { data: rawItems } = await supabase
@@ -197,12 +202,13 @@ export async function POST(request: NextRequest) {
 
       if (!charge.payment_intent) break;
 
-      // Look up the checkout session for this payment intent to get our order_id
-      const sessions = await stripe.checkout.sessions.list({
-        payment_intent: charge.payment_intent,
-        limit: 1,
-      });
-      const orderId = sessions.data[0]?.metadata?.order_id;
+      // Look up the order directly — faster and avoids a Stripe API round-trip
+      const { data: orderRow } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("stripe_payment_intent_id", charge.payment_intent)
+        .maybeSingle();
+      const orderId = (orderRow as { id: string } | null)?.id;
 
       if (!orderId) {
         console.error("charge.refunded: no order found for payment_intent", charge.payment_intent);
