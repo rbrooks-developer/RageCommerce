@@ -12,14 +12,15 @@ interface TawkChatProps {
   visitor: { name: string; email: string };
 }
 
-// Inline SVG used as fallback when Tawk.to's S3 avatar returns 403.
-// A simple white silhouette on a teal circle — neutral and chat-appropriate.
+// Fully URL-encoded SVG fallback — no raw quotes so it is safe to embed
+// inside a JS string literal. Used when Tawk.to's S3 avatar returns 403.
 const FALLBACK_AVATAR =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E" +
-  "%3Ccircle cx='20' cy='20' r='20' fill='%2303b2cb'/%3E" +
-  "%3Ccircle cx='20' cy='15' r='7' fill='white'/%3E" +
-  "%3Cellipse cx='20' cy='35' rx='12' ry='9' fill='white'/%3E" +
-  "%3C/svg%3E";
+  "data:image/svg+xml," +
+  "%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2040%2040%22%3E" +
+  "%3Ccircle%20cx%3D%2220%22%20cy%3D%2220%22%20r%3D%2220%22%20fill%3D%22%2303b2cb%22%2F%3E" +
+  "%3Ccircle%20cx%3D%2220%22%20cy%3D%2215%22%20r%3D%227%22%20fill%3D%22white%22%2F%3E" +
+  "%3Cellipse%20cx%3D%2220%22%20cy%3D%2235%22%20rx%3D%2212%22%20ry%3D%229%22%20fill%3D%22white%22%2F%3E" +
+  "%3C%2Fsvg%3E";
 
 export function TawkChat({ propertyId, widgetId, visitor }: TawkChatProps) {
   const pid = sanitize(propertyId);
