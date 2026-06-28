@@ -41,6 +41,12 @@ const carouselConfigSchema = z.object({
   fade_edges: z.boolean().default(true),
 });
 
+const chatConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  property_id: z.string().default(""),
+  widget_id: z.string().default("default"),
+});
+
 export const siteSettingsSchema = z.object({
   site_title: z.string().min(1, "Site title is required"),
   meta_title: z.string().max(60).nullable().optional(),
@@ -90,6 +96,7 @@ export const siteSettingsSchema = z.object({
     email: z.string().email().nullable().optional(),
     phone: z.string().nullable().optional(),
   }),
+  chat_config: chatConfigSchema,
   site_password: z.string().nullable().optional().transform((v) => v || null),
   handling_fee: z.number().min(0, "Handling fee cannot be negative").nullable().optional(),
   shipping_countries: z.array(z.string()).min(1, "Select at least one shipping country"),

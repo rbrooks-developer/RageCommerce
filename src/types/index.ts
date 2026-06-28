@@ -108,6 +108,12 @@ export type CarouselConfig = {
   fade_edges: boolean;
 };
 
+export type ChatConfig = {
+  enabled: boolean;
+  property_id: string;
+  widget_id: string;
+};
+
 export type NavConfig = {
   items: { label: string; link: string }[];
 };

@@ -12,7 +12,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
 import { COUNTRIES } from "@/lib/data/countries";
 import type { SiteSettings } from "@/types";
-import type { HomepageConfig, NavConfig, FooterConfig, ContactInfo, StoreAddress, CarouselConfig } from "@/types";
+import type { HomepageConfig, NavConfig, FooterConfig, ContactInfo, StoreAddress, CarouselConfig, ChatConfig } from "@/types";
 
 const MAX_CAROUSEL_IMAGES = 25;
 
@@ -199,6 +199,11 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
     homepage?.carousel ?? { images: [], speed: 40, direction: "left", height: 280, gap: 16, image_fit: "contain", image_padding: 0, border_radius: 8, pause_on_hover: true, fade_edges: true }
   );
 
+  const savedChat = (defaultValues as any)?.chat_config as ChatConfig | null;
+  const [chatEnabled, setChatEnabled] = useState(savedChat?.enabled ?? false);
+  const [chatPropertyId, setChatPropertyId] = useState(savedChat?.property_id ?? "");
+  const [chatWidgetId, setChatWidgetId] = useState(savedChat?.widget_id ?? "default");
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
@@ -254,6 +259,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         email: g("contact_email") || undefined,
         phone: g("contact_phone") || undefined,
       },
+      chat_config: { enabled: chatEnabled, property_id: chatPropertyId, widget_id: chatWidgetId || "default" },
       handling_fee: parseFloat(g("handling_fee")) || 0,
       shipping_countries: shippingCountries,
       store_address: {
@@ -671,6 +677,55 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div><Label htmlFor="contact_email">Email</Label><Input id="contact_email" name="contact_email" type="email" defaultValue={contact?.email ?? ""} /></div>
           <div><Label htmlFor="contact_phone">Phone</Label><Input id="contact_phone" name="contact_phone" defaultValue={contact?.phone ?? ""} /></div>
+        </div>
+      </Section>
+
+      <Section title="Live Chat">
+        <p className="text-sm text-gray-500">
+          Powered by{" "}
+          <a href="https://www.tawk.to" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">
+            Tawk.to
+          </a>{" "}
+          (free). Get your IDs from the Tawk.to dashboard under{" "}
+          <strong>Administration → Channels → Chat Widget → Installation</strong>.
+        </p>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={chatEnabled}
+            onClick={() => setChatEnabled((v) => !v)}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 ${chatEnabled ? "bg-gray-900" : "bg-gray-200"}`}
+          >
+            <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition-transform ${chatEnabled ? "translate-x-5" : "translate-x-0"}`} />
+          </button>
+          <span className="text-sm font-medium text-gray-900">
+            {chatEnabled ? "Chat widget enabled" : "Chat widget disabled (hidden from visitors)"}
+          </span>
+        </div>
+
+        <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 transition-opacity ${chatEnabled ? "opacity-100" : "opacity-40 pointer-events-none"}`}>
+          <div>
+            <Label htmlFor="chat_property_id">Property ID</Label>
+            <Input
+              id="chat_property_id"
+              value={chatPropertyId}
+              onChange={(e) => setChatPropertyId(e.target.value)}
+              placeholder="e.g. 64abc123abc123abc123abc1"
+              disabled={!chatEnabled}
+            />
+          </div>
+          <div>
+            <Label htmlFor="chat_widget_id">Widget ID</Label>
+            <Input
+              id="chat_widget_id"
+              value={chatWidgetId}
+              onChange={(e) => setChatWidgetId(e.target.value)}
+              placeholder="e.g. default or 1abc123ab"
+              disabled={!chatEnabled}
+            />
+          </div>
         </div>
       </Section>
 

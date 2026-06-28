@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { getSettings } from "@/lib/data/settings";
+import { TawkChat } from "@/components/storefront/TawkChat";
+import type { ChatConfig } from "@/types";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,6 +50,7 @@ export default async function RootLayout({
   const heroFont          = homepage?.hero_font             ?? "Playfair Display";
   const fontGradient      = homepage?.font_gradient_enabled ?? false;
   const faviconUrl        = settings?.favicon_url           ?? null;
+  const chatConfig        = settings?.chat_config as ChatConfig | null;
   const checkoutSectionColor = homepage?.checkout_section_color ?? null;
   const checkoutTextboxColor = homepage?.checkout_textbox_color ?? null;
 
@@ -114,6 +117,9 @@ export default async function RootLayout({
         } as React.CSSProperties}
       >
         {children}
+        {chatConfig?.enabled && chatConfig.property_id && (
+          <TawkChat propertyId={chatConfig.property_id} widgetId={chatConfig.widget_id || "default"} />
+        )}
       </body>
     </html>
   );
