@@ -227,7 +227,12 @@ export async function fetchItemSpecifics(
     if (key && val) specifics[key] = val;
   }
 
-  return { specifics, rawXml: xml.slice(0, 2000) };
+  const specificsIdx = xml.indexOf("<ItemSpecifics>");
+  const rawXml = specificsIdx >= 0
+    ? `[Found at char ${specificsIdx}]: ` + xml.slice(specificsIdx, specificsIdx + 1500)
+    : `[No <ItemSpecifics> in XML. Item keys: ${Object.keys(response?.Item ?? {}).join(", ")}]`;
+
+  return { specifics, rawXml };
 }
 
 /** Fetches every active Fixed Price listing via the Trading API (paginated). */
