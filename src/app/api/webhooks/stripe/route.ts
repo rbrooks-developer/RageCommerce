@@ -1,8 +1,12 @@
 import { NextRequest } from "next/server";
+import { waitUntil } from "@vercel/functions";
 import { getStripeClient } from "@/lib/stripe/client";
 import { createServiceClient } from "@/lib/supabase/server";
 import { sendOrderConfirmation } from "@/lib/emails/orderConfirmation";
 import { getSettings } from "@/lib/data/settings";
+import { getValidEbayConfig } from "@/lib/ebay/auth";
+import { decrementEbayInventory, restoreEbayInventory } from "@/lib/ebay/trading";
+import { createAdminNotification } from "@/lib/admin/notifications";
 import type { Order, OrderItem } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -74,15 +78,19 @@ export async function POST(request: NextRequest) {
 
       const orderItems = (rawItems ?? []) as (OrderItem & { products: { name: string } | null })[];
 
-      // Decrement inventory for each ordered item
+      // Decrement local inventory and collect eBay listings that need syncing
+      type EbaySyncItem = { listingId: string; qty: number; productName: string; productId: string };
+      const ebaySyncItems: EbaySyncItem[] = [];
+
       for (const item of orderItems) {
         const { data: prod } = await supabase
           .from("products")
-          .select("inventory")
+          .select("inventory, ebay_listing_id")
           .eq("id", item.product_id)
           .maybeSingle();
-        const current = (prod as { inventory: number } | null)?.inventory ?? 0;
-        const next    = Math.max(0, current - item.quantity);
+        const prodData = prod as { inventory: number; ebay_listing_id: string | null } | null;
+        const current  = prodData?.inventory ?? 0;
+        const next     = Math.max(0, current - item.quantity);
         const { error: invErr } = await supabase
           .from("products")
           .update({ inventory: next })
@@ -92,6 +100,46 @@ export async function POST(request: NextRequest) {
         } else {
           console.log(`[webhook] inventory ${item.product_id}: ${current} → ${next}`);
         }
+        if (prodData?.ebay_listing_id) {
+          ebaySyncItems.push({
+            listingId:   prodData.ebay_listing_id,
+            qty:         item.quantity,
+            productName: item.products?.name ?? "Unknown Product",
+            productId:   item.product_id,
+          });
+        }
+      }
+
+      // Sync eBay inventory in the background so Stripe gets a fast response
+      if (ebaySyncItems.length > 0) {
+        waitUntil((async () => {
+          const ebayConfig = await getValidEbayConfig();
+          if (!ebayConfig?.access_token) return;
+          for (const { listingId, qty, productName, productId } of ebaySyncItems) {
+            try {
+              const action = await decrementEbayInventory(listingId, qty, ebayConfig);
+              console.log(`[webhook] eBay ${listingId}: ${action} (sold ${qty})`);
+            } catch (err: any) {
+              console.error(`[webhook] eBay sync failed for ${listingId}:`, err.message);
+              await createAdminNotification({
+                type: "ebay_inventory_sync_error",
+                severity: "error",
+                title: "eBay Inventory Sync Failed",
+                body: `After order ${orderId.slice(0, 8).toUpperCase()} was paid, the eBay listing could not be updated automatically. Please adjust the listing quantity (or end it) manually.`,
+                metadata: {
+                  order_id:       orderId,
+                  order_number:   orderId.slice(0, 8).toUpperCase(),
+                  product_id:     productId,
+                  product_name:   productName,
+                  ebay_listing_id: listingId,
+                  quantity:       qty,
+                  action:         "decrement",
+                  error:          err.message,
+                },
+              });
+            }
+          }
+        })());
       }
 
       // Mark offers as purchased using IDs stored in session metadata.
@@ -219,6 +267,58 @@ export async function POST(request: NextRequest) {
         .eq("id", orderId);
 
       console.log(`charge.refunded: order ${orderId} → ${isFullRefund ? "refunded" : "partially_refunded"}`);
+
+      // On a full refund, try to restore eBay inventory in the background
+      if (isFullRefund) {
+        waitUntil((async () => {
+          const { data: refundItems } = await supabase
+            .from("order_items")
+            .select("product_id, quantity, products(name, ebay_listing_id)")
+            .eq("order_id", orderId);
+
+          if (!refundItems || refundItems.length === 0) return;
+
+          const ebayConfig = await getValidEbayConfig();
+          if (!ebayConfig?.access_token) return;
+
+          for (const item of refundItems) {
+            const p = item.products as unknown as { name: string; ebay_listing_id: string | null } | null;
+            const listingId = p?.ebay_listing_id;
+            if (!listingId) continue;
+            try {
+              const { action, activeListingId } = await restoreEbayInventory(listingId, item.quantity, ebayConfig);
+              console.log(`[webhook] eBay refund restore: ${action} ${listingId} → ${activeListingId} (qty +${item.quantity})`);
+              // If relisted, the listing gets a new ID — update our DB record
+              if (action === "relisted" && activeListingId !== listingId) {
+                await supabase
+                  .from("products")
+                  .update({ ebay_listing_id: activeListingId })
+                  .eq("id", item.product_id);
+                console.log(`[webhook] updated ebay_listing_id: ${listingId} → ${activeListingId}`);
+              }
+            } catch (err: any) {
+              console.error(`[webhook] eBay relist failed for ${listingId}:`, err.message);
+              await createAdminNotification({
+                type: "ebay_relist_error",
+                severity: "error",
+                title: "eBay Relist Failed After Refund",
+                body: `After order ${orderId.slice(0, 8).toUpperCase()} was refunded, the eBay listing could not be relisted automatically. Please relist the item manually on eBay.`,
+                metadata: {
+                  order_id:        orderId,
+                  order_number:    orderId.slice(0, 8).toUpperCase(),
+                  product_id:      item.product_id,
+                  product_name:    p?.name ?? "Unknown Product",
+                  ebay_listing_id: listingId,
+                  quantity:        item.quantity,
+                  action:          "relist",
+                  error:           err.message,
+                },
+              });
+            }
+          }
+        })());
+      }
+
       break;
     }
 

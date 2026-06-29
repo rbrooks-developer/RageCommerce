@@ -231,6 +231,137 @@ export async function fetchItemSpecifics(
   return { specifics };
 }
 
+// ── Inventory management helpers ─────────────────────────────────────────────
+
+async function tradingPost(
+  callName: string,
+  config: EbayConfig,
+  xmlBody: string,
+): Promise<string> {
+  const res = await fetch(TRADING_URL, {
+    method: "POST",
+    headers: {
+      "X-EBAY-API-SITEID":              "0",
+      "X-EBAY-API-COMPATIBILITY-LEVEL": COMPATIBILITY_LEVEL,
+      "X-EBAY-API-CALL-NAME":           callName,
+      "X-EBAY-API-APP-NAME":            config.app_id,
+      "Content-Type":                   "text/xml",
+    },
+    body: xmlBody,
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!res.ok) throw new Error(`${callName} HTTP ${res.status}`);
+  return res.text();
+}
+
+function parseAck(xml: string, responseKey: string): { doc: ReturnType<XMLParser["parse"]>; response: any } {
+  const parser = new XMLParser({ ignoreAttributes: true, parseTagValue: true });
+  const doc = parser.parse(xml);
+  const response = doc[responseKey];
+  if (response?.Ack === "Failure") {
+    const errs = Array.isArray(response.Errors) ? response.Errors : [response.Errors];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    throw new Error(errs.map((e: any) => e?.ShortMessage ?? "eBay error").join("; "));
+  }
+  return { doc, response };
+}
+
+/** Returns current available quantity and whether the listing is still active. */
+async function getEbayItemStatus(
+  listingId: string,
+  config: EbayConfig,
+): Promise<{ quantity: number; isActive: boolean }> {
+  const xml = await tradingPost("GetItem", config, `<?xml version="1.0" encoding="utf-8"?>
+<GetItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+  <RequesterCredentials><eBayAuthToken>${config.access_token}</eBayAuthToken></RequesterCredentials>
+  <ItemID>${listingId}</ItemID>
+  <DetailLevel>ItemReturnDescription</DetailLevel>
+</GetItemRequest>`);
+
+  const { response } = parseAck(xml, "GetItemResponse");
+  const totalQty  = parseInt(String(response?.Item?.Quantity      ?? 0), 10);
+  const soldQty   = parseInt(String(response?.Item?.QuantitySold  ?? 0), 10);
+  const status    = String(response?.Item?.SellingStatus?.ListingStatus ?? "").toLowerCase();
+  return { quantity: Math.max(0, totalQty - soldQty), isActive: status === "active" };
+}
+
+/**
+ * Decrements eBay listing inventory by quantitySold.
+ * - Remaining > 0  → ReviseInventoryStatus
+ * - Remaining ≤ 0  → EndItem (NotAvailable)
+ */
+export async function decrementEbayInventory(
+  listingId: string,
+  quantitySold: number,
+  config: EbayConfig,
+): Promise<"revised" | "ended"> {
+  const { quantity: current, isActive } = await getEbayItemStatus(listingId, config);
+  if (!isActive) return "ended"; // already ended — nothing to do
+
+  const next = current - quantitySold;
+
+  if (next > 0) {
+    const xml = await tradingPost("ReviseInventoryStatus", config, `<?xml version="1.0" encoding="utf-8"?>
+<ReviseInventoryStatusRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+  <RequesterCredentials><eBayAuthToken>${config.access_token}</eBayAuthToken></RequesterCredentials>
+  <InventoryStatus>
+    <ItemID>${listingId}</ItemID>
+    <Quantity>${next}</Quantity>
+  </InventoryStatus>
+</ReviseInventoryStatusRequest>`);
+    parseAck(xml, "ReviseInventoryStatusResponse");
+    return "revised";
+  } else {
+    const xml = await tradingPost("EndItem", config, `<?xml version="1.0" encoding="utf-8"?>
+<EndItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+  <RequesterCredentials><eBayAuthToken>${config.access_token}</eBayAuthToken></RequesterCredentials>
+  <ItemID>${listingId}</ItemID>
+  <EndingReason>NotAvailable</EndingReason>
+</EndItemRequest>`);
+    parseAck(xml, "EndItemResponse");
+    return "ended";
+  }
+}
+
+/**
+ * Restores eBay inventory after a refund.
+ * - If listing is still active  → ReviseInventoryStatus (add back qty)
+ * - If listing was ended         → RelistItem (creates new listing)
+ * Returns the listing ID that is now active (may differ from input if relisted).
+ */
+export async function restoreEbayInventory(
+  listingId: string,
+  quantityRestored: number,
+  config: EbayConfig,
+): Promise<{ action: "revised" | "relisted"; activeListingId: string }> {
+  const { quantity: current, isActive } = await getEbayItemStatus(listingId, config);
+
+  if (isActive) {
+    const xml = await tradingPost("ReviseInventoryStatus", config, `<?xml version="1.0" encoding="utf-8"?>
+<ReviseInventoryStatusRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+  <RequesterCredentials><eBayAuthToken>${config.access_token}</eBayAuthToken></RequesterCredentials>
+  <InventoryStatus>
+    <ItemID>${listingId}</ItemID>
+    <Quantity>${current + quantityRestored}</Quantity>
+  </InventoryStatus>
+</ReviseInventoryStatusRequest>`);
+    parseAck(xml, "ReviseInventoryStatusResponse");
+    return { action: "revised", activeListingId: listingId };
+  } else {
+    const xml = await tradingPost("RelistItem", config, `<?xml version="1.0" encoding="utf-8"?>
+<RelistItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+  <RequesterCredentials><eBayAuthToken>${config.access_token}</eBayAuthToken></RequesterCredentials>
+  <Item>
+    <ItemID>${listingId}</ItemID>
+    <Quantity>${quantityRestored}</Quantity>
+  </Item>
+</RelistItemRequest>`);
+    const { response } = parseAck(xml, "RelistItemResponse");
+    const newListingId = String(response?.ItemID ?? listingId);
+    return { action: "relisted", activeListingId: newListingId };
+  }
+}
+
 /** Fetches every active Fixed Price listing via the Trading API (paginated). */
 export async function fetchAllActiveListings(config: EbayConfig): Promise<TradingItem[]> {
   if (!config.access_token) throw new Error("No eBay access token — connect your account first");

@@ -257,6 +257,31 @@ export interface Database {
           updated_at?: string;
         };
       };
+      admin_notifications: {
+        Row: {
+          id: string;
+          type: string;
+          severity: "info" | "warning" | "error";
+          title: string;
+          body: string;
+          metadata: Json;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          type: string;
+          severity?: "info" | "warning" | "error";
+          title: string;
+          body: string;
+          metadata?: Json;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          read_at?: string | null;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
