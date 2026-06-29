@@ -222,11 +222,22 @@ export async function POST(request: NextRequest) {
   const proto  = host.startsWith("localhost") ? "http" : "https";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? `${proto}://${host}`;
 
+  // Pass offer IDs in metadata so the webhook can mark them purchased
+  // without relying on cart_items still existing at webhook time.
+  const resolvedOfferIds = items
+    .map((i) => i.offerId)
+    .filter((id): id is string => !!id && !!offerMap[id]);
+
   const sessionParams = {
     mode: "payment" as const,
     line_items: lineItems,
     customer_email: user.email,
-    metadata: { order_id: orderId },
+    metadata: {
+      order_id: orderId,
+      ...(resolvedOfferIds.length > 0
+        ? { offer_ids: resolvedOfferIds.join(",") }
+        : {}),
+    },
     success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/checkout`,
     ...(taxMode === "stripe" ? { automatic_tax: { enabled: true } } : {}),
