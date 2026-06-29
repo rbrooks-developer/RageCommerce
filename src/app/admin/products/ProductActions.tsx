@@ -34,7 +34,6 @@ export function DeleteAllProductsButton() {
 
   const handleDeleteAll = async () => {
     if (!confirm("Delete ALL products? This will permanently remove every product and cannot be undone.")) return;
-    if (!confirm("Are you sure? This cannot be reversed.")) return;
     setLoading(true);
     try {
       await deleteAllProducts();
