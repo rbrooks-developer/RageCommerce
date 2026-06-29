@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +16,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if ((profile as { role: string } | null)?.role !== "admin") redirect("/");
 
-  const { count: unreadCount } = await supabase
+  const serviceSupabase = createServiceClient();
+  const { count: unreadCount } = await serviceSupabase
     .from("admin_notifications")
     .select("*", { count: "exact", head: true })
     .is("read_at", null);

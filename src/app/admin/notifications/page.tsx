@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { markNotificationRead, markAllNotificationsRead, deleteNotification, createTestNotification } from "@/lib/admin/notifications";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
@@ -31,7 +31,7 @@ const typeLabels: Record<string, string> = {
 };
 
 export default async function NotificationsPage() {
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const { data } = await supabase
     .from("admin_notifications")
     .select("*")
