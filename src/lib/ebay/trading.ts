@@ -127,10 +127,8 @@ async function fetchPage(
 
   const parser = new XMLParser({
     isArray: (name) => ["Item", "PictureURL", "NameValueList"].includes(name),
-    ignoreAttributes:     false,
-    attributeNamePrefix:  "_",
-    parseTagValue:        true,
-    parseAttributeValue:  true,
+    ignoreAttributes: true,  // avoids { "#text": val, _attr: ... } wrapping on fields like StartPrice
+    parseTagValue:    true,
   });
 
   const doc      = parser.parse(xml);
