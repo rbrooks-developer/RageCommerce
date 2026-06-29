@@ -1,25 +1,50 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
 import { Plus } from "lucide-react";
 import { DeleteProductButton, DeleteAllProductsButton, TogglePublishedButton } from "./ProductActions";
+import { ProductFilters } from "./ProductFilters";
 import Image from "next/image";
 import type { Product } from "@/types";
 
 type ProductRow = Product & { categories: { name: string } | null };
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ search?: string; category?: string }>;
+}) {
+  const { search, category } = await searchParams;
   const supabase = await createClient();
-  const { data: raw } = await supabase
-    .from("products")
-    .select("*, categories(name)")
-    .order("created_at", { ascending: false });
-  const products = (raw ?? []) as ProductRow[];
+
+  const [{ data: raw }, { data: cats }] = await Promise.all([
+    supabase.from("products").select("*, categories(name)"),
+    supabase.from("categories").select("id, name").order("name"),
+  ]);
+
+  let products = (raw ?? []) as ProductRow[];
+  const categories = cats ?? [];
+
+  // Filter
+  if (search?.trim()) {
+    const q = search.trim().toLowerCase();
+    products = products.filter((p) => p.name.toLowerCase().includes(q));
+  }
+  if (category) {
+    products = products.filter((p) => p.category_id === category);
+  }
+
+  // Sort: category name A-Z, then product name A-Z
+  products.sort((a, b) => {
+    const catCmp = (a.categories?.name ?? "").localeCompare(b.categories?.name ?? "");
+    return catCmp !== 0 ? catCmp : a.name.localeCompare(b.name);
+  });
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Products</h1>
         <div className="flex items-center gap-2">
           <DeleteAllProductsButton />
@@ -32,6 +57,10 @@ export default async function ProductsPage() {
           </Link>
         </div>
       </div>
+
+      <Suspense>
+        <ProductFilters categories={categories} />
+      </Suspense>
 
       {/* Mobile card view */}
       <div className="space-y-3 md:hidden">
@@ -59,6 +88,9 @@ export default async function ProductsPage() {
             </div>
           </div>
         ))}
+        {products.length === 0 && (
+          <p className="py-12 text-center text-sm text-gray-400">No products found.</p>
+        )}
       </div>
 
       {/* Desktop table */}
@@ -110,7 +142,7 @@ export default async function ProductsPage() {
             </tbody>
           </table>
           {products.length === 0 && (
-            <p className="py-12 text-center text-sm text-gray-400">No products yet. Create your first product.</p>
+            <p className="py-12 text-center text-sm text-gray-400">No products found.</p>
           )}
         </div>
       </div>
