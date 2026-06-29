@@ -82,6 +82,17 @@ export async function deleteProduct(id: string) {
   revalidatePath("/products");
 }
 
+export async function deleteAllProducts() {
+  const auth = await requireAdmin();
+  if (auth.error) throw new Error(auth.error);
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("products").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/products");
+  revalidatePath("/products");
+}
+
 export async function togglePublished(id: string, current: boolean) {
   const auth = await requireAdmin();
   if (auth.error) throw new Error(auth.error);

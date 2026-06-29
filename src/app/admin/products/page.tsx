@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/utils";
 import { Plus } from "lucide-react";
-import { DeleteProductButton, TogglePublishedButton } from "./ProductActions";
+import { DeleteProductButton, DeleteAllProductsButton, TogglePublishedButton } from "./ProductActions";
 import Image from "next/image";
 import type { Product } from "@/types";
 
@@ -21,13 +21,16 @@ export default async function ProductsPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-        <Link
-          href="/admin/products/new"
-          className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 h-11 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          New Product
-        </Link>
+        <div className="flex items-center gap-2">
+          <DeleteAllProductsButton />
+          <Link
+            href="/admin/products/new"
+            className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 h-11 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            New Product
+          </Link>
+        </div>
       </div>
 
       {/* Mobile card view */}
