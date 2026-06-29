@@ -69,20 +69,17 @@ export async function POST(_request: NextRequest): Promise<Response> {
         const cat = ebayCatMap.get(l.ebayCategoryId);
         return cat && childrenMap.has(cat.id);
       });
+      // GetItem to fetch ItemSpecifics (Publisher/Brand) for items in parent categories.
+      // Many listings have no ItemSpecifics set in eBay, so title keyword matching
+      // is used as a fallback (checked during the main loop below).
       await send({ type: "enriching", count: needsSpecifics.length });
-      let firstItemXmlSent = false;
       for (const listing of needsSpecifics) {
         try {
-          const { specifics, rawXml } = await fetchItemSpecifics(listing.listingId, config);
+          const { specifics } = await fetchItemSpecifics(listing.listingId, config);
           listing.specifics = specifics;
           listing.brand     = specifics["brand"] ?? specifics["publisher"] ?? null;
-          if (!firstItemXmlSent && rawXml) {
-            firstItemXmlSent = true;
-            await send({ type: "warn", message: `DEBUG GetItem XML (first item): ${rawXml}` });
-          }
-        } catch (err) {
-          const msg = (err as Error & { cause?: Error });
-          await send({ type: "warn", message: `GetItem failed for "${listing.title}": ${msg.cause?.message ?? msg.message}` });
+        } catch {
+          // Ignore — title matching will still run
         }
       }
 
@@ -105,14 +102,23 @@ export async function POST(_request: NextRequest): Promise<Response> {
           continue;
         }
 
-        // Brand → child category routing
+        // Child category routing: try brand/publisher from ItemSpecifics first,
+        // then fall back to scanning the title for child category name keywords.
         let categoryId    = matchedCat.id;
         let resolvedChild: string | null = null;
         const children    = childrenMap.get(matchedCat.id) ?? [];
-        if (children.length > 0 && listing.brand) {
-          const brandLower = listing.brand.toLowerCase();
-          const brandChild = children.find((c) => c.name.toLowerCase() === brandLower);
-          if (brandChild) { categoryId = brandChild.id; resolvedChild = brandChild.name; }
+        if (children.length > 0) {
+          const titleLower = listing.title.toLowerCase();
+          const brandLower = (listing.brand ?? "").toLowerCase();
+
+          const matched =
+            // 1. Exact brand match from ItemSpecifics
+            (brandLower && children.find((c) => c.name.toLowerCase() === brandLower)) ||
+            // 2. Child name appears anywhere in the title
+            children.find((c) => titleLower.includes(c.name.toLowerCase())) ||
+            null;
+
+          if (matched) { categoryId = matched.id; resolvedChild = matched.name; }
         }
 
         // Check for existing product
