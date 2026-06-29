@@ -45,7 +45,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
 
   return (
     <header
-      className="sticky top-0 z-40 border-b border-black/10"
+      className="sticky top-0 z-50 border-b border-black/10"
       style={{ backgroundColor: bgColor, color: fontColor }}
     >
       {striationImageUrl && (
@@ -56,6 +56,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
             inset: 0,
             pointerEvents: "none",
             backgroundImage: `url(${striationImageUrl})`,
+            backgroundAttachment: "fixed",
             backgroundSize: striationPosition === "full" ? "cover" : striationPosition === "tile" ? "auto" : "auto 100%",
             backgroundPosition: striationPosition === "left" ? "left center" : striationPosition === "right" ? "right center" : "center",
             backgroundRepeat: striationPosition === "tile" ? "repeat" : "no-repeat",

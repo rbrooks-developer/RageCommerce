@@ -183,7 +183,7 @@ export default async function HomePage() {
 
       {/* Services section */}
       {serviceImages.length > 0 && (
-        <section id="services" aria-labelledby="services-heading" className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16" style={{ zIndex: 2 }}>
+        <section id="services" aria-labelledby="services-heading" className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16" style={{ zIndex: 46 }}>
           <div className="flex flex-col items-center gap-3 mb-6">
             <h2
               id="services-heading"
