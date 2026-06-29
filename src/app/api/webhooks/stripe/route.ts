@@ -272,6 +272,13 @@ export async function POST(request: NextRequest) {
 
       if (!orderId) {
         console.error("charge.refunded: no order found for payment_intent", charge.payment_intent);
+        await writeAdminNotification({
+          type: "refund_order_not_found",
+          severity: "warning",
+          title: "Refund Received — Order Not Found",
+          body: `Stripe sent a charge.refunded event but no order with payment_intent ${charge.payment_intent} was found. eBay inventory was not restored.`,
+          metadata: { error: `payment_intent: ${charge.payment_intent}` },
+        });
         break;
       }
 
@@ -283,6 +290,10 @@ export async function POST(request: NextRequest) {
 
       console.log(`charge.refunded: order ${orderId} → ${isFullRefund ? "refunded" : "partially_refunded"}`);
 
+      if (!isFullRefund) {
+        console.log(`[webhook] partial refund on order ${orderId} — skipping eBay relist`);
+      }
+
       // On a full refund, try to restore eBay inventory in the background
       if (isFullRefund) {
         waitUntil((async () => {
@@ -291,7 +302,10 @@ export async function POST(request: NextRequest) {
             .select("product_id, quantity, products(name, ebay_listing_id)")
             .eq("order_id", orderId);
 
-          if (!refundItems || refundItems.length === 0) return;
+          if (!refundItems || refundItems.length === 0) {
+            console.log(`[webhook] no order items found for refund eBay sync on order ${orderId}`);
+            return;
+          }
 
           const ebayConfig = await getValidEbayConfig();
           if (!ebayConfig?.access_token) {
@@ -318,7 +332,6 @@ export async function POST(request: NextRequest) {
             try {
               const { action, activeListingId } = await restoreEbayInventory(listingId, item.quantity, ebayConfig);
               console.log(`[webhook] eBay refund restore: ${action} ${listingId} → ${activeListingId} (qty +${item.quantity})`);
-              // If relisted, the listing gets a new ID — update our DB record
               if (action === "relisted" && activeListingId !== listingId) {
                 await supabase
                   .from("products")
@@ -326,6 +339,25 @@ export async function POST(request: NextRequest) {
                   .eq("id", item.product_id);
                 console.log(`[webhook] updated ebay_listing_id: ${listingId} → ${activeListingId}`);
               }
+              await writeAdminNotification({
+                type: "ebay_relist_success",
+                severity: "info",
+                title: action === "relisted"
+                  ? "eBay Listing Relisted After Refund"
+                  : "eBay Inventory Restored After Refund",
+                body: action === "relisted"
+                  ? `After order ${orderId.slice(0, 8).toUpperCase()} was refunded, the eBay listing was relisted with a new ID. The product record has been updated automatically.`
+                  : `After order ${orderId.slice(0, 8).toUpperCase()} was refunded, ${item.quantity} unit(s) were added back to the active eBay listing.`,
+                metadata: {
+                  order_id:        orderId,
+                  order_number:    orderId.slice(0, 8).toUpperCase(),
+                  product_id:      item.product_id,
+                  product_name:    p?.name ?? "Unknown Product",
+                  ebay_listing_id: activeListingId,
+                  quantity:        item.quantity,
+                  action,
+                },
+              });
             } catch (err: any) {
               console.error(`[webhook] eBay relist failed for ${listingId}:`, err.message);
               await writeAdminNotification({
