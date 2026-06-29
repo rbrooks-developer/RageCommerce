@@ -179,7 +179,7 @@ export async function fetchItemSpecifics(
     <eBayAuthToken>${config.access_token}</eBayAuthToken>
   </RequesterCredentials>
   <ItemID>${listingId}</ItemID>
-  <OutputSelector>ItemSpecifics</OutputSelector>
+  <OutputSelector>Item.ItemSpecifics</OutputSelector>
 </GetItemRequest>`;
 
   const res = await fetch(TRADING_URL, {
