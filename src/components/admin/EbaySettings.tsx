@@ -164,7 +164,7 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
             {config.token_expires_at && (
               <div className="flex justify-between">
                 <dt className="text-gray-500">Token expires</dt>
-                <dd>{new Date(config.token_expires_at).toLocaleString()}</dd>
+                <dd suppressHydrationWarning>{new Date(config.token_expires_at).toLocaleString()}</dd>
               </div>
             )}
           </dl>
@@ -214,7 +214,7 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
           <dl className="text-sm space-y-1">
             <div className="flex justify-between">
               <dt className="text-gray-500">Last synced</dt>
-              <dd>{new Date(config.categories_synced_at).toLocaleString()}</dd>
+              <dd suppressHydrationWarning>{new Date(config.categories_synced_at).toLocaleString()}</dd>
             </div>
             {config.categories_count != null && (
               <div className="flex justify-between">
@@ -265,7 +265,7 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
           <dl className="text-sm space-y-1">
             <div className="flex justify-between">
               <dt className="text-gray-500">Last synced</dt>
-              <dd>{new Date(config.listings_synced_at).toLocaleString()}</dd>
+              <dd suppressHydrationWarning>{new Date(config.listings_synced_at).toLocaleString()}</dd>
             </div>
             {config.listings_count != null && (
               <div className="flex justify-between">
