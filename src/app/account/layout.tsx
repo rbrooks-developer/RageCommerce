@@ -41,7 +41,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
           style={{
             position: "fixed",
             inset: 0,
-            zIndex: 35,
+            zIndex: 1,
             pointerEvents: "none",
             backgroundImage: `url(${striationImageUrl})`,
             backgroundSize: striationPosition === "full" ? "cover" : striationPosition === "tile" ? "auto" : "auto 100%",
@@ -61,6 +61,10 @@ export default async function AccountLayout({ children }: { children: React.Reac
         bgColor={bgColor}
         fontColor={fontColor}
         approvedOffersCount={approvedOffersCount}
+        striationImageUrl={striationImageUrl}
+        striationOpacity={striationOpacity}
+        striationBlendMode={striationBlendMode}
+        striationPosition={striationPosition}
       />
       <main className="flex-1">
         <div

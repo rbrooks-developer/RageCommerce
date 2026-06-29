@@ -36,7 +36,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
           style={{
             position: "fixed",
             inset: 0,
-            zIndex: 45,
+            zIndex: 1,
             pointerEvents: "none",
             backgroundImage: `url(${striationImageUrl})`,
             backgroundSize: striationPosition === "full" ? "cover" : striationPosition === "tile" ? "auto" : "auto 100%",
@@ -57,6 +57,10 @@ export default async function StorefrontLayout({ children }: { children: React.R
         bgColor={bgColor}
         fontColor={fontColor}
         approvedOffersCount={approvedOffersCount}
+        striationImageUrl={striationImageUrl}
+        striationOpacity={striationOpacity}
+        striationBlendMode={striationBlendMode}
+        striationPosition={striationPosition}
       />
       <main className="flex-1">{children}</main>
       <Footer

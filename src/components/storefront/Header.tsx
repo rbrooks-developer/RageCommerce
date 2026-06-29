@@ -17,6 +17,10 @@ interface HeaderProps {
   bgColor?: string;
   fontColor?: string;
   approvedOffersCount?: number;
+  striationImageUrl?: string | null;
+  striationOpacity?: number;
+  striationBlendMode?: React.CSSProperties["mixBlendMode"];
+  striationPosition?: string;
 }
 
 // Bare anchors like "#services" become "/#services" so they always target the homepage
@@ -34,7 +38,7 @@ function isAccountLink(link: string) {
   return n.startsWith("/account");
 }
 
-export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = false, bgColor = "#ffffff", fontColor = "#111827", approvedOffersCount = 0 }: HeaderProps) {
+export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = false, bgColor = "#ffffff", fontColor = "#111827", approvedOffersCount = 0, striationImageUrl, striationOpacity = 30, striationBlendMode = "screen", striationPosition = "full" }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { itemCount } = useCart();
   const navItems = navConfig?.items ?? [];
@@ -44,6 +48,23 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
       className="sticky top-0 z-40 border-b border-black/10"
       style={{ backgroundColor: bgColor, color: fontColor }}
     >
+      {striationImageUrl && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            backgroundImage: `url(${striationImageUrl})`,
+            backgroundSize: striationPosition === "full" ? "cover" : striationPosition === "tile" ? "auto" : "auto 100%",
+            backgroundPosition: striationPosition === "left" ? "left center" : striationPosition === "right" ? "right center" : "center",
+            backgroundRepeat: striationPosition === "tile" ? "repeat" : "no-repeat",
+            opacity: striationOpacity / 100,
+            mixBlendMode: striationBlendMode,
+          }}
+        />
+      )}
+      <div style={{ position: "relative" }}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between pt-2">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg" style={{ color: fontColor }}>
@@ -129,7 +150,6 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
           "md:hidden overflow-hidden transition-all duration-200",
           menuOpen ? "max-h-96 border-t border-black/10" : "max-h-0"
         )}
-        style={{ backgroundColor: bgColor }}
       >
         <nav className="flex flex-col px-4 py-3 space-y-1">
           {navItems.filter((item) => isLoggedIn || !isAccountLink(item.link)).map((item) => {
@@ -169,6 +189,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
             </Link>
           )}
         </nav>
+      </div>
       </div>
     </header>
   );

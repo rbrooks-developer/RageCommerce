@@ -37,7 +37,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
           style={{
             position: "fixed",
             inset: 0,
-            zIndex: 35,
+            zIndex: 1,
             pointerEvents: "none",
             backgroundImage: `url(${striationImageUrl})`,
             backgroundSize: striationPosition === "full" ? "cover" : striationPosition === "tile" ? "auto" : "auto 100%",
@@ -56,6 +56,10 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         isAdmin={isAdmin}
         bgColor={bgColor}
         fontColor={fontColor}
+        striationImageUrl={striationImageUrl}
+        striationOpacity={striationOpacity}
+        striationBlendMode={striationBlendMode}
+        striationPosition={striationPosition}
       />
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div
