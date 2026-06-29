@@ -45,7 +45,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
 
   return (
     <header
-      className="sticky top-0 z-50 border-b border-black/10"
+      className="sticky top-0 z-50"
       style={{ backgroundColor: bgColor, color: fontColor }}
     >
       {striationImageUrl && (
