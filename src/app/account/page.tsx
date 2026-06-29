@@ -190,7 +190,7 @@ export default async function AccountPage() {
                       <p className="text-sm font-semibold mt-1">{formatPrice(Number(order.total_price) * 100)}</p>
                     </div>
                   </div>
-                  {order.tracking_number && (
+                  {order.tracking_number && order.status !== "cancelled" && (
                     <p className="text-xs mt-2" style={{ opacity: 0.45 }}>
                       Tracking: <span className="font-mono">{order.tracking_number}</span>
                     </p>
@@ -219,7 +219,7 @@ export default async function AccountPage() {
                       <td className="px-5 py-3 text-xs" style={{ opacity: 0.5 }}>{formatDate(order.created_at)}</td>
                       <td className="px-5 py-3"><OrderStatusBadge status={order.status} /></td>
                       <td className="px-5 py-3 font-medium">{formatPrice(Number(order.total_price) * 100)}</td>
-                      <td className="px-5 py-3 font-mono text-xs" style={{ opacity: 0.5 }}>{order.tracking_number ?? "—"}</td>
+                      <td className="px-5 py-3 font-mono text-xs" style={{ opacity: 0.5 }}>{order.status !== "cancelled" ? (order.tracking_number ?? "—") : "—"}</td>
                       <td className="px-5 py-3 text-right">
                         <Link href={`/account/orders/${order.id}`} className="text-xs underline underline-offset-2 transition-opacity hover:opacity-70" style={{ opacity: 0.6 }}>
                           View

@@ -62,7 +62,7 @@ export default async function AccountOrderPage({
       </div>
 
       {/* Tracking */}
-      {order.tracking_number && (
+      {order.tracking_number && order.status !== "cancelled" && (
         <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
           <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-1">Tracking</p>
           <p className="font-mono text-sm font-medium text-blue-900">{order.tracking_number}</p>
