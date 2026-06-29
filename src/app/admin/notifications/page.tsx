@@ -1,5 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import { markNotificationRead, markAllNotificationsRead, deleteNotification, createTestNotification } from "@/lib/admin/notifications";
+import { markNotificationRead, markAllNotificationsRead, deleteNotification } from "@/lib/admin/notifications";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
@@ -51,14 +51,6 @@ export default async function NotificationsPage() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          <form action={createTestNotification}>
-            <button
-              type="submit"
-              className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2"
-            >
-              Send test notification
-            </button>
-          </form>
           {unreadCount > 0 && (
             <form action={markAllNotificationsRead}>
               <button
