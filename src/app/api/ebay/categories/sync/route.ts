@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { getEbayConfig, getAppToken, saveEbayConfig } from "@/lib/ebay/auth";
+import { getValidEbayConfig, getAppToken, saveEbayConfig } from "@/lib/ebay/auth";
 import { fetchAndFlattenCategoryTree } from "@/lib/ebay/taxonomy";
 import { createServiceClient } from "@/lib/supabase/server";
 
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   if (auth.error) return NextResponse.json({ error: auth.error }, { status: 401 });
 
   try {
-    const config = await getEbayConfig();
+    const config = await getValidEbayConfig();
     if (!config?.app_id || !config?.cert_id) {
       return NextResponse.json(
         { error: "eBay credentials not configured." },

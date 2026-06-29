@@ -126,6 +126,65 @@ export async function exchangeCodeForTokens(
   return res.json();
 }
 
+/**
+ * Uses the stored refresh token to get a new access token and persists it.
+ * eBay access tokens last 2 hours; refresh tokens last 18 months.
+ */
+export async function refreshAccessToken(config: EbayConfig): Promise<EbayConfig> {
+  if (!config.refresh_token) throw new Error("No refresh token stored — reconnect eBay.");
+
+  const res = await fetch(EBAY_TOKEN_URL, {
+    method: "POST",
+    headers: {
+      Authorization:  basicAuth(config.app_id, config.cert_id),
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      grant_type:    "refresh_token",
+      refresh_token: config.refresh_token,
+      scope:         EBAY_SCOPES,
+    }).toString(),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`eBay token refresh failed ${res.status}: ${text}`);
+  }
+
+  const data = await res.json();
+  const token_expires_at = new Date(Date.now() + data.expires_in * 1000).toISOString();
+
+  const updates: Partial<EbayConfig> = {
+    access_token: data.access_token,
+    token_expires_at,
+    // eBay may return a new refresh token; keep the existing one if not
+    ...(data.refresh_token ? { refresh_token: data.refresh_token } : {}),
+  };
+
+  await saveEbayConfig(updates);
+  return { ...config, ...updates };
+}
+
+/**
+ * Returns a guaranteed-fresh eBay config. If the access token has expired
+ * or will expire within 5 minutes it is silently refreshed first.
+ */
+export async function getValidEbayConfig(): Promise<EbayConfig | null> {
+  const config = await getEbayConfig();
+  if (!config?.access_token) return config;
+
+  const expiresAt    = config.token_expires_at ? new Date(config.token_expires_at).getTime() : 0;
+  const needsRefresh = Date.now() + 5 * 60 * 1000 >= expiresAt;
+
+  if (!needsRefresh) return config;
+
+  try {
+    return await refreshAccessToken(config);
+  } catch {
+    return config; // Let the caller surface any downstream API errors
+  }
+}
+
 export async function getEbayIdentity(
   accessToken: string
 ): Promise<{ userId: string; username: string }> {

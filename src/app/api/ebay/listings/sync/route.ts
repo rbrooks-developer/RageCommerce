@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { getEbayConfig, saveEbayConfig } from "@/lib/ebay/auth";
+import { getValidEbayConfig, saveEbayConfig } from "@/lib/ebay/auth";
 import { fetchAllActiveListings, fetchItemSpecifics } from "@/lib/ebay/trading";
 import { createServiceClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
@@ -27,7 +27,7 @@ export async function POST(_request: NextRequest): Promise<Response> {
   // Run sync in the background so we can return the stream immediately
   (async () => {
     try {
-      const config = await getEbayConfig();
+      const config = await getValidEbayConfig();
       if (!config?.access_token) {
         await send({ type: "fatal", message: "eBay account not connected" });
         return;
