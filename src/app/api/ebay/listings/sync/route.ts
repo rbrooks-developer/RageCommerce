@@ -102,23 +102,14 @@ export async function POST(_request: NextRequest): Promise<Response> {
           continue;
         }
 
-        // Child category routing: try brand/publisher from ItemSpecifics first,
-        // then fall back to scanning the title for child category name keywords.
+        // Brand → child category routing via ItemSpecifics (Publisher or Brand field)
         let categoryId    = matchedCat.id;
         let resolvedChild: string | null = null;
         const children    = childrenMap.get(matchedCat.id) ?? [];
-        if (children.length > 0) {
-          const titleLower = listing.title.toLowerCase();
-          const brandLower = (listing.brand ?? "").toLowerCase();
-
-          const matched =
-            // 1. Exact brand match from ItemSpecifics
-            (brandLower && children.find((c) => c.name.toLowerCase() === brandLower)) ||
-            // 2. Child name appears anywhere in the title
-            children.find((c) => titleLower.includes(c.name.toLowerCase())) ||
-            null;
-
-          if (matched) { categoryId = matched.id; resolvedChild = matched.name; }
+        if (children.length > 0 && listing.brand) {
+          const brandLower = listing.brand.toLowerCase();
+          const brandChild = children.find((c) => c.name.toLowerCase() === brandLower);
+          if (brandChild) { categoryId = brandChild.id; resolvedChild = brandChild.name; }
         }
 
         // Check for existing product

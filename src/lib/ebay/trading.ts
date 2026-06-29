@@ -179,6 +179,7 @@ export async function fetchItemSpecifics(
     <eBayAuthToken>${config.access_token}</eBayAuthToken>
   </RequesterCredentials>
   <ItemID>${listingId}</ItemID>
+  <IncludeItemSpecifics>true</IncludeItemSpecifics>
   <DetailLevel>ReturnAll</DetailLevel>
 </GetItemRequest>`;
 
