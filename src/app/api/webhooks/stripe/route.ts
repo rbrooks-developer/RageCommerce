@@ -6,7 +6,7 @@ import { sendOrderConfirmation } from "@/lib/emails/orderConfirmation";
 import { getSettings } from "@/lib/data/settings";
 import { getValidEbayConfig } from "@/lib/ebay/auth";
 import { decrementEbayInventory, restoreEbayInventory } from "@/lib/ebay/trading";
-import { createAdminNotification } from "@/lib/admin/notifications";
+import { writeAdminNotification } from "@/lib/admin/notify";
 import type { Order, OrderItem } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -114,14 +114,29 @@ export async function POST(request: NextRequest) {
       if (ebaySyncItems.length > 0) {
         waitUntil((async () => {
           const ebayConfig = await getValidEbayConfig();
-          if (!ebayConfig?.access_token) return;
+          if (!ebayConfig?.access_token) {
+            console.error("[webhook] eBay inventory sync skipped: no valid eBay config");
+            await writeAdminNotification({
+              type: "ebay_inventory_sync_error",
+              severity: "warning",
+              title: "eBay Inventory Sync Skipped — No eBay Connection",
+              body: `Order ${orderId.slice(0, 8).toUpperCase()} was paid but eBay inventory could not be updated because no valid eBay access token is configured. Please update the listings manually.`,
+              metadata: {
+                order_id:     orderId,
+                order_number: orderId.slice(0, 8).toUpperCase(),
+                action:       "decrement",
+                error:        "No valid eBay access token",
+              },
+            });
+            return;
+          }
           for (const { listingId, qty, productName, productId } of ebaySyncItems) {
             try {
               const action = await decrementEbayInventory(listingId, qty, ebayConfig);
               console.log(`[webhook] eBay ${listingId}: ${action} (sold ${qty})`);
             } catch (err: any) {
               console.error(`[webhook] eBay sync failed for ${listingId}:`, err.message);
-              await createAdminNotification({
+              await writeAdminNotification({
                 type: "ebay_inventory_sync_error",
                 severity: "error",
                 title: "eBay Inventory Sync Failed",
@@ -279,7 +294,22 @@ export async function POST(request: NextRequest) {
           if (!refundItems || refundItems.length === 0) return;
 
           const ebayConfig = await getValidEbayConfig();
-          if (!ebayConfig?.access_token) return;
+          if (!ebayConfig?.access_token) {
+            console.error("[webhook] eBay relist skipped: no valid eBay config");
+            await writeAdminNotification({
+              type: "ebay_relist_error",
+              severity: "warning",
+              title: "eBay Relist Skipped — No eBay Connection",
+              body: `Order ${orderId.slice(0, 8).toUpperCase()} was refunded but eBay inventory could not be restored because no valid eBay access token is configured. Please relist the items manually.`,
+              metadata: {
+                order_id:     orderId,
+                order_number: orderId.slice(0, 8).toUpperCase(),
+                action:       "relist",
+                error:        "No valid eBay access token",
+              },
+            });
+            return;
+          }
 
           for (const item of refundItems) {
             const p = item.products as unknown as { name: string; ebay_listing_id: string | null } | null;
@@ -298,7 +328,7 @@ export async function POST(request: NextRequest) {
               }
             } catch (err: any) {
               console.error(`[webhook] eBay relist failed for ${listingId}:`, err.message);
-              await createAdminNotification({
+              await writeAdminNotification({
                 type: "ebay_relist_error",
                 severity: "error",
                 title: "eBay Relist Failed After Refund",
