@@ -178,7 +178,10 @@ export async function POST(_request: NextRequest): Promise<Response> {
 
       await send({ type: "done", inserted, updated, errors });
     } catch (err) {
-      await send({ type: "fatal", message: (err as Error).message ?? "Sync failed" });
+      const e = err as Error & { cause?: Error };
+      const message = [e.message, e.cause?.message].filter(Boolean).join(" → ");
+      console.error("[ebay/listings/sync] fatal", message, e.cause ?? e);
+      await send({ type: "fatal", message: message || "Sync failed" });
     } finally {
       await writer.close();
     }

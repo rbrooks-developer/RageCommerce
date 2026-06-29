@@ -184,8 +184,14 @@ async function fetchSpecificsForIds(
   url.searchParams.set("IncludeSelector", "ItemSpecifics");
   url.searchParams.set("responseencoding","JSON");
 
+  console.log("[ebay/trading] Shopping API request:", url.toString());
   const res  = await fetch(url.toString(), { signal: AbortSignal.timeout(30_000) });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Shopping API HTTP ${res.status}: ${body.slice(0, 200)}`);
+  }
   const data = await res.json() as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  console.log("[ebay/trading] Shopping API ack:", data?.Ack, "items:", Array.isArray(data?.Item) ? data.Item.length : typeof data?.Item);
 
   const map = new Map<string, Record<string, string>>();
   const items: any[] = Array.isArray(data?.Item) ? data.Item : (data?.Item ? [data.Item] : []); // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -230,9 +236,19 @@ export async function fetchAllActiveListings(config: EbayConfig): Promise<Tradin
 
   // Enrich with ItemSpecifics in batches of 20 via Shopping API
   for (let i = 0; i < all.length; i += 20) {
-    const batch   = all.slice(i, i + 20);
-    const ids     = batch.map((item) => item.listingId);
-    const specMap = await fetchSpecificsForIds(ids, config.app_id);
+    const batch = all.slice(i, i + 20);
+    const ids   = batch.map((item) => item.listingId);
+
+    let specMap = new Map<string, Record<string, string>>();
+    try {
+      specMap = await fetchSpecificsForIds(ids, config.app_id);
+    } catch (err) {
+      const e = err as Error & { cause?: Error };
+      console.warn(
+        "[ebay/trading] Shopping API batch failed, continuing without specifics:",
+        e.cause?.message ?? e.message,
+      );
+    }
 
     for (const item of batch) {
       const specifics = specMap.get(item.listingId) ?? {};
