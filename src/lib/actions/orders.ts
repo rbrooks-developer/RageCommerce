@@ -132,6 +132,7 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
       const easypost = getEasyPostClient() as any;
 
       const shipment = await easypost.Shipment.create({
+        options: { label_format: "PDF" },
         to_address: {
           name: order.shipping_name,
           street1: order.shipping_address_line1,
