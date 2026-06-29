@@ -12,6 +12,13 @@ export default async function EbayAdminPage({
   const success = params.success ?? null;
   const error   = params.error   ?? null;
 
+  // Credentials come from env vars — check independently of token state
+  const credentialsConfigured = !!(
+    process.env.EBAY_APP_ID &&
+    process.env.EBAY_CERT_ID &&
+    process.env.EBAY_RU_NAME
+  );
+
   return (
     <div className="space-y-8 max-w-2xl">
       <div>
@@ -20,7 +27,12 @@ export default async function EbayAdminPage({
           Connect your eBay seller account and sync the eBay category tree.
         </p>
       </div>
-      <EbaySettings config={config} successParam={success} errorParam={error} />
+      <EbaySettings
+        config={config}
+        credentialsConfigured={credentialsConfigured}
+        successParam={success}
+        errorParam={error}
+      />
     </div>
   );
 }

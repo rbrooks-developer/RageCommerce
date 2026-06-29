@@ -2,14 +2,13 @@
 
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { saveEbayCredentials, disconnectEbay } from "@/lib/actions/ebay";
+import { disconnectEbay } from "@/lib/actions/ebay";
 import { CheckCircle, XCircle, Loader2, RefreshCw, Link2Off, Tag, PlugZap } from "lucide-react";
 import type { EbayConfig } from "@/types";
 
 interface Props {
   config: EbayConfig | null;
+  credentialsConfigured: boolean;
   successParam: string | null;
   errorParam: string | null;
 }
@@ -18,21 +17,17 @@ function errorMessage(code: string | null) {
   if (!code) return null;
   const map: Record<string, string> = {
     access_denied:         "You cancelled the eBay authorisation.",
-    token_exchange_failed: "Token exchange failed — check your App ID, Cert ID, and RuName.",
-    missing_credentials:   "Save your credentials first, then try connecting.",
+    token_exchange_failed: "Token exchange failed — check your Vercel env vars (EBAY_APP_ID, EBAY_CERT_ID, EBAY_RU_NAME).",
+    missing_credentials:   "eBay credentials are not configured. Add EBAY_APP_ID, EBAY_CERT_ID, and EBAY_RU_NAME to your Vercel environment variables.",
     invalid_state:         "The authorisation request expired. Please try again.",
+    server_error:          "An unexpected server error occurred. Check Vercel function logs.",
+    unauthorized:          "You must be logged in as admin.",
   };
   return map[code] ?? "Something went wrong. Please try again.";
 }
 
-export function EbaySettings({ config, successParam, errorParam }: Props) {
+export function EbaySettings({ config, credentialsConfigured, successParam, errorParam }: Props) {
   const isConnected = !!config?.access_token;
-
-  const [credState, credAction, credPending] = useActionState(saveEbayCredentials, null) as [
-    { error?: string; success?: true } | null,
-    (payload: FormData) => void,
-    boolean,
-  ];
 
   const [discState, discAction, discPending] = useActionState(disconnectEbay, null) as [
     { error?: string; success?: true } | null,
@@ -41,13 +36,16 @@ export function EbaySettings({ config, successParam, errorParam }: Props) {
   ];
 
   const [syncState, setSyncState] = useState<
-    { status: "idle" } | { status: "syncing" } | { status: "done"; count: number } | { status: "error"; message: string }
+    | { status: "idle" }
+    | { status: "syncing" }
+    | { status: "done"; count: number }
+    | { status: "error"; message: string }
   >({ status: "idle" });
 
   async function handleSync() {
     setSyncState({ status: "syncing" });
     try {
-      const res = await fetch("/api/ebay/categories/sync", { method: "POST" });
+      const res  = await fetch("/api/ebay/categories/sync", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Sync failed");
       setSyncState({ status: "done", count: data.count });
@@ -73,82 +71,46 @@ export function EbaySettings({ config, successParam, errorParam }: Props) {
         </div>
       )}
 
-      {/* ── 1. Developer Credentials ──────────────────────────── */}
-      <section className="rounded-lg border border-gray-200 bg-white p-6 space-y-5">
-        <div>
-          <h2 className="text-base font-semibold text-gray-900">Developer Credentials</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Found in{" "}
-            <a
-              href="https://developer.ebay.com/my/keys"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-            >
-              eBay Developer Portal → Application Keys
-            </a>
-            . Use the <strong>Production</strong> keys.
-          </p>
-        </div>
-
-        <form action={credAction} className="space-y-4">
+      {/* ── 1. Credentials status ─────────────────────────────── */}
+      <section className="rounded-lg border border-gray-200 bg-white p-6 space-y-4">
+        <div className="flex items-center justify-between">
           <div>
-            <Label htmlFor="app_id">App ID (Client ID)</Label>
-            <Input
-              id="app_id"
-              name="app_id"
-              defaultValue={config?.app_id ?? ""}
-              placeholder="YourApp-12345-Production-abcde12345"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="dev_id">Dev ID</Label>
-            <Input
-              id="dev_id"
-              name="dev_id"
-              defaultValue={config?.dev_id ?? ""}
-              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="cert_id">Cert ID (Client Secret)</Label>
-            <Input
-              id="cert_id"
-              name="cert_id"
-              type="password"
-              defaultValue={config?.cert_id ?? ""}
-              placeholder="Production-…"
-              autoComplete="off"
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="ru_name">RuName</Label>
-            <Input
-              id="ru_name"
-              name="ru_name"
-              defaultValue={config?.ru_name ?? ""}
-              placeholder="YourApp-YourApp-Produc-abcde"
-              required
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              eBay Developer Portal → Your App → OAuth credentials → RuName. The callback URL
-              registered under that RuName must be{" "}
-              <code className="bg-gray-100 px-1 rounded">{process.env.NEXT_PUBLIC_APP_URL}/api/ebay/callback</code>.
+            <h2 className="text-base font-semibold text-gray-900">Developer Credentials</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Set via Vercel environment variables — no form needed.
             </p>
           </div>
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+              credentialsConfigured
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-600"
+            }`}
+          >
+            {credentialsConfigured ? (
+              <><CheckCircle className="h-3 w-3" /> Configured</>
+            ) : (
+              <><XCircle className="h-3 w-3" /> Missing</>
+            )}
+          </span>
+        </div>
 
-          {credState?.error && (
-            <p className="text-sm text-red-600">{credState.error}</p>
-          )}
-          {credState?.success && (
-            <p className="text-sm text-green-600">Credentials saved.</p>
-          )}
+        <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+          {(["EBAY_APP_ID", "EBAY_DEV_ID", "EBAY_CERT_ID", "EBAY_RU_NAME"] as const).map((varName) => (
+            <div key={varName} className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2">
+              <dt className="font-mono text-xs text-gray-500">{varName}</dt>
+              <dd className="text-xs text-gray-400">set in Vercel</dd>
+            </div>
+          ))}
+        </dl>
 
-          <Button type="submit" loading={credPending}>Save Credentials</Button>
-        </form>
+        {!credentialsConfigured && (
+          <p className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+            Add <code className="font-mono">EBAY_APP_ID</code>, <code className="font-mono">EBAY_CERT_ID</code>,
+            and <code className="font-mono">EBAY_RU_NAME</code> (and optionally <code className="font-mono">EBAY_DEV_ID</code>)
+            to your Vercel project environment variables, then redeploy.
+          </p>
+        )}
       </section>
 
       {/* ── 2. Account Connection ─────────────────────────────── */}
@@ -187,8 +149,7 @@ export function EbaySettings({ config, successParam, errorParam }: Props) {
           </dl>
         ) : (
           <p className="text-sm text-gray-500">
-            No eBay account connected. Save your credentials above, then click below to
-            authorise via eBay's secure OAuth flow.
+            No eBay account connected. Click below to authorise via eBay's secure OAuth flow.
           </p>
         )}
 
@@ -198,7 +159,7 @@ export function EbaySettings({ config, successParam, errorParam }: Props) {
 
         <div className="flex gap-3">
           <a href="/api/ebay/auth">
-            <Button variant="default" disabled={!config?.app_id}>
+            <Button variant="default" disabled={!credentialsConfigured}>
               {isConnected ? (
                 <><RefreshCw className="h-4 w-4" /> Reconnect</>
               ) : (
@@ -258,7 +219,7 @@ export function EbaySettings({ config, successParam, errorParam }: Props) {
 
         <Button
           onClick={handleSync}
-          disabled={!config?.app_id || syncState.status === "syncing"}
+          disabled={!credentialsConfigured || syncState.status === "syncing"}
           loading={syncState.status === "syncing"}
           variant="outline"
         >
