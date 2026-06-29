@@ -55,21 +55,58 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
     }
   }
 
+  type SyncError = { listingId: string; title: string; reason: string };
+
   type ListingSyncState =
     | { status: "idle" }
-    | { status: "syncing" }
-    | { status: "done"; inserted: number; updated: number; errors: { listingId: string; title: string; reason: string }[] }
+    | { status: "fetching" }
+    | { status: "syncing"; current: number; total: number; inserted: number; updated: number; lastTitle: string }
+    | { status: "done"; inserted: number; updated: number; errors: SyncError[] }
     | { status: "error"; message: string };
 
   const [listingSyncState, setListingSyncState] = useState<ListingSyncState>({ status: "idle" });
 
   async function handleListingSync() {
-    setListingSyncState({ status: "syncing" });
+    setListingSyncState({ status: "fetching" });
     try {
-      const res  = await fetch("/api/ebay/listings/sync", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Listing sync failed");
-      setListingSyncState({ status: "done", inserted: data.inserted, updated: data.updated, errors: data.errors ?? [] });
+      const res = await fetch("/api/ebay/listings/sync", { method: "POST" });
+      if (!res.body) throw new Error("No response body");
+
+      const reader  = res.body.getReader();
+      const decoder = new TextDecoder();
+      let   buffer  = "";
+      let   inserted = 0, updated = 0, total = 0;
+      const errors: SyncError[] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const msg = JSON.parse(line);
+            if (msg.type === "fetching") {
+              setListingSyncState({ status: "fetching" });
+            } else if (msg.type === "total") {
+              total = msg.count;
+              setListingSyncState({ status: "syncing", current: 0, total, inserted: 0, updated: 0, lastTitle: "" });
+            } else if (msg.type === "item") {
+              if (msg.status === "inserted") inserted++;
+              if (msg.status === "updated")  updated++;
+              if (msg.status === "skipped")  errors.push({ listingId: "", title: msg.title, reason: msg.reason });
+              setListingSyncState({ status: "syncing", current: msg.current, total, inserted, updated, lastTitle: msg.title });
+            } else if (msg.type === "done") {
+              setListingSyncState({ status: "done", inserted: msg.inserted, updated: msg.updated, errors: msg.errors ?? [] });
+            } else if (msg.type === "fatal") {
+              setListingSyncState({ status: "error", message: msg.message });
+            }
+          } catch { /* ignore malformed line */ }
+        }
+      }
     } catch (err) {
       setListingSyncState({ status: "error", message: (err as Error).message });
     }
@@ -276,6 +313,50 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
           </dl>
         )}
 
+        {/* Live progress */}
+        {(listingSyncState.status === "fetching" || listingSyncState.status === "syncing") && (
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-3">
+            {listingSyncState.status === "fetching" ? (
+              <div className="flex items-center gap-2 text-sm text-blue-700">
+                <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                Fetching active listings from eBay…
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between text-sm text-blue-800">
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                    Processing {listingSyncState.current} of {listingSyncState.total}
+                  </span>
+                  <span className="font-medium tabular-nums">
+                    {listingSyncState.total > 0
+                      ? Math.round((listingSyncState.current / listingSyncState.total) * 100)
+                      : 0}%
+                  </span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="h-1.5 w-full rounded-full bg-blue-200 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-blue-500 transition-all duration-150"
+                    style={{ width: listingSyncState.total > 0 ? `${(listingSyncState.current / listingSyncState.total) * 100}%` : "0%" }}
+                  />
+                </div>
+
+                <div className="flex gap-4 text-xs text-blue-700">
+                  <span>{listingSyncState.inserted} inserted</span>
+                  <span>{listingSyncState.updated} updated</span>
+                </div>
+
+                {listingSyncState.lastTitle && (
+                  <p className="text-xs text-blue-600 truncate">{listingSyncState.lastTitle}</p>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Done */}
         {listingSyncState.status === "done" && (
           <div className="space-y-3">
             <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
@@ -292,13 +373,11 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
             {listingSyncState.errors.length > 0 && (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
                 <p className="text-sm font-medium text-amber-800 mb-2">
-                  Skipped listings — map these eBay categories in the Admin → Categories section:
+                  Skipped — map these eBay categories in Admin → Categories:
                 </p>
                 <div className="max-h-48 overflow-y-auto space-y-1">
-                  {listingSyncState.errors.map((e) => (
-                    <div key={e.listingId} className="text-xs text-amber-700">
-                      <span className="font-mono">{e.listingId}</span>
-                      {" — "}
+                  {listingSyncState.errors.map((e, i) => (
+                    <div key={i} className="text-xs text-amber-700">
                       <span className="font-medium">{e.title}</span>
                       <br />
                       <span className="text-amber-600">{e.reason}</span>
@@ -319,12 +398,14 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
 
         <Button
           onClick={handleListingSync}
-          disabled={!isConnected || listingSyncState.status === "syncing"}
-          loading={listingSyncState.status === "syncing"}
+          disabled={!isConnected || listingSyncState.status === "fetching" || listingSyncState.status === "syncing"}
+          loading={listingSyncState.status === "fetching" || listingSyncState.status === "syncing"}
           variant="outline"
         >
           <RefreshCw className="h-4 w-4" />
-          {listingSyncState.status === "syncing" ? "Syncing listings…" : "Sync eBay Listings"}
+          {listingSyncState.status === "fetching" || listingSyncState.status === "syncing"
+            ? "Syncing…"
+            : "Sync eBay Listings"}
         </Button>
 
         {!isConnected && (
