@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getStripeClient } from "@/lib/stripe/client";
 import { getEasyPostClient } from "@/lib/easypost/client";
+import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getSettings } from "@/lib/data/settings";
 import { sendShippingUpdate } from "@/lib/emails/shippingUpdate";
 import type { Order, OrderItem, Product, StoreAddress } from "@/types";
@@ -165,6 +166,7 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
 
       const trackingNumber: string = purchased.tracking_code ?? "";
       const labelUrl: string = purchased.postage_label?.label_url ?? "";
+      const shipmentId: string = purchased.id ?? "";
 
       // Update order
       await supabase
@@ -173,6 +175,7 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
           status: "shipped",
           tracking_number: trackingNumber,
           shipping_label_url: labelUrl,
+          easypost_shipment_id: shipmentId,
         })
         .eq("id", orderId);
 
@@ -205,4 +208,42 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
 
   revalidatePath("/admin/orders");
   return results;
+}
+
+export async function voidLabel(orderId: string): Promise<{ success: boolean; error?: string }> {
+  const auth = await requireAdmin();
+  if (auth.error) return { success: false, error: auth.error };
+
+  const supabase = createServiceClient();
+
+  const { data: orderRaw } = await supabase
+    .from("orders")
+    .select("id, status, easypost_shipment_id")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  const order = orderRaw as { id: string; status: string; easypost_shipment_id: string | null } | null;
+  if (!order) return { success: false, error: "Order not found" };
+  if (!order.easypost_shipment_id) return { success: false, error: "No EasyPost shipment ID on record — label may have been generated before this feature was added" };
+
+  try {
+    const easypost = getEasyPostClient() as any;
+    await easypost.Shipment.refund(order.easypost_shipment_id);
+  } catch (err: any) {
+    return { success: false, error: err.message ?? "EasyPost refund failed" };
+  }
+
+  await supabase
+    .from("orders")
+    .update({
+      status: "paid",
+      tracking_number: null,
+      shipping_label_url: null,
+      easypost_shipment_id: null,
+    })
+    .eq("id", orderId);
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/orders");
+  return { success: true };
 }

@@ -135,6 +135,7 @@ export interface Database {
           selected_shipping_rate: Json | null;
           tracking_number: string | null;
           shipping_label_url: string | null;
+          easypost_shipment_id: string | null;
           shipping_name: string;
           shipping_address_line1: string;
           shipping_address_line2: string | null;
@@ -158,6 +159,7 @@ export interface Database {
           selected_shipping_rate?: Json | null;
           tracking_number?: string | null;
           shipping_label_url?: string | null;
+          easypost_shipment_id?: string | null;
           shipping_name: string;
           shipping_address_line1: string;
           shipping_address_line2?: string | null;
@@ -172,6 +174,7 @@ export interface Database {
           status?: OrderStatus;
           tracking_number?: string | null;
           shipping_label_url?: string | null;
+          easypost_shipment_id?: string | null;
           updated_at?: string;
         };
       };

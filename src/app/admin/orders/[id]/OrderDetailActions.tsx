@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Spinner } from "@/components/ui/spinner";
-import { cancelOrder, generateLabels, updateOrderStatus } from "@/lib/actions/orders";
+import { cancelOrder, generateLabels, updateOrderStatus, voidLabel } from "@/lib/actions/orders";
 import type { Order } from "@/types";
 
 export function OrderDetailActions({ order }: { order: Order }) {
@@ -33,6 +33,19 @@ export function OrderDetailActions({ order }: { order: Order }) {
     });
   }
 
+  function handleVoidLabel() {
+    if (!confirm("Void this label and request a refund from EasyPost? The order will return to paid status.")) return;
+    startTransition(async () => {
+      try {
+        setError(null);
+        const result = await voidLabel(order.id);
+        if (!result.success) setError(result.error ?? "Failed to void label");
+      } catch (err: any) {
+        setError(err.message);
+      }
+    });
+  }
+
   function handleGenerateLabel() {
     startTransition(async () => {
       try {
@@ -53,6 +66,7 @@ export function OrderDetailActions({ order }: { order: Order }) {
   const canCancel = order.status === "paid" || order.status === "shipped";
   const canGenerateLabel = order.status === "paid";
   const canMarkFulfilled = order.status === "shipped";
+  const canVoidLabel = order.status === "shipped" && !!(order as any).easypost_shipment_id;
 
   if (order.status === "cancelled" || order.status === "fulfilled") return null;
 
@@ -82,6 +96,15 @@ export function OrderDetailActions({ order }: { order: Order }) {
             className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
           >
             Generate Shipping Label
+          </button>
+        )}
+
+        {canVoidLabel && !isPending && (
+          <button
+            onClick={handleVoidLabel}
+            className="rounded-md border border-orange-200 px-4 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 transition-colors"
+          >
+            Void Label & Get Refund
           </button>
         )}
 
