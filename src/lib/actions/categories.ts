@@ -16,13 +16,15 @@ export async function createCategory(_prevState: unknown, formData: FormData) {
     name: formData.get("name"),
     slug: formData.get("slug"),
     parent_id: formData.get("parent_id") || null,
+    ebay_category_id:   formData.get("ebay_category_id")   || null,
+    ebay_category_name: formData.get("ebay_category_name") || null,
   });
 
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
   }
 
-  const { error } = await supabase.from("categories").insert(parsed.data);
+  const { error } = await supabase.from("categories").insert(parsed.data as any);
   if (error) return { error: { _form: [error.message] } };
 
   revalidatePath("/admin/categories");
@@ -40,6 +42,8 @@ export async function updateCategory(id: string, _prevState: unknown, formData: 
     name: formData.get("name"),
     slug: formData.get("slug"),
     parent_id: formData.get("parent_id") || null,
+    ebay_category_id:   formData.get("ebay_category_id")   || null,
+    ebay_category_name: formData.get("ebay_category_name") || null,
   });
 
   if (!parsed.success) {
@@ -48,7 +52,7 @@ export async function updateCategory(id: string, _prevState: unknown, formData: 
 
   const { error } = await supabase
     .from("categories")
-    .update(parsed.data)
+    .update(parsed.data as any)
     .eq("id", id);
 
   if (error) return { error: { _form: [error.message] } };

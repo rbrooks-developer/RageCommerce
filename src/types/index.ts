@@ -114,6 +114,25 @@ export type ChatConfig = {
   widget_id: string;
 };
 
+export type EbayConfig = {
+  app_id: string;
+  dev_id: string;
+  cert_id: string;
+  ru_name: string;
+  access_token?: string | null;
+  refresh_token?: string | null;
+  token_expires_at?: string | null;
+  ebay_user_id?: string | null;
+  ebay_username?: string | null;
+  categories_synced_at?: string | null;
+  categories_count?: number | null;
+};
+
+export type CategoryWithEbay = Category & {
+  ebay_category_id?: string | null;
+  ebay_category_name?: string | null;
+};
+
 export type NavConfig = {
   items: { label: string; link: string }[];
 };

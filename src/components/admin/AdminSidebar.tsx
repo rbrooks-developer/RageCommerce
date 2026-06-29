@@ -16,6 +16,7 @@ import {
   X,
   LogOut,
   ArrowLeft,
+  RefreshCw,
 } from "lucide-react";
 
 const navItems = [
@@ -24,6 +25,7 @@ const navItems = [
   { label: "Categories", href: "/admin/categories", icon: FolderOpen },
   { label: "Orders",     href: "/admin/orders",     icon: ShoppingCart },
   { label: "Offers",     href: "/admin/offers",     icon: Tag },
+  { label: "eBay Sync",  href: "/admin/ebay",       icon: RefreshCw },
   { label: "Settings",   href: "/admin/settings",   icon: Settings },
 ];
 
