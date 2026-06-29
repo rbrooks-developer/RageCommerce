@@ -70,12 +70,18 @@ export async function POST(_request: NextRequest): Promise<Response> {
         return cat && childrenMap.has(cat.id);
       });
       await send({ type: "enriching", count: needsSpecifics.length });
+      let firstItemXmlSent = false;
       for (let b = 0; b < needsSpecifics.length; b += 8) {
         await Promise.all(
           needsSpecifics.slice(b, b + 8).map(async (listing) => {
             try {
-              listing.specifics = await fetchItemSpecifics(listing.listingId, config);
-              listing.brand     = listing.specifics["brand"] ?? listing.specifics["publisher"] ?? null;
+              const { specifics, rawXml } = await fetchItemSpecifics(listing.listingId, config);
+              listing.specifics = specifics;
+              listing.brand     = specifics["brand"] ?? specifics["publisher"] ?? null;
+              if (!firstItemXmlSent && rawXml) {
+                firstItemXmlSent = true;
+                await send({ type: "warn", message: `DEBUG GetItem XML (first item): ${rawXml}` });
+              }
             } catch (err) {
               const msg = (err as Error & { cause?: Error });
               await send({ type: "warn", message: `GetItem failed for "${listing.title}": ${msg.cause?.message ?? msg.message}` });

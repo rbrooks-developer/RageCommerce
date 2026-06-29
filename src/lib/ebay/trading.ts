@@ -172,7 +172,7 @@ async function fetchPage(
 export async function fetchItemSpecifics(
   listingId: string,
   config: EbayConfig,
-): Promise<Record<string, string>> {
+): Promise<{ specifics: Record<string, string>; rawXml?: string }> {
   const body = `<?xml version="1.0" encoding="utf-8"?>
 <GetItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
   <RequesterCredentials>
@@ -227,7 +227,7 @@ export async function fetchItemSpecifics(
     if (key && val) specifics[key] = val;
   }
 
-  return specifics;
+  return { specifics, rawXml: xml.slice(0, 2000) };
 }
 
 /** Fetches every active Fixed Price listing via the Trading API (paginated). */
