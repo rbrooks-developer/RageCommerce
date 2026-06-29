@@ -46,6 +46,7 @@ export interface Database {
           is_published: boolean;
           seo_title: string | null;
           seo_description: string | null;
+          ebay_listing_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -66,6 +67,7 @@ export interface Database {
           is_published?: boolean;
           seo_title?: string | null;
           seo_description?: string | null;
+          ebay_listing_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -85,6 +87,7 @@ export interface Database {
           is_published?: boolean;
           seo_title?: string | null;
           seo_description?: string | null;
+          ebay_listing_id?: string | null;
           updated_at?: string;
         };
       };
@@ -94,6 +97,8 @@ export interface Database {
           name: string;
           slug: string;
           parent_id: string | null;
+          ebay_category_id: string | null;
+          ebay_category_name: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -102,6 +107,8 @@ export interface Database {
           name: string;
           slug: string;
           parent_id?: string | null;
+          ebay_category_id?: string | null;
+          ebay_category_name?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -109,6 +116,8 @@ export interface Database {
           name?: string;
           slug?: string;
           parent_id?: string | null;
+          ebay_category_id?: string | null;
+          ebay_category_name?: string | null;
           updated_at?: string;
         };
       };

@@ -35,22 +35,43 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
     boolean,
   ];
 
-  const [syncState, setSyncState] = useState<
+  type SyncState =
     | { status: "idle" }
     | { status: "syncing" }
     | { status: "done"; count: number }
-    | { status: "error"; message: string }
-  >({ status: "idle" });
+    | { status: "error"; message: string };
 
-  async function handleSync() {
-    setSyncState({ status: "syncing" });
+  const [catSyncState, setCatSyncState] = useState<SyncState>({ status: "idle" });
+
+  async function handleCatSync() {
+    setCatSyncState({ status: "syncing" });
     try {
       const res  = await fetch("/api/ebay/categories/sync", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Sync failed");
-      setSyncState({ status: "done", count: data.count });
+      setCatSyncState({ status: "done", count: data.count });
     } catch (err) {
-      setSyncState({ status: "error", message: (err as Error).message });
+      setCatSyncState({ status: "error", message: (err as Error).message });
+    }
+  }
+
+  type ListingSyncState =
+    | { status: "idle" }
+    | { status: "syncing" }
+    | { status: "done"; inserted: number; updated: number; errors: { listingId: string; title: string; reason: string }[] }
+    | { status: "error"; message: string };
+
+  const [listingSyncState, setListingSyncState] = useState<ListingSyncState>({ status: "idle" });
+
+  async function handleListingSync() {
+    setListingSyncState({ status: "syncing" });
+    try {
+      const res  = await fetch("/api/ebay/listings/sync", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Listing sync failed");
+      setListingSyncState({ status: "done", inserted: data.inserted, updated: data.updated, errors: data.errors ?? [] });
+    } catch (err) {
+      setListingSyncState({ status: "error", message: (err as Error).message });
     }
   }
 
@@ -204,28 +225,111 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
           </dl>
         )}
 
-        {syncState.status === "done" && (
+        {catSyncState.status === "done" && (
           <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
             <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" />
-            <span>Sync complete — {syncState.count.toLocaleString()} categories stored.</span>
+            <span>Sync complete — {catSyncState.count.toLocaleString()} categories stored.</span>
           </div>
         )}
-        {syncState.status === "error" && (
+        {catSyncState.status === "error" && (
           <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             <XCircle className="h-4 w-4 shrink-0 mt-0.5" />
-            <span>{syncState.message}</span>
+            <span>{catSyncState.message}</span>
           </div>
         )}
 
         <Button
-          onClick={handleSync}
-          disabled={!credentialsConfigured || syncState.status === "syncing"}
-          loading={syncState.status === "syncing"}
+          onClick={handleCatSync}
+          disabled={!credentialsConfigured || catSyncState.status === "syncing"}
+          loading={catSyncState.status === "syncing"}
           variant="outline"
         >
           <Tag className="h-4 w-4" />
-          {syncState.status === "syncing" ? "Syncing (this takes ~30s)…" : "Sync eBay Categories"}
+          {catSyncState.status === "syncing" ? "Syncing (this takes ~30s)…" : "Sync eBay Categories"}
         </Button>
+      </section>
+
+      {/* ── 4. Listing Sync ───────────────────────────────────── */}
+      <section className="rounded-lg border border-gray-200 bg-white p-6 space-y-4">
+        <div>
+          <h2 className="text-base font-semibold text-gray-900">Listing Sync</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Imports all active Fixed Price eBay listings into the website products table.
+            Products are matched to website categories via the eBay category mapping above.
+            If a matched category has children, the item&apos;s Brand is used to route to the
+            correct child category. Re-run at any time to update prices, inventory, and details.
+          </p>
+        </div>
+
+        {config?.listings_synced_at && (
+          <dl className="text-sm space-y-1">
+            <div className="flex justify-between">
+              <dt className="text-gray-500">Last synced</dt>
+              <dd>{new Date(config.listings_synced_at).toLocaleString()}</dd>
+            </div>
+            {config.listings_count != null && (
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Products synced</dt>
+                <dd className="font-medium">{config.listings_count.toLocaleString()}</dd>
+              </div>
+            )}
+          </dl>
+        )}
+
+        {listingSyncState.status === "done" && (
+          <div className="space-y-3">
+            <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+              <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>
+                Sync complete — {listingSyncState.inserted.toLocaleString()} inserted,{" "}
+                {listingSyncState.updated.toLocaleString()} updated.
+                {listingSyncState.errors.length > 0 && (
+                  <> {listingSyncState.errors.length} listing{listingSyncState.errors.length > 1 ? "s" : ""} skipped (see below).</>
+                )}
+              </span>
+            </div>
+
+            {listingSyncState.errors.length > 0 && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm font-medium text-amber-800 mb-2">
+                  Skipped listings — map these eBay categories in the Admin → Categories section:
+                </p>
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {listingSyncState.errors.map((e) => (
+                    <div key={e.listingId} className="text-xs text-amber-700">
+                      <span className="font-mono">{e.listingId}</span>
+                      {" — "}
+                      <span className="font-medium">{e.title}</span>
+                      <br />
+                      <span className="text-amber-600">{e.reason}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {listingSyncState.status === "error" && (
+          <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <XCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>{listingSyncState.message}</span>
+          </div>
+        )}
+
+        <Button
+          onClick={handleListingSync}
+          disabled={!isConnected || listingSyncState.status === "syncing"}
+          loading={listingSyncState.status === "syncing"}
+          variant="outline"
+        >
+          <RefreshCw className="h-4 w-4" />
+          {listingSyncState.status === "syncing" ? "Syncing listings…" : "Sync eBay Listings"}
+        </Button>
+
+        {!isConnected && (
+          <p className="text-xs text-gray-400">Connect your eBay account above before syncing listings.</p>
+        )}
       </section>
     </div>
   );
