@@ -164,59 +164,63 @@ async function fetchPage(
   return { items, hasMore };
 }
 
-const SHOPPING_API_URL = "https://open.api.ebay.com/shopping";
-
 /**
- * Shopping API — GetMultipleItems with IncludeSelector=ItemSpecifics.
- * No user token required; returns JSON; max 20 IDs per call.
- * Returns a map of listingId → normalized specifics (lowercase key → first value).
+ * Trading API — GetItem for a single listing.
+ * Returns a normalized specifics map (lowercase key → first value string).
+ * Used to get ItemSpecifics which GetSellerList does not return.
  */
-async function fetchSpecificsForIds(
-  ids: string[],
-  appId: string,
-): Promise<Map<string, Record<string, string>>> {
-  const url = new URL(SHOPPING_API_URL);
-  url.searchParams.set("callname",        "GetMultipleItems");
-  url.searchParams.set("version",         "863");
-  url.searchParams.set("appid",           appId);
-  url.searchParams.set("siteid",          "0");
-  url.searchParams.set("ItemID",          ids.join(","));
-  url.searchParams.set("IncludeSelector", "ItemSpecifics");
-  url.searchParams.set("responseencoding","JSON");
+export async function fetchItemSpecifics(
+  listingId: string,
+  config: EbayConfig,
+): Promise<Record<string, string>> {
+  const body = `<?xml version="1.0" encoding="utf-8"?>
+<GetItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+  <RequesterCredentials>
+    <eBayAuthToken>${config.access_token}</eBayAuthToken>
+  </RequesterCredentials>
+  <ItemID>${listingId}</ItemID>
+  <DetailLevel>ReturnAll</DetailLevel>
+</GetItemRequest>`;
 
-  console.log("[ebay/trading] Shopping API request:", url.toString());
-  const res  = await fetch(url.toString(), { signal: AbortSignal.timeout(30_000) });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`Shopping API HTTP ${res.status}: ${body.slice(0, 200)}`);
+  const res = await fetch(TRADING_URL, {
+    method: "POST",
+    headers: {
+      "X-EBAY-API-SITEID":              "0",
+      "X-EBAY-API-COMPATIBILITY-LEVEL": COMPATIBILITY_LEVEL,
+      "X-EBAY-API-CALL-NAME":           "GetItem",
+      "X-EBAY-API-APP-NAME":            config.app_id,
+      "Content-Type":                   "text/xml",
+    },
+    body,
+    signal: AbortSignal.timeout(20_000),
+  });
+
+  if (!res.ok) throw new Error(`GetItem HTTP ${res.status}`);
+
+  const xml    = await res.text();
+  const parser = new XMLParser({
+    isArray:          (name) => ["NameValueList"].includes(name),
+    ignoreAttributes: true,
+    parseTagValue:    true,
+  });
+
+  const doc          = parser.parse(xml);
+  const nameValueList: { Name: unknown; Value: unknown }[] =
+    doc.GetItemResponse?.Item?.ItemSpecifics?.NameValueList ?? [];
+
+  const specifics: Record<string, string> = {};
+  for (const nv of nameValueList) {
+    const key = String(nv.Name ?? "").toLowerCase().trim();
+    const val = Array.isArray(nv.Value)
+      ? String(nv.Value[0] ?? "").trim()
+      : String(nv.Value ?? "").trim();
+    if (key && val) specifics[key] = val;
   }
-  const data = await res.json() as any; // eslint-disable-line @typescript-eslint/no-explicit-any
-  console.log("[ebay/trading] Shopping API ack:", data?.Ack, "items:", Array.isArray(data?.Item) ? data.Item.length : typeof data?.Item);
 
-  const map = new Map<string, Record<string, string>>();
-  const items: any[] = Array.isArray(data?.Item) ? data.Item : (data?.Item ? [data.Item] : []); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-  for (const item of items) {
-    const itemId   = String(item.ItemID ?? "");
-    const nvList   = item.ItemSpecifics?.NameValueList;
-    const list     = Array.isArray(nvList) ? nvList : (nvList ? [nvList] : []);
-    const specifics: Record<string, string> = {};
-
-    for (const nv of list) {
-      const key = String(nv.Name ?? "").toLowerCase().trim();
-      const val = Array.isArray(nv.Value)
-        ? String(nv.Value[0] ?? "").trim()
-        : String(nv.Value ?? "").trim();
-      if (key && val) specifics[key] = val;
-    }
-    if (itemId) map.set(itemId, specifics);
-  }
-
-  return map;
+  return specifics;
 }
 
-/** Fetches every active Fixed Price listing via the Trading API (paginated),
- *  then enriches each item with ItemSpecifics via the Shopping API. */
+/** Fetches every active Fixed Price listing via the Trading API (paginated). */
 export async function fetchAllActiveListings(config: EbayConfig): Promise<TradingItem[]> {
   if (!config.access_token) throw new Error("No eBay access token — connect your account first");
 
@@ -232,29 +236,6 @@ export async function fetchAllActiveListings(config: EbayConfig): Promise<Tradin
     all.push(...items);
     if (!hasMore || page >= 50) break;
     page++;
-  }
-
-  // Enrich with ItemSpecifics in batches of 20 via Shopping API
-  for (let i = 0; i < all.length; i += 20) {
-    const batch = all.slice(i, i + 20);
-    const ids   = batch.map((item) => item.listingId);
-
-    let specMap = new Map<string, Record<string, string>>();
-    try {
-      specMap = await fetchSpecificsForIds(ids, config.app_id);
-    } catch (err) {
-      const e = err as Error & { cause?: Error };
-      console.warn(
-        "[ebay/trading] Shopping API batch failed, continuing without specifics:",
-        e.cause?.message ?? e.message,
-      );
-    }
-
-    for (const item of batch) {
-      const specifics = specMap.get(item.listingId) ?? {};
-      item.specifics  = specifics;
-      item.brand      = specifics["brand"] ?? specifics["publisher"] ?? null;
-    }
   }
 
   return all;

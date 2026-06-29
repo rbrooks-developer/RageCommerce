@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getEbayConfig, saveEbayConfig } from "@/lib/ebay/auth";
-import { fetchAllActiveListings } from "@/lib/ebay/trading";
+import { fetchAllActiveListings, fetchItemSpecifics } from "@/lib/ebay/trading";
 import { createServiceClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 
@@ -60,7 +60,29 @@ export async function POST(_request: NextRequest): Promise<Response> {
       // Fetch all active eBay listings
       await send({ type: "fetching" });
       const listings = await fetchAllActiveListings(config);
-      const total    = listings.length;
+
+      // Enrich only listings that go to a category with children — those need
+      // brand/publisher from ItemSpecifics for child-category routing.
+      // GetSellerList never returns ItemSpecifics, so we call GetItem per listing.
+      // Run in parallel batches of 8 to stay well under eBay rate limits.
+      const needsSpecifics = listings.filter((l) => {
+        const cat = ebayCatMap.get(l.ebayCategoryId);
+        return cat && childrenMap.has(cat.id);
+      });
+      for (let b = 0; b < needsSpecifics.length; b += 8) {
+        await Promise.all(
+          needsSpecifics.slice(b, b + 8).map(async (listing) => {
+            try {
+              listing.specifics = await fetchItemSpecifics(listing.listingId, config);
+              listing.brand     = listing.specifics["brand"] ?? listing.specifics["publisher"] ?? null;
+            } catch (err) {
+              console.warn(`[ebay/sync] GetItem specifics failed for ${listing.listingId}:`, (err as Error).message);
+            }
+          }),
+        );
+      }
+
+      const total = listings.length;
       await send({ type: "total", count: total });
 
       let inserted = 0;
