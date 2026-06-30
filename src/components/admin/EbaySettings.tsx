@@ -13,6 +13,8 @@ interface Props {
   errorParam: string | null;
 }
 
+const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
 function errorMessage(code: string | null) {
   if (!code) return null;
   const map: Record<string, string> = {
@@ -94,6 +96,9 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
               setListingSyncState({ status: "fetching" });
             } else if (msg.type === "enriching") {
               setListingSyncState({ status: "enriching", current: msg.current ?? 0, count: msg.count });
+              // Enrichment now runs in parallel batches, so several lines can land
+              // in one chunk — yield a frame so progress is actually visible.
+              await nextFrame();
             } else if (msg.type === "total") {
               total = msg.count;
               setListingSyncState({ status: "syncing", current: 0, total, inserted: 0, updated: 0, lastTitle: "" });
@@ -102,6 +107,9 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
               if (msg.status === "updated")  updated++;
               if (msg.status === "skipped")  errors.push({ listingId: "", title: msg.title, reason: msg.reason });
               setListingSyncState({ status: "syncing", current: msg.current, total, inserted, updated, lastTitle: msg.title });
+              // Upserting is fast, so many item lines can land in one chunk —
+              // yield a frame so the browser actually paints each step.
+              await nextFrame();
             } else if (msg.type === "done") {
               setListingSyncState({ status: "done", inserted: msg.inserted, updated: msg.updated, errors: msg.errors ?? [] });
             } else if (msg.type === "fatal") {

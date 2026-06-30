@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Loader2, RefreshCw } from "lucide-react";
 
+const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
 type SyncState =
   | { status: "idle" }
   | { status: "fetching" }
@@ -46,6 +48,10 @@ export function EbayInventorySyncButton({ disabled }: { disabled?: boolean }) {
               if (msg.status === "zeroed")    zeroed++;
               if (msg.status === "unchanged") unchanged++;
               setState({ status: "syncing", current: msg.current, total, updated, zeroed, unchanged, lastTitle: msg.title });
+              // The bulk fetch makes per-item processing nearly instant server-side,
+              // so many NDJSON lines can arrive in one chunk. Yield a frame so the
+              // browser actually paints each step instead of jumping to the final state.
+              await nextFrame();
             } else if (msg.type === "done") {
               setState({ status: "done", total: msg.total, updated: msg.updated, zeroed: msg.zeroed, unchanged: msg.unchanged, errors: msg.errors ?? 0 });
             } else if (msg.type === "fatal") {
