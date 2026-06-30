@@ -3,6 +3,7 @@ import { waitUntil } from "@vercel/functions";
 import { getStripeClient } from "@/lib/stripe/client";
 import { createServiceClient } from "@/lib/supabase/server";
 import { sendOrderConfirmation } from "@/lib/emails/orderConfirmation";
+import { sendOrderCancellation } from "@/lib/emails/orderCancellation";
 import { getSettings } from "@/lib/data/settings";
 import { getValidEbayConfig } from "@/lib/ebay/auth";
 import { decrementEbayInventory, restoreEbayInventory } from "@/lib/ebay/trading";
@@ -265,10 +266,11 @@ export async function POST(request: NextRequest) {
       // Look up the order directly — faster and avoids a Stripe API round-trip
       const { data: orderRow } = await supabase
         .from("orders")
-        .select("id")
+        .select("*")
         .eq("stripe_payment_intent_id", charge.payment_intent)
         .maybeSingle();
-      const orderId = (orderRow as { id: string } | null)?.id;
+      const refundedOrder = orderRow as Order | null;
+      const orderId = refundedOrder?.id;
 
       if (!orderId) {
         console.error("charge.refunded: no order found for payment_intent", charge.payment_intent);
@@ -292,6 +294,45 @@ export async function POST(request: NextRequest) {
 
       if (!isFullRefund) {
         console.log(`[webhook] partial refund on order ${orderId} — skipping eBay relist`);
+      }
+
+      // Send cancellation/refund email with the actual amount Stripe refunded
+      if (refundedOrder) {
+        const { data: profileRaw } = await supabase
+          .from("profiles")
+          .select("email")
+          .eq("id", refundedOrder.user_id)
+          .maybeSingle();
+        const customerEmail = (profileRaw as { email: string } | null)?.email ?? null;
+
+        if (customerEmail) {
+          const { data: rawItems } = await supabase
+            .from("order_items")
+            .select("*, products(name)")
+            .eq("order_id", orderId);
+          const refundItemsForEmail = (rawItems ?? []) as (OrderItem & { products: { name: string } | null })[];
+
+          const settings = await getSettings();
+          const homepage = settings?.homepage_config as import("@/types").HomepageConfig | null;
+          const footer   = settings?.footer_config   as import("@/types").FooterConfig   | null;
+          const displayName = homepage?.hero_display_name || footer?.display_name || null;
+
+          await sendOrderCancellation({
+            to: customerEmail,
+            orderNumber: orderId.slice(0, 8).toUpperCase(),
+            items: refundItemsForEmail.map((i) => ({
+              name: i.products?.name ?? "Product",
+              quantity: i.quantity,
+              price: Number(i.price),
+            })),
+            totalPrice: Number(refundedOrder.total_price),
+            refundAmount: charge.amount_refunded / 100,
+            isFullRefund,
+            siteTitle: settings?.site_title ?? "My Store",
+            displayName,
+          }).then(() => console.log("[webhook] cancellation/refund email sent successfully"))
+            .catch((err) => console.error("[webhook] failed to send cancellation/refund email:", err.message, err));
+        }
       }
 
       // On a full refund, try to restore eBay inventory in the background
