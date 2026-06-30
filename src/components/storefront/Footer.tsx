@@ -37,6 +37,8 @@ export function Footer({
               <img
                 src={logoUrl}
                 alt={siteTitle}
+                loading="lazy"
+                decoding="async"
                 className="h-16 w-auto opacity-90 hover:opacity-100 transition-opacity"
               />
             ) : (

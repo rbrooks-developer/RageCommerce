@@ -104,6 +104,8 @@ export function ImageCarousel({ config, bgColor }: { config: CarouselConfig; bgC
             <img
               src={item.url}
               alt=""
+              loading="lazy"
+              decoding="async"
               style={{ height: "100%", width: "auto", display: "block", borderRadius: innerRadius ? `${innerRadius}px` : undefined }}
               aria-hidden="true"
             />
