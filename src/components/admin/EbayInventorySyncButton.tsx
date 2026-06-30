@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Loader2, RefreshCw } from "lucide-react";
 
 type SyncState =
   | { status: "idle" }
+  | { status: "fetching" }
   | { status: "syncing"; current: number; total: number; updated: number; zeroed: number; unchanged: number; lastTitle: string }
   | { status: "done"; total: number; updated: number; zeroed: number; unchanged: number; errors: number }
   | { status: "error"; message: string };
@@ -14,7 +15,7 @@ export function EbayInventorySyncButton({ disabled }: { disabled?: boolean }) {
   const [state, setState] = useState<SyncState>({ status: "idle" });
 
   async function handleSync() {
-    setState({ status: "syncing", current: 0, total: 0, updated: 0, zeroed: 0, unchanged: 0, lastTitle: "" });
+    setState({ status: "fetching" });
     try {
       const res = await fetch("/api/ebay/inventory/sync", { method: "POST" });
       if (!res.body) throw new Error("No response body");
@@ -35,7 +36,9 @@ export function EbayInventorySyncButton({ disabled }: { disabled?: boolean }) {
           if (!line.trim()) continue;
           try {
             const msg = JSON.parse(line);
-            if (msg.type === "total") {
+            if (msg.type === "fetching") {
+              setState({ status: "fetching" });
+            } else if (msg.type === "total") {
               total = msg.count;
               setState({ status: "syncing", current: 0, total, updated: 0, zeroed: 0, unchanged: 0, lastTitle: "" });
             } else if (msg.type === "item") {
@@ -58,33 +61,42 @@ export function EbayInventorySyncButton({ disabled }: { disabled?: boolean }) {
 
   return (
     <div className="space-y-3">
-      {state.status === "syncing" && (
+      {(state.status === "fetching" || state.status === "syncing") && (
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-3">
-          <div className="flex items-center justify-between text-sm text-blue-800">
-            <span className="flex items-center gap-2">
+          {state.status === "fetching" ? (
+            <div className="flex items-center gap-2 text-sm text-blue-700">
               <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-              Checking {state.current} of {state.total}
-            </span>
-            <span className="font-medium tabular-nums">
-              {state.total > 0 ? Math.round((state.current / state.total) * 100) : 0}%
-            </span>
-          </div>
+              Fetching active listings from eBay…
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between text-sm text-blue-800">
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                  Checking {state.current} of {state.total}
+                </span>
+                <span className="font-medium tabular-nums">
+                  {state.total > 0 ? Math.round((state.current / state.total) * 100) : 0}%
+                </span>
+              </div>
 
-          <div className="h-1.5 w-full rounded-full bg-blue-200 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-blue-500 transition-all duration-150"
-              style={{ width: state.total > 0 ? `${(state.current / state.total) * 100}%` : "0%" }}
-            />
-          </div>
+              <div className="h-1.5 w-full rounded-full bg-blue-200 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-blue-500 transition-all duration-150"
+                  style={{ width: state.total > 0 ? `${(state.current / state.total) * 100}%` : "0%" }}
+                />
+              </div>
 
-          <div className="flex gap-4 text-xs text-blue-700">
-            <span>{state.updated} updated</span>
-            <span>{state.zeroed} zeroed out</span>
-            <span>{state.unchanged} unchanged</span>
-          </div>
+              <div className="flex gap-4 text-xs text-blue-700">
+                <span>{state.updated} updated</span>
+                <span>{state.zeroed} zeroed out</span>
+                <span>{state.unchanged} unchanged</span>
+              </div>
 
-          {state.lastTitle && (
-            <p className="text-xs text-blue-600 truncate">{state.lastTitle}</p>
+              {state.lastTitle && (
+                <p className="text-xs text-blue-600 truncate">{state.lastTitle}</p>
+              )}
+            </>
           )}
         </div>
       )}
@@ -109,12 +121,12 @@ export function EbayInventorySyncButton({ disabled }: { disabled?: boolean }) {
 
       <Button
         onClick={handleSync}
-        disabled={disabled || state.status === "syncing"}
-        loading={state.status === "syncing"}
+        disabled={disabled || state.status === "fetching" || state.status === "syncing"}
+        loading={state.status === "fetching" || state.status === "syncing"}
         variant="outline"
       >
         <RefreshCw className="h-4 w-4" />
-        {state.status === "syncing" ? "Syncing…" : "Sync Now"}
+        {state.status === "fetching" || state.status === "syncing" ? "Syncing…" : "Sync Now"}
       </Button>
 
       {disabled && (
