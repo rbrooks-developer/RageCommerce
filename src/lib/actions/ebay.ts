@@ -46,17 +46,22 @@ export async function saveEbayCategoryMapping(
 }
 
 export async function saveEbayInventorySyncSettings(
-  enabled: boolean,
-  intervalMinutes: number,
+  _prevState: { error?: string; success?: true } | null,
+  formData: FormData,
 ): Promise<{ error?: string; success?: true }> {
   const auth = await requireAdmin();
   if (auth.error) return { error: auth.error };
+
+  const enabled = formData.has("enabled");
+  const hours   = Math.max(1, Math.min(24, Number(formData.get("interval_hours")) || 1));
+
   try {
     await saveEbayConfig({
       inventory_sync_enabled:          enabled,
-      inventory_sync_interval_minutes: Math.max(5, Math.round(intervalMinutes)),
+      inventory_sync_interval_minutes: hours * 60,
     });
     revalidatePath("/admin/ebay");
+    refresh();
     return { success: true };
   } catch (err: any) {
     return { error: err.message };

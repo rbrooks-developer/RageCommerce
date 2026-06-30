@@ -1,7 +1,9 @@
-import { revalidatePath, refresh } from "next/cache";
-import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { saveEbayConfig } from "@/lib/ebay/auth";
+"use client";
+
+import { useActionState } from "react";
+import { saveEbayInventorySyncSettings } from "@/lib/actions/ebay";
 import { EbayInventorySyncButton } from "@/components/admin/EbayInventorySyncButton";
+import { CheckCircle, XCircle } from "lucide-react";
 import type { EbayConfig } from "@/types";
 
 export function EbayInventorySyncSettings({
@@ -14,19 +16,7 @@ export function EbayInventorySyncSettings({
   const intervalHours = Math.max(1, Math.round((config?.inventory_sync_interval_minutes ?? 60) / 60));
   const lastRun      = config?.inventory_sync_last_run         ?? null;
 
-  async function saveSettings(formData: FormData) {
-    "use server";
-    const auth = await requireAdmin();
-    if (auth.error) return;
-    const isEnabled = formData.has("enabled");
-    const hours     = Math.max(1, Math.min(24, Number(formData.get("interval_hours")) || 1));
-    await saveEbayConfig({
-      inventory_sync_enabled:          isEnabled,
-      inventory_sync_interval_minutes: hours * 60,
-    });
-    revalidatePath("/admin/ebay");
-    refresh();
-  }
+  const [state, formAction, pending] = useActionState(saveEbayInventorySyncSettings, null);
 
   return (
     <section className="rounded-lg border border-gray-200 bg-white p-6 space-y-5">
@@ -46,7 +36,7 @@ export function EbayInventorySyncSettings({
         </p>
       )}
 
-      <form action={saveSettings} className="space-y-5">
+      <form action={formAction} className="space-y-5">
         <label className="flex items-center gap-3 cursor-pointer select-none w-fit">
           <input
             type="checkbox"
@@ -76,14 +66,27 @@ export function EbayInventorySyncSettings({
           <span className="text-xs text-gray-400">1–24 hours</span>
         </div>
 
+        {state?.success && (
+          <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+            <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>Sync settings saved.</span>
+          </div>
+        )}
+        {state?.error && (
+          <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <XCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>{state.error}</span>
+          </div>
+        )}
+
         <button
           type="submit"
-          disabled={!isConnected}
+          disabled={!isConnected || pending}
           className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium
                      text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-50
                      disabled:cursor-not-allowed transition-colors"
         >
-          Save Sync Settings
+          {pending ? "Saving…" : "Save Sync Settings"}
         </button>
 
         {!isConnected && (
