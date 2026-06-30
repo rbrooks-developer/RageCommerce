@@ -56,6 +56,8 @@ export function CheckoutFlow({ allowedCountries, defaultShipping }: { allowedCou
   const [selectedRate, setSelectedRate] = useState<EasyPostRate | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [insuranceRequired, setInsuranceRequired] = useState(false);
+  const [signatureRequired, setSignatureRequired] = useState(false);
 
   const subdivisions = SUBDIVISIONS[address.country] ?? [];
   const hasSubdivisions = subdivisions.length > 0;
@@ -115,6 +117,8 @@ export function CheckoutFlow({ allowedCountries, defaultShipping }: { allowedCou
       );
       setRates(sorted);
       setSelectedRate(sorted[0] ?? null);
+      setInsuranceRequired(!!data.insuranceRequired);
+      setSignatureRequired(!!data.signatureRequired);
       setStep("review");
     } catch (err: any) {
       setError(err.message);
@@ -335,6 +339,20 @@ export function CheckoutFlow({ allowedCountries, defaultShipping }: { allowedCou
                 <p className="text-sm" style={{ opacity: 0.8 }}>
                   {selectedRate?.carrier} {selectedRate?.service} — {formatPrice(parseFloat(selectedRate?.rate ?? "0") * 100)}
                 </p>
+                {(insuranceRequired || signatureRequired) && (
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {insuranceRequired && (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium" style={{ backgroundColor: "color-mix(in srgb, var(--site-fg) 12%, transparent)" }}>
+                        Insured
+                      </span>
+                    )}
+                    {signatureRequired && (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium" style={{ backgroundColor: "color-mix(in srgb, var(--site-fg) 12%, transparent)" }}>
+                        Signature required
+                      </span>
+                    )}
+                  </div>
+                )}
                 <button onClick={() => setStep("shipping")} className="mt-1 text-xs transition-opacity hover:opacity-60" style={{ opacity: 0.5 }}>Edit</button>
               </div>
               <div style={dividerStyle} className="pt-4">

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getStripeClient } from "@/lib/stripe/client";
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/data/settings";
+import { resolveShippingProtection } from "@/lib/easypost/protection";
 import type { Product } from "@/types";
 
 const requestSchema = z.object({
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
   const settings = await getSettings();
   const taxMode = settings?.tax_mode ?? "none";
   const taxFlatRate = Number(settings?.tax_flat_rate ?? 0);
+  const { insuranceRequired, signatureRequired } = resolveShippingProtection(subtotal, settings);
 
   let taxAmount = 0;
   if (taxMode === "flat_rate" && taxFlatRate > 0) {
@@ -143,6 +145,8 @@ export async function POST(request: NextRequest) {
       tax_amount: taxAmount,
       total_price: totalPrice,
       selected_shipping_rate: shippingRate,
+      insurance_required: insuranceRequired,
+      signature_required: signatureRequired,
       shipping_name: shippingAddress.name,
       shipping_address_line1: shippingAddress.address_line1,
       shipping_address_line2: shippingAddress.address_line2 ?? null,

@@ -136,7 +136,12 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
       const easypost = getEasyPostClient() as any;
 
       const shipment = await easypost.Shipment.create({
-        options: { label_format: "PDF" },
+        // Signature confirmation affects carrier pricing, so it has to be
+        // requested up front — it can't be bolted on at purchase time.
+        options: {
+          label_format: "PDF",
+          ...(order.signature_required ? { delivery_confirmation: "SIGNATURE" } : {}),
+        },
         to_address: {
           name: order.shipping_name,
           street1: order.shipping_address_line1,
@@ -165,7 +170,9 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
       });
 
       const lowestRate = shipment.lowestRate();
-      const purchased = await easypost.Shipment.buy(shipment.id, lowestRate);
+      const purchased = order.insurance_required
+        ? await easypost.Shipment.buy(shipment.id, lowestRate, order.subtotal)
+        : await easypost.Shipment.buy(shipment.id, lowestRate);
 
       const trackingNumber: string = purchased.tracking_code ?? "";
       const labelUrl: string = purchased.postage_label?.label_url ?? "";

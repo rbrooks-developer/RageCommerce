@@ -261,6 +261,8 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
       },
       chat_config: { enabled: chatEnabled, property_id: chatPropertyId, widget_id: chatWidgetId || "default" },
       handling_fee: parseFloat(g("handling_fee")) || 0,
+      insurance_min_subtotal: parseFloat(g("insurance_min_subtotal")) || 0,
+      signature_min_subtotal: parseFloat(g("signature_min_subtotal")) || 0,
       shipping_countries: shippingCountries,
       store_address: {
         name: g("store_name"),
@@ -755,6 +757,36 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
             placeholder="0.00"
           />
           <p className="mt-1.5 text-xs text-gray-400">Added to every shipping rate from EasyPost to cover boxes, tape, and packing materials. Not shown as a separate line item.</p>
+        </div>
+      </Section>
+
+      <Section title="Shipping Protection">
+        <p className="text-sm text-gray-500">Automatically require insurance and/or signature confirmation once an order's subtotal reaches these amounts. Set to 0 to disable.</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="insurance_min_subtotal">Insure orders ≥ ($)</Label>
+            <Input
+              id="insurance_min_subtotal"
+              name="insurance_min_subtotal"
+              type="number"
+              step="0.01"
+              min="0"
+              defaultValue={defaultValues?.insurance_min_subtotal ?? 0}
+              placeholder="0.00"
+            />
+          </div>
+          <div>
+            <Label htmlFor="signature_min_subtotal">Require signature ≥ ($)</Label>
+            <Input
+              id="signature_min_subtotal"
+              name="signature_min_subtotal"
+              type="number"
+              step="0.01"
+              min="0"
+              defaultValue={defaultValues?.signature_min_subtotal ?? 0}
+              placeholder="0.00"
+            />
+          </div>
         </div>
       </Section>
 

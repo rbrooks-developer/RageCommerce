@@ -133,6 +133,8 @@ export interface Database {
           stripe_session_id: string | null;
           stripe_payment_intent_id: string | null;
           selected_shipping_rate: Json | null;
+          insurance_required: boolean;
+          signature_required: boolean;
           tracking_number: string | null;
           shipping_label_url: string | null;
           easypost_shipment_id: string | null;
@@ -157,6 +159,8 @@ export interface Database {
           stripe_session_id?: string | null;
           stripe_payment_intent_id?: string | null;
           selected_shipping_rate?: Json | null;
+          insurance_required?: boolean;
+          signature_required?: boolean;
           tracking_number?: string | null;
           shipping_label_url?: string | null;
           easypost_shipment_id?: string | null;
@@ -215,6 +219,8 @@ export interface Database {
           store_address: Json;
           tax_mode: TaxMode;
           tax_flat_rate: number | null;
+          insurance_min_subtotal: number;
+          signature_min_subtotal: number;
           created_at: string;
           updated_at: string;
         };
@@ -235,6 +241,8 @@ export interface Database {
           store_address?: Json;
           tax_mode?: TaxMode;
           tax_flat_rate?: number | null;
+          insurance_min_subtotal?: number;
+          signature_min_subtotal?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -254,6 +262,8 @@ export interface Database {
           store_address?: Json;
           tax_mode?: TaxMode;
           tax_flat_rate?: number | null;
+          insurance_min_subtotal?: number;
+          signature_min_subtotal?: number;
           updated_at?: string;
         };
       };

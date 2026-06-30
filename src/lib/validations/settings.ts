@@ -99,6 +99,8 @@ export const siteSettingsSchema = z.object({
   chat_config: chatConfigSchema,
   site_password: z.string().nullable().optional().transform((v) => v || null),
   handling_fee: z.number().min(0, "Handling fee cannot be negative").nullable().optional(),
+  insurance_min_subtotal: z.number().min(0, "Must be 0 or greater").nullable().optional(),
+  signature_min_subtotal: z.number().min(0, "Must be 0 or greater").nullable().optional(),
   shipping_countries: z.array(z.string()).min(1, "Select at least one shipping country"),
   store_address: z.object({
     name: z.string().min(1, "Store name is required"),

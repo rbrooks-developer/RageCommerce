@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getEasyPostClient } from "@/lib/easypost/client";
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/data/settings";
+import { resolveSubtotal } from "@/lib/cart/pricing";
+import { resolveShippingProtection } from "@/lib/easypost/protection";
 import type { Product, StoreAddress } from "@/types";
 
 const requestSchema = z.object({
@@ -15,7 +17,11 @@ const requestSchema = z.object({
     zip: z.string(),
     country: z.string().default("US"),
   }),
-  items: z.array(z.object({ productId: z.string(), quantity: z.number().int().positive() })),
+  items: z.array(z.object({
+    productId: z.string(),
+    quantity: z.number().int().positive(),
+    offerId: z.string().nullable().optional(),
+  })),
 });
 
 export async function POST(request: NextRequest) {
@@ -65,6 +71,12 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Store shipping address not configured. Please update Site Settings." }, { status: 422 });
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const subtotal = await resolveSubtotal(supabase, items, user?.id ?? null);
+  const { insuranceRequired, signatureRequired } = resolveShippingProtection(subtotal, settings);
+
   try {
     const shipment = await (getEasyPostClient() as any).Shipment.create({
       to_address: {
@@ -92,6 +104,9 @@ export async function POST(request: NextRequest) {
         width: maxWidth,
         height: maxHeight,
       },
+      // Signature confirmation affects carrier pricing, so it must be set
+      // before requesting rates — not applied after the fact at purchase time.
+      ...(signatureRequired ? { options: { delivery_confirmation: "SIGNATURE" } } : {}),
     });
 
     const rates = (shipment.rates ?? []).map((r: any) => ({
@@ -105,7 +120,7 @@ export async function POST(request: NextRequest) {
 
     rates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate));
 
-    return Response.json({ rates });
+    return Response.json({ rates, insuranceRequired, signatureRequired });
   } catch (err: any) {
     console.error("EasyPost error:", err);
     return Response.json(
