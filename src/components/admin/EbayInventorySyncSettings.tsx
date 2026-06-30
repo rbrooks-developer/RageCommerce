@@ -1,12 +1,18 @@
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { saveEbayConfig } from "@/lib/ebay/auth";
+import { getValidEbayConfig, saveEbayConfig } from "@/lib/ebay/auth";
+import { runEbayInventorySync } from "@/lib/ebay/inventorySync";
 import type { EbayConfig } from "@/types";
 
 export function EbayInventorySyncSettings({
   config,
+  syncResult,
+  syncError,
 }: {
   config: EbayConfig | null;
+  syncResult?: { total: number; updated: number; zeroed: number; unchanged: number; errors: number } | null;
+  syncError?: string | null;
 }) {
   const isConnected  = !!config?.access_token;
   const enabled      = config?.inventory_sync_enabled          ?? false;
@@ -26,6 +32,34 @@ export function EbayInventorySyncSettings({
     revalidatePath("/admin/ebay");
   }
 
+  async function syncNow() {
+    "use server";
+    const auth = await requireAdmin();
+    if (auth.error) redirect(`/admin/ebay?syncError=${encodeURIComponent(auth.error)}`);
+
+    const liveConfig = await getValidEbayConfig();
+    if (!liveConfig?.access_token) {
+      redirect(`/admin/ebay?syncError=${encodeURIComponent("eBay is not connected.")}`);
+    }
+
+    let target: string;
+    try {
+      const result = await runEbayInventorySync(liveConfig);
+      await saveEbayConfig({ inventory_sync_last_run: new Date().toISOString() });
+      const qs = new URLSearchParams({
+        total:     String(result.total),
+        updated:   String(result.updated),
+        zeroed:    String(result.zeroed),
+        unchanged: String(result.unchanged),
+        errors:    String(result.errors),
+      });
+      target = `/admin/ebay?${qs.toString()}`;
+    } catch (err: any) {
+      target = `/admin/ebay?syncError=${encodeURIComponent(err.message)}`;
+    }
+    redirect(target);
+  }
+
   return (
     <section className="rounded-lg border border-gray-200 bg-white p-6 space-y-5">
       <div>
@@ -37,6 +71,20 @@ export function EbayInventorySyncSettings({
           0 (out of stock). On the Hobby plan the cron runs once daily.
         </p>
       </div>
+
+      {syncResult && (
+        <div className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+          Sync complete — {syncResult.total} checked, {syncResult.updated} updated,{" "}
+          {syncResult.zeroed} zeroed out, {syncResult.unchanged} unchanged
+          {syncResult.errors > 0 && `, ${syncResult.errors} errors`}.
+        </div>
+      )}
+
+      {syncError && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+          Sync failed: {syncError}
+        </div>
+      )}
 
       {lastRun && (
         <p className="text-sm text-gray-500" suppressHydrationWarning>
@@ -89,6 +137,22 @@ export function EbayInventorySyncSettings({
             Connect your eBay account above to enable inventory sync.
           </p>
         )}
+      </form>
+
+      <form action={syncNow} className="pt-1 border-t border-gray-100">
+        <button
+          type="submit"
+          disabled={!isConnected}
+          className="mt-4 rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white
+                     shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed
+                     transition-colors"
+        >
+          Sync Now
+        </button>
+        <p className="mt-2 text-xs text-gray-400">
+          Runs the sync immediately, regardless of the schedule above. May take a moment for
+          large catalogs.
+        </p>
       </form>
     </section>
   );
