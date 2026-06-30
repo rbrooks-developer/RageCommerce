@@ -1,6 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-export type OrderStatus = "pending" | "paid" | "shipped" | "fulfilled" | "cancelled";
+export type OrderStatus = "pending" | "paid" | "shipped" | "fulfilled" | "cancelled" | "refunded" | "partially_refunded";
 export type UserRole = "customer" | "admin";
 export type TaxMode = "stripe" | "flat_rate" | "none";
 

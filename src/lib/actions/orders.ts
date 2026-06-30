@@ -9,7 +9,7 @@ import { getSettings } from "@/lib/data/settings";
 import { sendShippingUpdate } from "@/lib/emails/shippingUpdate";
 import type { Order, OrderItem, Product, StoreAddress } from "@/types";
 
-type OrderStatus = "pending" | "paid" | "shipped" | "fulfilled" | "cancelled";
+type OrderStatus = "pending" | "paid" | "shipped" | "fulfilled" | "cancelled" | "refunded" | "partially_refunded";
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   const supabase = createServiceClient();
@@ -52,21 +52,17 @@ export async function cancelOrder(orderId: string) {
     }
   }
 
-  // Restore inventory for each item
-  const { data: itemsRaw } = await supabase
-    .from("order_items")
-    .select("product_id, quantity")
-    .eq("order_id", orderId);
-
-  const items = (itemsRaw ?? []) as Pick<OrderItem, "product_id" | "quantity">[];
-  for (const item of items) {
-    await supabase.rpc("increment_inventory", {
-      product_id: item.product_id,
-      amount: item.quantity,
-    });
-  }
-
-  await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId);
+  // Set status immediately after the refund call returns, before any other
+  // (slower) work below — the charge.refunded webhook fires as a direct
+  // result of the refund call above and will overwrite this to "refunded"
+  // once it lands. Inventory restoration and eBay relisting are handled
+  // exclusively by that webhook so they happen exactly once, regardless of
+  // whether the refund was triggered here or directly in the Stripe dashboard.
+  const { error: statusError } = await supabase
+    .from("orders")
+    .update({ status: "cancelled" })
+    .eq("id", orderId);
+  if (statusError) throw new Error(`Failed to update order status: ${statusError.message}`);
 
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);

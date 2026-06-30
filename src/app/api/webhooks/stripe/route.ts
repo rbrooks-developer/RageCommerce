@@ -285,15 +285,46 @@ export async function POST(request: NextRequest) {
       }
 
       const isFullRefund = charge.amount_refunded >= charge.amount;
-      await supabase
+      const { error: statusUpdateError } = await supabase
         .from("orders")
         .update({ status: isFullRefund ? "refunded" : "partially_refunded" })
         .eq("id", orderId);
 
-      console.log(`charge.refunded: order ${orderId} → ${isFullRefund ? "refunded" : "partially_refunded"}`);
+      if (statusUpdateError) {
+        console.error(`charge.refunded: failed to update order ${orderId} status:`, statusUpdateError.message);
+        await writeAdminNotification({
+          type: "refund_status_update_failed",
+          severity: "error",
+          title: "Refund Received — Order Status Not Updated",
+          body: `Order ${orderId.slice(0, 8).toUpperCase()} was refunded by Stripe but its status could not be updated: ${statusUpdateError.message}`,
+          metadata: { order_id: orderId, error: statusUpdateError.message },
+        });
+      } else {
+        console.log(`charge.refunded: order ${orderId} → ${isFullRefund ? "refunded" : "partially_refunded"}`);
+      }
 
-      if (!isFullRefund) {
-        console.log(`[webhook] partial refund on order ${orderId} — skipping eBay relist`);
+      // Restore local inventory on a full refund — this is the single place
+      // inventory is restored for any refund, whether triggered by the admin
+      // "Cancel & Refund" button or a refund issued directly in Stripe, so
+      // it only ever happens once per order.
+      if (isFullRefund) {
+        const { data: itemsRaw } = await supabase
+          .from("order_items")
+          .select("product_id, quantity")
+          .eq("order_id", orderId);
+
+        for (const item of (itemsRaw ?? []) as { product_id: string; quantity: number }[]) {
+          const { error: invErr } = await supabase.rpc("increment_inventory", {
+            product_id: item.product_id,
+            amount: item.quantity,
+          });
+          if (invErr) {
+            console.error(`charge.refunded: inventory restore failed for ${item.product_id}:`, invErr.message);
+          }
+        }
+        console.log(`[webhook] inventory restored for order ${orderId}`);
+      } else {
+        console.log(`[webhook] partial refund on order ${orderId} — skipping inventory restore and eBay relist`);
       }
 
       // Send cancellation/refund email with the actual amount Stripe refunded
