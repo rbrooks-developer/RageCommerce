@@ -16,6 +16,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const homepage = settings?.homepage_config as import("@/types").HomepageConfig | null;
   const ogImage = homepage?.og_image_url ?? settings?.logo_url ?? null;
   return {
+    // Lets every page below resolve relative metadata URLs (canonical,
+    // openGraph.images, etc.) to absolute ones even if a page forgets to
+    // (or NEXT_PUBLIC_APP_URL is ever unset) — without this, those fields
+    // silently fall back to relative/localhost URLs in production.
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
     title: { default: settings?.site_title ?? "My Store", template: `%s | ${settings?.site_title ?? "My Store"}` },
     description: settings?.meta_description ?? undefined,
     openGraph: {
