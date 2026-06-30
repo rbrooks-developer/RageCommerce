@@ -1,7 +1,7 @@
 "use server";
 
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { saveEbayConfig } from "@/lib/ebay/auth";
+import { saveEbayConfig, getEbayConfig, refreshAccessToken } from "@/lib/ebay/auth";
 import { revalidatePath, refresh } from "next/cache";
 
 export async function disconnectEbay(_prevState: unknown) {
@@ -16,6 +16,23 @@ export async function disconnectEbay(_prevState: unknown) {
       ebay_user_id:    null,
       ebay_username:   null,
     });
+    revalidatePath("/admin/ebay");
+    refresh();
+    return { success: true as const };
+  } catch (err) {
+    return { error: (err as Error).message };
+  }
+}
+
+export async function manualRefreshEbayToken(_prevState: unknown) {
+  const auth = await requireAdmin();
+  if (auth.error) return { error: auth.error };
+
+  try {
+    const config = await getEbayConfig();
+    if (!config?.refresh_token) return { error: "No refresh token stored — reconnect eBay." };
+
+    await refreshAccessToken(config);
     revalidatePath("/admin/ebay");
     refresh();
     return { success: true as const };

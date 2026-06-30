@@ -2,8 +2,8 @@
 
 import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { disconnectEbay } from "@/lib/actions/ebay";
-import { CheckCircle, XCircle, Loader2, RefreshCw, Link2Off, Tag, PlugZap } from "lucide-react";
+import { disconnectEbay, manualRefreshEbayToken } from "@/lib/actions/ebay";
+import { CheckCircle, XCircle, Loader2, RefreshCw, RefreshCcw, Link2Off, Tag, PlugZap } from "lucide-react";
 import type { EbayConfig } from "@/types";
 
 interface Props {
@@ -32,6 +32,12 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
   const isConnected = !!config?.access_token;
 
   const [discState, discAction, discPending] = useActionState(disconnectEbay, null) as [
+    { error?: string; success?: true } | null,
+    (payload: FormData) => void,
+    boolean,
+  ];
+
+  const [refreshState, refreshAction, refreshPending] = useActionState(manualRefreshEbayToken, null) as [
     { error?: string; success?: true } | null,
     (payload: FormData) => void,
     boolean,
@@ -183,6 +189,12 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
         {discState?.error && (
           <p className="text-sm text-red-600">{discState.error}</p>
         )}
+        {refreshState?.success && (
+          <p className="text-sm text-green-600">Token refreshed.</p>
+        )}
+        {refreshState?.error && (
+          <p className="text-sm text-red-600">{refreshState.error}</p>
+        )}
 
         <div className="flex gap-3">
           <a href="/api/ebay/auth">
@@ -195,12 +207,20 @@ export function EbaySettings({ config, credentialsConfigured, successParam, erro
             </Button>
           </a>
           {isConnected && (
-            <form action={discAction}>
-              <Button type="submit" variant="outline" loading={discPending}>
-                <Link2Off className="h-4 w-4" />
-                Disconnect
-              </Button>
-            </form>
+            <>
+              <form action={refreshAction}>
+                <Button type="submit" variant="outline" loading={refreshPending}>
+                  <RefreshCcw className="h-4 w-4" />
+                  Refresh Token
+                </Button>
+              </form>
+              <form action={discAction}>
+                <Button type="submit" variant="outline" loading={discPending}>
+                  <Link2Off className="h-4 w-4" />
+                  Disconnect
+                </Button>
+              </form>
+            </>
           )}
         </div>
       </section>
