@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, refresh } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getStripeClient } from "@/lib/stripe/client";
 import { getEasyPostClient } from "@/lib/easypost/client";
@@ -20,6 +20,7 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
+  refresh();
 }
 
 export async function cancelOrder(orderId: string) {
@@ -66,6 +67,7 @@ export async function cancelOrder(orderId: string) {
 
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
+  refresh();
 }
 
 interface LabelResult {
@@ -214,6 +216,7 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
   }
 
   revalidatePath("/admin/orders");
+  refresh();
   return results;
 }
 
@@ -252,5 +255,6 @@ export async function voidLabel(orderId: string): Promise<{ success: boolean; er
 
   revalidatePath(`/admin/orders/${orderId}`);
   revalidatePath("/admin/orders");
+  refresh();
   return { success: true };
 }

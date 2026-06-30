@@ -2,7 +2,7 @@
 
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { saveEbayConfig } from "@/lib/ebay/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, refresh } from "next/cache";
 
 export async function disconnectEbay(_prevState: unknown) {
   const auth = await requireAdmin();
@@ -17,6 +17,7 @@ export async function disconnectEbay(_prevState: unknown) {
       ebay_username:   null,
     });
     revalidatePath("/admin/ebay");
+    refresh();
     return { success: true as const };
   } catch (err) {
     return { error: (err as Error).message };
@@ -40,6 +41,7 @@ export async function saveEbayCategoryMapping(
 
   if (error) return { error: error.message };
   revalidatePath("/admin/categories");
+  refresh();
   return { success: true as const };
 }
 

@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, refresh } from "next/cache";
 import { sendOfferReceived } from "@/lib/emails/offerReceived";
 import { sendOfferApproved } from "@/lib/emails/offerApproved";
 import { sendOfferDeclined } from "@/lib/emails/offerDeclined";
@@ -92,6 +92,7 @@ export async function submitOffer(productId: string, quantity: number, offerPric
 
   revalidatePath(`/products/${product.id}`);
   revalidatePath("/account");
+  refresh();
   return { success: true };
 }
 
@@ -129,6 +130,7 @@ export async function approveOffer(offerId: string) {
   }
 
   revalidatePath("/admin/offers");
+  refresh();
   return { success: true };
 }
 
@@ -161,6 +163,7 @@ export async function declineOffer(offerId: string, reason?: string) {
   }
 
   revalidatePath("/admin/offers");
+  refresh();
   return { success: true };
 }
 
@@ -177,6 +180,7 @@ export async function deleteOffer(offerId: string) {
 
   if (error) return { error: error.message };
   revalidatePath("/account");
+  refresh();
   return { success: true };
 }
 
@@ -187,6 +191,7 @@ export async function adminDeleteOffer(offerId: string) {
   const { error } = await sb.from("product_offers").delete().eq("id", offerId);
   if (error) { console.error("adminDeleteOffer:", error.message); return { error: "Failed to delete offer" }; }
   revalidatePath("/admin/offers");
+  refresh();
   return { success: true };
 }
 
@@ -220,6 +225,7 @@ export async function counterOffer(offerId: string, counterPrice: number) {
   }
 
   revalidatePath("/admin/offers");
+  refresh();
   return { success: true };
 }
 
@@ -274,6 +280,7 @@ export async function acceptCounter(offerId: string) {
   }
 
   revalidatePath("/account");
+  refresh();
   return { success: true };
 }
 
@@ -295,6 +302,7 @@ export async function declineCounter(offerId: string) {
   if (error) { console.error("declineCounter:", error.message); return { error: "Failed to decline counter offer" }; }
 
   revalidatePath("/account");
+  refresh();
   return { success: true };
 }
 
@@ -358,6 +366,7 @@ export async function userCounterBack(offerId: string, newOfferPrice: number) {
 
   revalidatePath("/account");
   revalidatePath("/admin/offers");
+  refresh();
   return { success: true };
 }
 
@@ -464,6 +473,7 @@ export async function checkOfferInventory(offerId: string): Promise<{ ok: boolea
       .update({ status: "out_of_stock", updated_at: new Date().toISOString() })
       .eq("id", offerId);
     revalidatePath("/account");
+    refresh();
     return { ok: false };
   }
 

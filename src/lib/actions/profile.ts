@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, refresh } from "next/cache";
 import { z } from "zod";
 
 const profileSchema = z.object({
@@ -31,6 +31,7 @@ export async function updateProfile(_prev: unknown, formData: FormData) {
   if (error) return { error: { _form: [error.message] } };
 
   revalidatePath("/account");
+  refresh();
   return { success: true };
 }
 

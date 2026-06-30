@@ -1,4 +1,4 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, refresh } from "next/cache";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { saveEbayConfig } from "@/lib/ebay/auth";
 import { EbayInventorySyncButton } from "@/components/admin/EbayInventorySyncButton";
@@ -25,6 +25,7 @@ export function EbayInventorySyncSettings({
       inventory_sync_interval_minutes: hours * 60,
     });
     revalidatePath("/admin/ebay");
+    refresh();
   }
 
   return (

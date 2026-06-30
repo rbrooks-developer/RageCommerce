@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { productSchema } from "@/lib/validations/product";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
 function parseProductFormData(formData: FormData) {
@@ -89,6 +89,7 @@ export async function deleteProduct(id: string): Promise<{ success: true } | { e
   }
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  refresh();
   return { success: true };
 }
 
@@ -118,6 +119,7 @@ export async function deleteAllProducts(): Promise<{ deleted: number; skipped: n
 
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  refresh();
 
   return { deleted: count ?? 0, skipped: orderedIds.length };
 }
@@ -134,4 +136,5 @@ export async function togglePublished(id: string, current: boolean) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/products");
   revalidatePath("/products");
+  refresh();
 }

@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { categorySchema } from "@/lib/validations/category";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, refresh } from "next/cache";
 import { redirect } from "next/navigation";
 
 export async function createCategory(_prevState: unknown, formData: FormData) {
@@ -71,4 +71,5 @@ export async function deleteCategory(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/categories");
   revalidatePath("/");
+  refresh();
 }

@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { siteSettingsSchema, type SiteSettingsInput } from "@/lib/validations/settings";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, refresh } from "next/cache";
 
 export async function updateSettings(data: SiteSettingsInput) {
   const auth = await requireAdmin();
@@ -24,5 +24,6 @@ export async function updateSettings(data: SiteSettingsInput) {
   if (error) return { error: { _form: [error.message] } };
 
   revalidatePath("/", "layout");
+  refresh();
   return { success: true };
 }
