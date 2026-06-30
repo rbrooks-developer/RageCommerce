@@ -1,0 +1,15 @@
+name: eBay Inventory Sync
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call inventory sync endpoint
+        run: |
+          curl -sf -X GET "https://www.godlycomics.com/api/cron/ebay-inventory-sync" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
