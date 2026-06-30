@@ -303,11 +303,18 @@ export async function POST(request: NextRequest) {
         console.log(`charge.refunded: order ${orderId} → ${isFullRefund ? "refunded" : "partially_refunded"}`);
       }
 
-      // Restore local inventory on a full refund — this is the single place
-      // inventory is restored for any refund, whether triggered by the admin
-      // "Cancel & Refund" button or a refund issued directly in Stripe, so
-      // it only ever happens once per order.
-      if (isFullRefund) {
+      // Restore local inventory whenever the order never actually shipped —
+      // that's the real signal for whether the stock is still on hand, not
+      // whether the refund happened to be full or partial. An order that's
+      // refunded (fully or partially) before a label was ever purchased
+      // still has its goods in the warehouse and should be restocked. An
+      // order that already shipped keeps its inventory deducted even on a
+      // partial refund, since the physical item is gone. This is the single
+      // place inventory is restored for any refund, whether triggered by the
+      // admin "Cancel & Refund" button or a refund issued directly in
+      // Stripe, so it only ever happens once per order.
+      const alreadyShipped = !!refundedOrder?.tracking_number;
+      if (!alreadyShipped) {
         const { data: itemsRaw } = await supabase
           .from("order_items")
           .select("product_id, quantity")
@@ -324,7 +331,7 @@ export async function POST(request: NextRequest) {
         }
         console.log(`[webhook] inventory restored for order ${orderId}`);
       } else {
-        console.log(`[webhook] partial refund on order ${orderId} — skipping inventory restore and eBay relist`);
+        console.log(`[webhook] order ${orderId} already shipped — skipping inventory restore`);
       }
 
       // Send cancellation/refund email with the actual amount Stripe refunded
