@@ -1,7 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { saveEbayConfig } from "@/lib/ebay/auth";
-import { CheckCircle } from "lucide-react";
 import type { EbayConfig } from "@/types";
 
 export function EbayInventorySyncSettings({
@@ -9,20 +8,20 @@ export function EbayInventorySyncSettings({
 }: {
   config: EbayConfig | null;
 }) {
-  const isConnected     = !!config?.access_token;
-  const enabled         = config?.inventory_sync_enabled          ?? false;
-  const intervalMinutes = config?.inventory_sync_interval_minutes ?? 60;
-  const lastRun         = config?.inventory_sync_last_run         ?? null;
+  const isConnected  = !!config?.access_token;
+  const enabled      = config?.inventory_sync_enabled          ?? false;
+  const intervalHours = Math.max(1, Math.round((config?.inventory_sync_interval_minutes ?? 60) / 60));
+  const lastRun      = config?.inventory_sync_last_run         ?? null;
 
   async function saveSettings(formData: FormData) {
     "use server";
     const auth = await requireAdmin();
     if (auth.error) return;
-    const isEnabled   = formData.has("enabled");
-    const intervalVal = Math.max(5, Number(formData.get("interval_minutes")) || 60);
+    const isEnabled = formData.has("enabled");
+    const hours     = Math.max(1, Math.min(24, Number(formData.get("interval_hours")) || 1));
     await saveEbayConfig({
       inventory_sync_enabled:          isEnabled,
-      inventory_sync_interval_minutes: intervalVal,
+      inventory_sync_interval_minutes: hours * 60,
     });
     revalidatePath("/admin/ebay");
   }
@@ -35,8 +34,7 @@ export function EbayInventorySyncSettings({
           Automatically updates product inventory from eBay on a schedule. eBay is the
           source of truth — quantities are pulled via the Trading API and written to the
           website. If a listing no longer exists on eBay, the product inventory is set to
-          0 (out of stock). On the Hobby plan the cron runs once daily; upgrade to Pro
-          for sub-hour intervals.
+          0 (out of stock). On the Hobby plan the cron runs once daily.
         </p>
       </div>
 
@@ -60,20 +58,20 @@ export function EbayInventorySyncSettings({
 
         <div className="flex items-center gap-3">
           <label htmlFor="inv-interval" className="text-sm text-gray-700 shrink-0 w-40">
-            Sync every (minutes)
+            Sync every (hours)
           </label>
           <input
             id="inv-interval"
             type="number"
-            name="interval_minutes"
-            defaultValue={intervalMinutes}
-            min={5}
-            max={1440}
+            name="interval_hours"
+            defaultValue={intervalHours}
+            min={1}
+            max={24}
             disabled={!isConnected}
             className="w-24 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900
                        focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
           />
-          <span className="text-xs text-gray-400">min 5, max 1440 (24 h)</span>
+          <span className="text-xs text-gray-400">1–24 hours</span>
         </div>
 
         <button
