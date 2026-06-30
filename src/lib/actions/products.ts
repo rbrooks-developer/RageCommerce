@@ -134,7 +134,12 @@ export async function togglePublished(id: string, current: boolean) {
     .update({ is_published: !current })
     .eq("id", id);
   if (error) throw new Error(error.message);
+
+  // No refresh() here on purpose — the caller updates its own UI
+  // optimistically, so there's no need to pay for a synchronous full
+  // re-render of the (currently 270+ row) products table on every toggle.
+  // revalidatePath still marks both caches stale for the *next* navigation,
+  // which is enough to keep the admin list and storefront correct.
   revalidatePath("/admin/products");
   revalidatePath("/products");
-  refresh();
 }

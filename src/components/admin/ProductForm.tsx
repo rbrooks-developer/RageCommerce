@@ -32,7 +32,7 @@ export function ProductForm({
   const [images, setImages] = useState<string[]>(
     (defaultValues?.images as string[]) ?? []
   );
-  const [isPublished, setIsPublished] = useState(defaultValues?.is_published ?? false);
+  const [isPublished, setIsPublished] = useState(defaultValues?.is_published ?? true);
   const [categoryId, setCategoryId] = useState(defaultValues?.category_id ?? "");
 
   const categoryOptions = buildCategoryOptions(categories, { noneLabel: "No category" });

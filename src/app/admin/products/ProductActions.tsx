@@ -1,8 +1,36 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { deleteProduct, deleteAllProducts, togglePublished } from "@/lib/actions/products";
 import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
+import { formatPrice } from "@/lib/utils";
+import type { Product } from "@/types";
+
+type ProductRow = Product & { categories: { name: string } | null };
+
+function usePublishToggle(id: string, initialPublished: boolean) {
+  const [published, setPublished] = useState(initialPublished);
+  const [loading, setLoading] = useState(false);
+
+  const toggle = async () => {
+    const prev = published;
+    setPublished(!prev);
+    setLoading(true);
+    try {
+      await togglePublished(id, prev);
+    } catch {
+      setPublished(prev);
+      alert("Failed to update product status.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { published, loading, toggle };
+}
 
 export function DeleteProductButton({ id }: { id: string }) {
   const [loading, setLoading] = useState(false);
@@ -67,22 +95,79 @@ export function DeleteAllProductsButton() {
   );
 }
 
-export function TogglePublishedButton({ id, isPublished }: { id: string; isPublished: boolean }) {
-  const [loading, setLoading] = useState(false);
-
-  const handleToggle = async () => {
-    setLoading(true);
-    await togglePublished(id, isPublished);
-  };
+export function ProductCard({ product }: { product: ProductRow }) {
+  const { published, loading, toggle } = usePublishToggle(product.id, product.is_published);
+  const image = (product.images as string[])[0];
 
   return (
-    <button
-      onClick={handleToggle}
-      disabled={loading}
-      className="text-gray-600 hover:underline disabled:opacity-50 inline-flex items-center gap-1 text-sm"
-    >
-      {loading ? <Spinner className="h-3 w-3" /> : null}
-      {isPublished ? "Unpublish" : "Publish"}
-    </button>
+    <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="flex gap-3">
+        {image && (
+          <div className="relative h-16 w-16 shrink-0 rounded-md overflow-hidden">
+            <Image src={image} alt={product.name} fill className="object-cover" sizes="64px" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-gray-900 truncate">{product.name}</p>
+          <p className="text-sm text-gray-500">{formatPrice(Number(product.price) * 100)}</p>
+          <p className="text-xs text-gray-400">{product.categories?.name ?? "—"}</p>
+        </div>
+        <Badge variant={published ? "success" : "outline"}>{published ? "Live" : "Draft"}</Badge>
+      </div>
+      <div className="mt-3 flex gap-2">
+        <Link href={`/admin/products/${product.id}/edit`} className="text-sm text-blue-600 hover:underline">Edit</Link>
+        <button
+          onClick={toggle}
+          disabled={loading}
+          className="text-gray-600 hover:underline disabled:opacity-50 inline-flex items-center gap-1 text-sm"
+        >
+          {loading ? <Spinner className="h-3 w-3" /> : null}
+          {published ? "Unpublish" : "Publish"}
+        </button>
+        <DeleteProductButton id={product.id} />
+      </div>
+    </div>
+  );
+}
+
+export function ProductTableRow({ product }: { product: ProductRow }) {
+  const { published, loading, toggle } = usePublishToggle(product.id, product.is_published);
+  const image = (product.images as string[])[0];
+
+  return (
+    <tr className="hover:bg-gray-50">
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          {image ? (
+            <div className="relative h-10 w-10 rounded-md overflow-hidden shrink-0">
+              <Image src={image} alt={product.name} fill className="object-cover" sizes="40px" />
+            </div>
+          ) : (
+            <div className="h-10 w-10 rounded-md bg-gray-100 shrink-0" />
+          )}
+          <span className="font-medium text-gray-900">{product.name}</span>
+        </div>
+      </td>
+      <td className="px-4 py-3 text-gray-500">{product.categories?.name ?? "—"}</td>
+      <td className="px-4 py-3 text-gray-700">{formatPrice(Number(product.price) * 100)}</td>
+      <td className="px-4 py-3 text-gray-700">{product.inventory}</td>
+      <td className="px-4 py-3">
+        <Badge variant={published ? "success" : "outline"}>{published ? "Live" : "Draft"}</Badge>
+      </td>
+      <td className="px-4 py-3 text-right">
+        <div className="flex items-center justify-end gap-2">
+          <Link href={`/admin/products/${product.id}/edit`} className="text-blue-600 hover:underline">Edit</Link>
+          <button
+            onClick={toggle}
+            disabled={loading}
+            className="text-gray-600 hover:underline disabled:opacity-50 inline-flex items-center gap-1 text-sm"
+          >
+            {loading ? <Spinner className="h-3 w-3" /> : null}
+            {published ? "Unpublish" : "Publish"}
+          </button>
+          <DeleteProductButton id={product.id} />
+        </div>
+      </td>
+    </tr>
   );
 }
