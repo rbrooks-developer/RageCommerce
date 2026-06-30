@@ -6,13 +6,18 @@ import type { Order, Product } from "@/types";
 async function getStats() {
   const supabase = await createClient();
   const [products, categories, orders] = await Promise.all([
-    supabase.from("products").select("id, is_published", { count: "exact" }),
+    supabase.from("products").select("id, is_published, price, inventory", { count: "exact" }),
     supabase.from("categories").select("id", { count: "exact" }),
     supabase.from("orders").select("id, total_price, refunded_amount, status", { count: "exact" }),
   ]);
 
   const orderRows = (orders.data ?? []) as Pick<Order, "id" | "total_price" | "refunded_amount" | "status">[];
-  const productRows = (products.data ?? []) as Pick<Product, "id" | "is_published">[];
+  const productRows = (products.data ?? []) as Pick<Product, "id" | "is_published" | "price" | "inventory">[];
+
+  const inventoryValue = productRows.reduce(
+    (sum, p) => sum + Number(p.price) * p.inventory,
+    0
+  );
 
   const paidOrders = orderRows.filter((o) => o.status !== "cancelled" && o.status !== "pending");
   const paidOrderIds = paidOrders.map((o) => o.id);
@@ -75,6 +80,7 @@ async function getStats() {
   return {
     productCount: products.count ?? 0,
     publishedCount: productRows.filter((p) => p.is_published).length,
+    inventoryValue,
     categoryCount: categories.count ?? 0,
     orderCount: orders.count ?? 0,
     revenue,
@@ -108,7 +114,7 @@ export default async function AdminDashboard() {
       : undefined;
 
   const statCards = [
-    { label: "Total Products", value: stats.productCount, sub: `${stats.publishedCount} published`, icon: Package },
+    { label: "Total Products", value: stats.productCount, sub: `${stats.publishedCount} published · ${formatPrice(stats.inventoryValue * 100)} value`, icon: Package },
     { label: "Categories", value: stats.categoryCount, icon: FolderOpen },
     { label: "Total Orders", value: stats.orderCount, icon: ShoppingCart },
     { label: "Profit", value: profitValue, sub: profitSub, icon: TrendingUp, negative: typeof stats.profit === "number" && stats.profit < 0 },
