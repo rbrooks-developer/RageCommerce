@@ -57,6 +57,9 @@ const nextConfig: NextConfig = {
         hostname: "i.ebayimg.com",
       },
     ],
+    // Default is "attachment" (forces a download) — link-preview crawlers
+    // need the image served inline to render it.
+    contentDispositionType: "inline",
   },
 };
 

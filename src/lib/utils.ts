@@ -28,3 +28,13 @@ export function slugify(text: string): string {
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
+
+// Routes a remote (e.g. Supabase Storage) image through Next's built-in
+// /_next/image optimizer so OG/Twitter crawlers fetch it from our own
+// domain at a compressed size — Supabase Storage serves public objects
+// with `x-robots-tag: none`, which Apple's iMessage link-preview crawler
+// is stricter about honoring than other social scrapers, and the
+// uncompressed source files are well above the size link previews want.
+export function ogImageUrl(rawUrl: string): string {
+  return `/_next/image?url=${encodeURIComponent(rawUrl)}&w=1200&q=75`;
+}

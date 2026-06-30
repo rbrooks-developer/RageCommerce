@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/data/settings";
 import { notFound } from "next/navigation";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, ogImageUrl } from "@/lib/utils";
 import { ProductImages } from "./ProductImages";
 import { AddToCartButton } from "@/components/storefront/AddToCartButton";
 import { MakeOfferForm } from "./MakeOfferForm";
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       url: `${appUrl}/products/${slug}`,
       title: product.seo_title ?? product.name,
       description: product.seo_description ?? undefined,
-      images: (product.images as string[]).slice(0, 1),
+      images: (product.images as string[]).slice(0, 1).map(ogImageUrl),
     },
   };
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/data/settings";
+import { ogImageUrl } from "@/lib/utils";
 import { ProductCard } from "@/components/storefront/ProductCard";
 import { ImageCarousel } from "@/components/storefront/ImageCarousel";
 import type { HomepageConfig, FooterConfig, Product, Category, CarouselConfig } from "@/types";
@@ -17,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: settings?.meta_title ?? settings?.site_title ?? "Home",
       description: settings?.meta_description ?? undefined,
-      images: ogImage ? [ogImage] : [],
+      images: ogImage ? [ogImageUrl(ogImage)] : [],
     },
   };
 }

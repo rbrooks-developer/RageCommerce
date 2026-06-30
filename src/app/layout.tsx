@@ -4,6 +4,7 @@ import "./globals.css";
 import { getSettings } from "@/lib/data/settings";
 import { createClient } from "@/lib/supabase/server";
 import { TawkChat } from "@/components/storefront/TawkChat";
+import { ogImageUrl } from "@/lib/utils";
 import type { ChatConfig } from "@/types";
 
 const geistSans = Geist({
@@ -27,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       siteName: settings?.site_title ?? "My Store",
       url: process.env.NEXT_PUBLIC_APP_URL ?? "",
-      ...(ogImage ? { images: [ogImage] } : {}),
+      ...(ogImage ? { images: [ogImageUrl(ogImage)] } : {}),
     },
   };
 }
