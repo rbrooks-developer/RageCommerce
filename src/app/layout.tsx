@@ -4,8 +4,9 @@ import "./globals.css";
 import { getSettings } from "@/lib/data/settings";
 import { createClient } from "@/lib/supabase/server";
 import { TawkChat } from "@/components/storefront/TawkChat";
+import { Analytics } from "@/components/storefront/Analytics";
 import { ogImageUrl } from "@/lib/utils";
-import type { ChatConfig } from "@/types";
+import type { ChatConfig, TrackingConfig } from "@/types";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -58,6 +59,7 @@ export default async function RootLayout({
   const fontGradient      = homepage?.font_gradient_enabled ?? false;
   const faviconUrl        = settings?.favicon_url           ?? null;
   const chatConfig        = (settings as any)?.chat_config as ChatConfig | null;
+  const trackingConfig    = (settings as any)?.tracking_config as TrackingConfig | null;
 
   // Resolve chat visitor — only when chat is actually enabled
   let chatVisitor: { name: string; email: string } | null = null;
@@ -151,6 +153,13 @@ export default async function RootLayout({
             propertyId={chatConfig!.property_id}
             widgetId={chatConfig!.widget_id || "default"}
             visitor={chatVisitor}
+          />
+        )}
+        {(trackingConfig?.ga4_id || trackingConfig?.meta_pixel_id || trackingConfig?.clarity_id) && (
+          <Analytics
+            ga4_id={trackingConfig.ga4_id}
+            meta_pixel_id={trackingConfig.meta_pixel_id}
+            clarity_id={trackingConfig.clarity_id}
           />
         )}
       </body>

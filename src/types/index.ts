@@ -114,6 +114,12 @@ export type ChatConfig = {
   widget_id: string;
 };
 
+export type TrackingConfig = {
+  ga4_id?: string | null;
+  meta_pixel_id?: string | null;
+  clarity_id?: string | null;
+};
+
 export type EbayConfig = {
   app_id: string;
   dev_id: string;

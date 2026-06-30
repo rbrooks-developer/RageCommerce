@@ -224,6 +224,7 @@ export interface Database {
           tax_flat_rate: number | null;
           insurance_min_subtotal: number;
           signature_min_subtotal: number;
+          tracking_config: Json | null;
           created_at: string;
           updated_at: string;
         };
@@ -246,6 +247,7 @@ export interface Database {
           tax_flat_rate?: number | null;
           insurance_min_subtotal?: number;
           signature_min_subtotal?: number;
+          tracking_config?: Json | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -267,6 +269,7 @@ export interface Database {
           tax_flat_rate?: number | null;
           insurance_min_subtotal?: number;
           signature_min_subtotal?: number;
+          tracking_config?: Json | null;
           updated_at?: string;
         };
       };

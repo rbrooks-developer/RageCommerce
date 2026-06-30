@@ -12,7 +12,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
 import { COUNTRIES } from "@/lib/data/countries";
 import type { SiteSettings } from "@/types";
-import type { HomepageConfig, NavConfig, FooterConfig, ContactInfo, StoreAddress, CarouselConfig, ChatConfig } from "@/types";
+import type { HomepageConfig, NavConfig, FooterConfig, ContactInfo, StoreAddress, CarouselConfig, ChatConfig, TrackingConfig } from "@/types";
 
 const MAX_CAROUSEL_IMAGES = 25;
 
@@ -204,6 +204,11 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [chatPropertyId, setChatPropertyId] = useState(savedChat?.property_id ?? "");
   const [chatWidgetId, setChatWidgetId] = useState(savedChat?.widget_id ?? "default");
 
+  const savedTracking = (defaultValues as any)?.tracking_config as TrackingConfig | null;
+  const [ga4Id, setGa4Id] = useState(savedTracking?.ga4_id ?? "");
+  const [metaPixelId, setMetaPixelId] = useState(savedTracking?.meta_pixel_id ?? "");
+  const [clarityId, setClarityId] = useState(savedTracking?.clarity_id ?? "");
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
@@ -260,6 +265,11 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         phone: g("contact_phone") || undefined,
       },
       chat_config: { enabled: chatEnabled, property_id: chatPropertyId, widget_id: chatWidgetId || "default" },
+      tracking_config: {
+        ga4_id: ga4Id || null,
+        meta_pixel_id: metaPixelId || null,
+        clarity_id: clarityId || null,
+      },
       handling_fee: parseFloat(g("handling_fee")) || 0,
       insurance_min_subtotal: parseFloat(g("insurance_min_subtotal")) || 0,
       signature_min_subtotal: parseFloat(g("signature_min_subtotal")) || 0,
@@ -727,6 +737,131 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
               placeholder="e.g. default or 1abc123ab"
               disabled={!chatEnabled}
             />
+          </div>
+        </div>
+      </Section>
+
+      <Section title="Analytics &amp; Tracking">
+        <p className="text-sm text-gray-500">
+          Leave any field blank to disable that service. IDs are never shared with visitors — they only appear in the page source after you save.
+        </p>
+
+        {/* Google Analytics 4 */}
+        <div className="rounded-lg border border-gray-200 overflow-hidden">
+          <div className="flex items-start gap-4 p-4 border-l-4" style={{ borderLeftColor: "#E37400" }}>
+            <div className="shrink-0 mt-0.5">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+                <rect x="0" y="18" width="10" height="18" rx="2" fill="#FBBC04"/>
+                <rect x="13" y="10" width="10" height="26" rx="2" fill="#34A853"/>
+                <rect x="26" y="2" width="10" height="34" rx="2" fill="#EA4335"/>
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-gray-900">Google Analytics 4</span>
+                <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700 ring-1 ring-green-600/20">Free</span>
+              </div>
+              <p className="text-sm text-gray-500 mb-3">
+                The industry standard for understanding your traffic — where visitors come from, which pages they view, how long they stay, and how many become buyers. Connects directly to Google Search Console and Google Ads.
+              </p>
+              <div>
+                <Label htmlFor="ga4_id">Measurement ID</Label>
+                <Input
+                  id="ga4_id"
+                  value={ga4Id}
+                  onChange={(e) => setGa4Id(e.target.value)}
+                  placeholder="G-XXXXXXXXXX"
+                  className="mt-1 font-mono"
+                />
+                <p className="mt-1.5 text-xs text-gray-400">
+                  Format: <code className="bg-gray-100 px-1 rounded">G-XXXXXXXXXX</code> · Find yours in{" "}
+                  <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
+                    Google Analytics
+                  </a>{" "}
+                  → Admin → Data Streams → your stream → Measurement ID
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Meta Pixel */}
+        <div className="rounded-lg border border-gray-200 overflow-hidden">
+          <div className="flex items-start gap-4 p-4 border-l-4" style={{ borderLeftColor: "#0866FF" }}>
+            <div className="shrink-0 mt-0.5">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+                <circle cx="18" cy="18" r="18" fill="#0866FF"/>
+                <path d="M20.5 18.5h-3v10.5H14V18.5h-2v-3.5h2v-2.2C14 10.1 15.4 8.5 18.5 8.5H21V12h-1.8c-1 0-1.2.4-1.2 1.2V15h3.1l-.6 3.5z" fill="white"/>
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-gray-900">Meta Pixel</span>
+                <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700 ring-1 ring-green-600/20">Free</span>
+              </div>
+              <p className="text-sm text-gray-500 mb-3">
+                Required if you run Facebook or Instagram ads. Tracks purchases, add-to-cart events, and page views so Meta&apos;s algorithm can optimize your campaigns and build look-alike audiences from real buyers.
+              </p>
+              <div>
+                <Label htmlFor="meta_pixel_id">Pixel ID</Label>
+                <Input
+                  id="meta_pixel_id"
+                  value={metaPixelId}
+                  onChange={(e) => setMetaPixelId(e.target.value)}
+                  placeholder="123456789012345"
+                  className="mt-1 font-mono"
+                />
+                <p className="mt-1.5 text-xs text-gray-400">
+                  Format: 15–16 digit number · Find yours in{" "}
+                  <a href="https://business.facebook.com/events_manager" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
+                    Meta Events Manager
+                  </a>{" "}
+                  → your pixel → Settings
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Microsoft Clarity */}
+        <div className="rounded-lg border border-gray-200 overflow-hidden">
+          <div className="flex items-start gap-4 p-4 border-l-4" style={{ borderLeftColor: "#512BD4" }}>
+            <div className="shrink-0 mt-0.5">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+                <rect width="36" height="36" rx="8" fill="#512BD4"/>
+                <ellipse cx="18" cy="18" rx="13" ry="8" stroke="white" strokeWidth="2.2" fill="none"/>
+                <circle cx="18" cy="18" r="4.5" fill="white"/>
+                <circle cx="18" cy="18" r="2.2" fill="#512BD4"/>
+                <circle cx="21.5" cy="14.5" r="1.2" fill="white"/>
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-gray-900">Microsoft Clarity</span>
+                <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700 ring-1 ring-green-600/20">Free</span>
+                <span className="inline-flex items-center rounded-full bg-purple-50 px-2 py-0.5 text-[11px] font-medium text-purple-700 ring-1 ring-purple-600/20">Session Recording</span>
+              </div>
+              <p className="text-sm text-gray-500 mb-3">
+                Watch real visitors navigate your store — where they click, scroll, and get confused. Heatmaps and session recordings reveal friction points that GA numbers can&apos;t. Completely free with no traffic limits.
+              </p>
+              <div>
+                <Label htmlFor="clarity_id">Project ID</Label>
+                <Input
+                  id="clarity_id"
+                  value={clarityId}
+                  onChange={(e) => setClarityId(e.target.value)}
+                  placeholder="abc12def"
+                  className="mt-1 font-mono"
+                />
+                <p className="mt-1.5 text-xs text-gray-400">
+                  Format: 8-char alphanumeric · Find yours in{" "}
+                  <a href="https://clarity.microsoft.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
+                    Microsoft Clarity
+                  </a>{" "}
+                  → your project → Settings → Tracking Code
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </Section>

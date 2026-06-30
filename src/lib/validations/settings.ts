@@ -97,6 +97,11 @@ export const siteSettingsSchema = z.object({
     phone: z.string().nullable().optional(),
   }),
   chat_config: chatConfigSchema,
+  tracking_config: z.object({
+    ga4_id: z.string().nullable().optional(),
+    meta_pixel_id: z.string().nullable().optional(),
+    clarity_id: z.string().nullable().optional(),
+  }).optional(),
   site_password: z.string().nullable().optional().transform((v) => v || null),
   handling_fee: z.number().min(0, "Handling fee cannot be negative").nullable().optional(),
   insurance_min_subtotal: z.number().min(0, "Must be 0 or greater").nullable().optional(),
