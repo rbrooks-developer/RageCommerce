@@ -64,7 +64,6 @@ export async function POST(_request: NextRequest): Promise<Response> {
       // Enrich only listings that go to a category with children — those need
       // brand/publisher from ItemSpecifics for child-category routing.
       // GetSellerList never returns ItemSpecifics, so we call GetItem per listing.
-      // Run in parallel batches of 8 to stay well under eBay rate limits.
       const needsSpecifics = listings.filter((l) => {
         const cat = ebayCatMap.get(l.ebayCategoryId);
         return cat && childrenMap.has(cat.id);
@@ -72,22 +71,41 @@ export async function POST(_request: NextRequest): Promise<Response> {
       // GetItem to fetch ItemSpecifics (Publisher/Brand) for items in parent categories.
       // Many listings have no ItemSpecifics set in eBay, so title keyword matching
       // is used as a fallback (checked during the main loop below).
-      const enrichTotal = needsSpecifics.length;
+      // Run in parallel batches to stay well under eBay rate limits while avoiding
+      // a fully sequential round-trip per listing.
+      const enrichTotal  = needsSpecifics.length;
+      const ENRICH_BATCH = 8;
+      let enrichedCount  = 0;
       await send({ type: "enriching", current: 0, count: enrichTotal });
-      for (let ei = 0; ei < needsSpecifics.length; ei++) {
-        const listing = needsSpecifics[ei];
-        try {
-          const { specifics } = await fetchItemSpecifics(listing.listingId, config);
-          listing.specifics = specifics;
-          listing.brand     = specifics["brand"] ?? specifics["publisher"] ?? null;
-        } catch {
-          // Ignore — brand stays null
-        }
-        await send({ type: "enriching", current: ei + 1, count: enrichTotal });
+      for (let start = 0; start < needsSpecifics.length; start += ENRICH_BATCH) {
+        const batch = needsSpecifics.slice(start, start + ENRICH_BATCH);
+        await Promise.all(batch.map(async (listing) => {
+          try {
+            const { specifics } = await fetchItemSpecifics(listing.listingId, config);
+            listing.specifics = specifics;
+            listing.brand     = specifics["brand"] ?? specifics["publisher"] ?? null;
+          } catch {
+            // Ignore — brand stays null
+          }
+          enrichedCount++;
+          await send({ type: "enriching", current: enrichedCount, count: enrichTotal });
+        }));
       }
 
       const total = listings.length;
       await send({ type: "total", count: total });
+
+      // One bulk lookup instead of a SELECT per listing — keeps existing slugs
+      // stable across syncs (re-deriving a slug from the title on every sync
+      // would change public product URLs).
+      const { data: existingRows } = await supabase
+        .from("products")
+        .select("id, slug, ebay_listing_id")
+        .not("ebay_listing_id", "is", null);
+
+      const existingByListingId = new Map(
+        (existingRows ?? []).map((p) => [p.ebay_listing_id as string, p]),
+      );
 
       let inserted = 0;
       let updated  = 0;
@@ -115,48 +133,17 @@ export async function POST(_request: NextRequest): Promise<Response> {
           if (brandChild) { categoryId = brandChild.id; resolvedChild = brandChild.name; }
         }
 
-        // Check for existing product
-        const { data: existing } = await supabase
+        const existing = existingByListingId.get(listing.listingId);
+        const now       = new Date().toISOString();
+        const slug      = existing?.slug
+          ?? `${slugify(listing.title).slice(0, 200)}-${listing.listingId.slice(-6)}`;
+
+        const { error } = await supabase
           .from("products")
-          .select("id")
-          .eq("ebay_listing_id", listing.listingId)
-          .maybeSingle();
-
-        const now = new Date().toISOString();
-
-        if (existing) {
-          const { error } = await supabase
-            .from("products")
-            .update({
-              name:        listing.title,
-              description: listing.description,
-              price:       listing.price,
-              cost:        0,
-              inventory:   listing.inventory,
-              images:      listing.images,
-              category_id: categoryId,
-              weight_oz:   listing.weightOz,
-              length_in:   listing.lengthIn,
-              width_in:    listing.widthIn,
-              height_in:   listing.heightIn,
-              is_published: true,
-              updated_at:  now,
-            })
-            .eq("id", existing.id);
-
-          if (error) {
-            errors.push({ listingId: listing.listingId, title: listing.title, reason: error.message });
-            await send({ type: "item", current: i + 1, total, title: listing.title, status: "skipped", reason: error.message });
-          } else {
-            updated++;
-            await send({ type: "item", current: i + 1, total, title: listing.title, status: "updated" });
-          }
-        } else {
-          const slug = `${slugify(listing.title).slice(0, 200)}-${listing.listingId.slice(-6)}`;
-
-          const { error } = await supabase
-            .from("products")
-            .insert({
+          .upsert(
+            {
+              ...(existing ? { id: existing.id } : {}),
+              ebay_listing_id: listing.listingId,
               name:            listing.title,
               slug,
               description:     listing.description,
@@ -170,16 +157,20 @@ export async function POST(_request: NextRequest): Promise<Response> {
               width_in:        listing.widthIn,
               height_in:       listing.heightIn,
               is_published:    true,
-              ebay_listing_id: listing.listingId,
-            });
+              updated_at:      now,
+            },
+            { onConflict: "ebay_listing_id" },
+          );
 
-          if (error) {
-            errors.push({ listingId: listing.listingId, title: listing.title, reason: error.message });
-            await send({ type: "item", current: i + 1, total, title: listing.title, status: "skipped", reason: error.message });
-          } else {
-            inserted++;
-            await send({ type: "item", current: i + 1, total, title: listing.title, status: "inserted" });
-          }
+        if (error) {
+          errors.push({ listingId: listing.listingId, title: listing.title, reason: error.message });
+          await send({ type: "item", current: i + 1, total, title: listing.title, status: "skipped", reason: error.message });
+        } else if (existing) {
+          updated++;
+          await send({ type: "item", current: i + 1, total, title: listing.title, status: "updated" });
+        } else {
+          inserted++;
+          await send({ type: "item", current: i + 1, total, title: listing.title, status: "inserted" });
         }
       }
 
