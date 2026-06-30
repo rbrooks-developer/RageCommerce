@@ -84,6 +84,9 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
   const supabase = createServiceClient();
   const settings = await getSettings();
   const storeAddress = settings?.store_address as StoreAddress | null;
+  const homepage = settings?.homepage_config as import("@/types").HomepageConfig | null;
+  const footer   = settings?.footer_config   as import("@/types").FooterConfig   | null;
+  const displayName = homepage?.hero_display_name || footer?.display_name || null;
 
   if (!storeAddress?.street1) {
     throw new Error("Store address not configured. Update Site Settings first.");
@@ -197,6 +200,7 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
           carrier: lowestRate?.carrier ?? "Carrier",
           siteTitle,
           siteUrl,
+          displayName,
         }).catch((err) => console.error("Shipping email failed:", err));
       }
 

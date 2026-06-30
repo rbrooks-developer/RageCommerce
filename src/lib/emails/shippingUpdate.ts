@@ -7,9 +7,12 @@ interface SendShippingUpdateOptions {
   carrier: string;
   siteTitle: string;
   siteUrl: string;
+  displayName?: string | null;
 }
 
 export async function sendShippingUpdate(opts: SendShippingUpdateOptions) {
+  const headerName = opts.displayName ?? opts.siteTitle;
+  const fromField = opts.displayName ? `${opts.displayName} <${FROM_EMAIL}>` : FROM_EMAIL;
   const html = `
 <!DOCTYPE html>
 <html>
@@ -17,7 +20,7 @@ export async function sendShippingUpdate(opts: SendShippingUpdateOptions) {
 <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;margin:0;padding:24px">
   <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb">
     <div style="background:#111827;padding:24px;text-align:center">
-      <h1 style="color:#fff;margin:0;font-size:20px">${opts.siteTitle}</h1>
+      <h1 style="color:#fff;margin:0;font-size:20px">${headerName}</h1>
     </div>
     <div style="padding:32px 24px">
       <h2 style="margin:0 0 8px;font-size:18px;color:#111827">Your order has shipped!</h2>
@@ -43,7 +46,7 @@ export async function sendShippingUpdate(opts: SendShippingUpdateOptions) {
 </html>`;
 
   return getResendClient().emails.send({
-    from: FROM_EMAIL,
+    from: fromField,
     to: opts.to,
     subject: `Your order has shipped – #${opts.orderNumber}`,
     html,
