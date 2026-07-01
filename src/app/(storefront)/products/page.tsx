@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/data/settings";
-import { ProductCard } from "@/components/storefront/ProductCard";
+import { CategoryProducts } from "@/components/storefront/CategoryProducts";
 import { CategorySidebar } from "@/components/storefront/CategorySidebar";
 import type { Metadata } from "next";
 import type { Product, Category, HomepageConfig } from "@/types";
+
 
 type ProductRow = Pick<Product, "id" | "slug" | "name" | "price" | "images" | "inventory"> & { category_id: string | null };
 type CategoryRow = Pick<Category, "id" | "slug" | "name"> & { parent_id: string | null };
@@ -79,15 +80,7 @@ export default async function ProductsPage({
             <span className="text-sm" style={{ opacity: 0.5 }}>{filtered.length} products</span>
           </div>
 
-          {filtered.length === 0 ? (
-            <p className="text-center py-20" style={{ opacity: 0.4 }}>No products found.</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filtered.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
+          <CategoryProducts products={filtered} />
         </div>
       </div>
     </div>
