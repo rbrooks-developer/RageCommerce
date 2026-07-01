@@ -35,28 +35,38 @@ export function CategoryProducts({ products }: { products: ProductRow[] }) {
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+      <div
+        className="flex flex-col sm:flex-row gap-3 mb-6"
+        style={{ position: "relative", zIndex: 46 }}
+      >
         <input
           type="search"
           placeholder="Search products…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 rounded-lg border px-4 py-2 text-sm focus:outline-none focus:ring-2"
           style={{
-            borderColor: "var(--site-fg, #111827)",
-            backgroundColor: "transparent",
+            flex: 1,
+            borderRadius: "0.5rem",
+            border: "1px solid var(--site-fg, #111827)",
+            padding: "0.5rem 1rem",
+            fontSize: "0.875rem",
+            backgroundColor: "var(--site-bg, #ffffff)",
             color: "var(--site-fg, #111827)",
-            opacity: 0.85,
+            outline: "none",
           }}
         />
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as SortKey)}
-          className="rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 sm:w-44"
           style={{
-            borderColor: "var(--site-fg, #111827)",
+            borderRadius: "0.5rem",
+            border: "1px solid var(--site-fg, #111827)",
+            padding: "0.5rem 0.75rem",
+            fontSize: "0.875rem",
             backgroundColor: "var(--site-bg, #ffffff)",
             color: "var(--site-fg, #111827)",
+            width: "11rem",
+            outline: "none",
           }}
         >
           {SORT_OPTIONS.map((o) => (
