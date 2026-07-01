@@ -56,7 +56,7 @@ export function ProductImages({ images, name }: { images: string[]; name: string
       <div
         ref={containerRef}
         className="product-zoom-container relative aspect-square overflow-hidden rounded-lg cursor-crosshair"
-        style={{ backgroundColor: "var(--product-detail-bg, transparent)" }}
+        style={{ backgroundColor: "var(--product-detail-bg, transparent)", zIndex: 46, isolation: "isolate" }}
         onMouseEnter={(e) => zoomIn(e.clientX, e.clientY)}
         onMouseMove={(e) => pan(e.clientX, e.clientY)}
         onMouseLeave={zoomOut}

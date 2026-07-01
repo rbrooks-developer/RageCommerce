@@ -154,7 +154,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8" style={{ zIndex: 2 }}>
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <Breadcrumbs crumbs={breadcrumbCrumbs} />
         <div className="flex flex-col gap-8 lg:flex-row">
           <div className="lg:w-1/2">
