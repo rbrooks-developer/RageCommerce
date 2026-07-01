@@ -26,19 +26,29 @@ function buildTree(cats: Cat[]): Node[] {
   return roots;
 }
 
+function nodeHasProducts(node: Node, withProducts: Set<string>): boolean {
+  if (withProducts.has(node.cat.id)) return true;
+  return node.children.some((child) => nodeHasProducts(child, withProducts));
+}
+
 function CategoryNode({
   node,
   activeSlug,
   depth,
   fontColor,
   bgColor,
+  withProducts,
 }: {
   node: Node;
   activeSlug: string | undefined;
   depth: number;
   fontColor: string;
   bgColor: string;
+  withProducts: Set<string>;
 }) {
+  // Hide child categories (depth > 0) that have no products in them or their descendants
+  if (depth > 0 && !nodeHasProducts(node, withProducts)) return null;
+
   const hasChildren = node.children.length > 0;
   // Auto-expand if any descendant is active
   const isDescendantActive = (n: Node): boolean =>
@@ -95,6 +105,7 @@ function CategoryNode({
               depth={depth + 1}
               fontColor={fontColor}
               bgColor={bgColor}
+              withProducts={withProducts}
             />
           ))}
         </ul>
@@ -108,9 +119,10 @@ interface CategorySidebarProps {
   activeSlug: string | undefined;
   fontColor: string;
   bgColor: string;
+  categoryIdsWithProducts: Set<string>;
 }
 
-export function CategorySidebar({ categories, activeSlug, fontColor, bgColor }: CategorySidebarProps) {
+export function CategorySidebar({ categories, activeSlug, fontColor, bgColor, categoryIdsWithProducts }: CategorySidebarProps) {
   const tree = buildTree(categories);
 
   return (
@@ -140,6 +152,7 @@ export function CategorySidebar({ categories, activeSlug, fontColor, bgColor }: 
             depth={0}
             fontColor={fontColor}
             bgColor={bgColor}
+            withProducts={categoryIdsWithProducts}
           />
         ))}
       </ul>

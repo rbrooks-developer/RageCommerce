@@ -51,6 +51,11 @@ export default async function ProductsPage({
   const products = (productsRes.data ?? []) as ProductRow[];
   const categories = (categoriesRes.data ?? []) as CategoryRow[];
 
+  // Build set of category IDs that have at least one published product
+  const categoryIdsWithProducts = new Set(
+    products.map((p) => p.category_id).filter(Boolean) as string[]
+  );
+
   // When a category is selected, also include products in all descendant categories
   const selectedCat = category ? categories.find((c) => c.slug === category) : null;
   const filterIds = selectedCat ? collectIds(selectedCat.id, categories) : null;
@@ -70,6 +75,7 @@ export default async function ProductsPage({
               activeSlug={category}
               fontColor={fontColor}
               bgColor={bgColor}
+              categoryIdsWithProducts={categoryIdsWithProducts}
             />
           </aside>
         )}
