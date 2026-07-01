@@ -42,7 +42,15 @@ export function ProductCard({ product }: { product: Pick<Product, "id" | "slug" 
         )}
       </div>
       <div className="mt-3">
-        <h3 className="text-sm font-medium group-hover:underline underline-offset-2 line-clamp-2">{product.name}</h3>
+        <h3
+          className="text-sm font-medium group-hover:underline underline-offset-2"
+          style={{
+            display: "-webkit-box",
+            WebkitBoxOrient: "vertical",
+            WebkitLineClamp: 3,
+            overflow: "hidden",
+          }}
+        >{product.name}</h3>
         <p className="mt-1 text-sm font-semibold" style={{ opacity: 0.75 }}>{formatPrice(Number(product.price) * 100)}</p>
       </div>
     </Link>
