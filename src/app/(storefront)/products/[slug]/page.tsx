@@ -49,7 +49,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 function renderWithEmojiColor(text: string) {
   return text.split(/([^\x00-\x7F]+)/).map((seg, i) =>
     /[^\x00-\x7F]/.test(seg)
-      ? <span key={i} style={{ color: "initial" }}>{seg}</span>
+      ? (
+        <span
+          key={i}
+          style={{
+            WebkitTextFillColor: "initial",
+            backgroundImage: "none",
+            WebkitBackgroundClip: "initial",
+            backgroundClip: "initial",
+            fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', emoji, sans-serif",
+          }}
+        >
+          {seg}
+        </span>
+      )
       : seg
   );
 }
