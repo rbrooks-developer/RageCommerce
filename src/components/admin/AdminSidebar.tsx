@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   RefreshCw,
   Bell,
+  BarChart2,
 } from "lucide-react";
 
 const navItems = [
@@ -26,9 +27,10 @@ const navItems = [
   { label: "Categories",    href: "/admin/categories",      icon: FolderOpen },
   { label: "Orders",        href: "/admin/orders",          icon: ShoppingCart },
   { label: "Offers",        href: "/admin/offers",          icon: Tag },
-  { label: "eBay Sync",     href: "/admin/ebay",            icon: RefreshCw },
-  { label: "Notifications", href: "/admin/notifications",   icon: Bell },
-  { label: "Settings",      href: "/admin/settings",        icon: Settings },
+  { label: "eBay Sync",        href: "/admin/ebay",            icon: RefreshCw },
+  { label: "Google Analytics", href: "/admin/analytics",      icon: BarChart2 },
+  { label: "Notifications",    href: "/admin/notifications",  icon: Bell },
+  { label: "Settings",         href: "/admin/settings",       icon: Settings },
 ];
 
 function NavLink({ item, unreadCount, onClick }: { item: typeof navItems[0]; unreadCount?: number; onClick?: () => void }) {

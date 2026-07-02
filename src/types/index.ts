@@ -118,6 +118,7 @@ export type TrackingConfig = {
   ga4_id?: string | null;
   meta_pixel_id?: string | null;
   clarity_id?: string | null;
+  looker_studio_url?: string | null;
 };
 
 export type EbayConfig = {
