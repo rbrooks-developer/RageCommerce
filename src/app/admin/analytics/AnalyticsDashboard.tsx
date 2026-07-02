@@ -77,33 +77,35 @@ export function AnalyticsDashboard({ lookerStudioUrl }: { lookerStudioUrl: strin
             {/* Setup guide */}
             <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 space-y-3">
               <p className="text-sm font-semibold text-blue-900">How to set up your dashboard</p>
-              <ol className="space-y-2 text-sm text-blue-800 list-decimal list-inside">
+              <ol className="space-y-3 text-sm text-blue-800 list-decimal list-inside">
                 <li>
                   Go to{" "}
                   <a href="https://lookerstudio.google.com" target="_blank" rel="noopener noreferrer"
                      className="underline inline-flex items-center gap-0.5">
                     lookerstudio.google.com <ExternalLink className="h-3 w-3" />
                   </a>{" "}
-                  and create a new report.
-                </li>
-                <li>Add a data source → Google Analytics → select your GA4 property.</li>
-                <li>
-                  <strong>World Map:</strong> Insert → Geo Map → set <em>Geo dimension</em> to <em>City</em>, metric to <em>Sessions</em>. This shows a city-level bubble map.
+                  → click <strong>Blank Report</strong>.
                 </li>
                 <li>
-                  <strong>Traffic by Hour:</strong> Insert → Bar chart → set <em>Dimension</em> to <em>Hour of Day</em>, metric to <em>Sessions</em>.
+                  In the <em>Add data to report</em> panel that opens, choose <strong>Google Analytics</strong> → select your GA4 property → click <strong>Add</strong>.
                 </li>
                 <li>
-                  <strong>KPI Cards:</strong> Insert → Scorecard → repeat for <em>Total Users</em>, <em>Sessions</em>, <em>Pageviews</em>, <em>Bounce Rate</em>, and <em>Avg Session Duration</em>.
+                  <strong>World Map (city dots):</strong> In the toolbar click <strong>Add a chart</strong> (the bar-chart icon) → scroll down to find <strong>Google Maps</strong> (shows a globe). In the chart setup panel on the right set <em>Location dimension</em> to <strong>City</strong> and <em>Size metric</em> to <strong>Sessions</strong>.
                 </li>
                 <li>
-                  <strong>Traffic Sources:</strong> Insert → Pie chart → set <em>Dimension</em> to <em>Default Channel Group</em>.
+                  <strong>Traffic by Hour:</strong> Add a chart → <strong>Bar chart</strong>. Set <em>Dimension</em> to <strong>Hour</strong> (search for it — it may appear as "Hour" under Date &amp; Time) and <em>Metric</em> to <strong>Sessions</strong>.
                 </li>
                 <li>
-                  <strong>Top Pages:</strong> Insert → Table → set <em>Dimension</em> to <em>Page path</em>, metrics to <em>Sessions</em> and <em>Pageviews</em>.
+                  <strong>KPI Scorecards:</strong> Add a chart → <strong>Scorecard</strong>. Create one for each: <em>Total users</em>, <em>Sessions</em>, <em>Views</em>, <em>Bounce rate</em>, <em>Average session duration</em>. Repeat for each metric.
                 </li>
                 <li>
-                  When done: File → Share → Embed report. Copy the <code className="bg-blue-100 px-1 rounded">src</code> value from the iframe snippet and paste it in the field above.
+                  <strong>Traffic Sources:</strong> Add a chart → <strong>Pie chart</strong>. Set <em>Dimension</em> to <strong>Session default channel group</strong> and <em>Metric</em> to <strong>Sessions</strong>.
+                </li>
+                <li>
+                  <strong>Top Pages:</strong> Add a chart → <strong>Table</strong>. Set <em>Dimension</em> to <strong>Page path and screen class</strong>, metrics to <strong>Sessions</strong> and <strong>Views</strong>.
+                </li>
+                <li>
+                  When done: <strong>File → Share → Embed report</strong>. In the dialog copy the URL from the <code className="bg-blue-100 px-1 rounded">src="…"</code> attribute inside the iframe code and paste it in the field above.
                 </li>
               </ol>
             </div>
