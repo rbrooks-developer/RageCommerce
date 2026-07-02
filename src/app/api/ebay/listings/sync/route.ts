@@ -160,6 +160,14 @@ export async function POST(_request: NextRequest): Promise<Response> {
               width_in:        listing.widthIn,
               height_in:       listing.heightIn,
               is_published:    true,
+              genre:                listing.specifics["genre"] ?? null,
+              grade:                listing.specifics["grade"] ?? null,
+              professional_grader:  listing.specifics["professional grader"] ?? null,
+              certification_number: listing.specifics["certification number"] ?? null,
+              signed:               listing.specifics["signed"] != null
+                ? listing.specifics["signed"].toLowerCase() === "yes"
+                : null,
+              signed_by:            listing.specifics["signed by"] ?? null,
               updated_at:      now,
             },
             { onConflict: "ebay_listing_id" },

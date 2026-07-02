@@ -47,6 +47,12 @@ export interface Database {
           seo_title: string | null;
           seo_description: string | null;
           ebay_listing_id: string | null;
+          genre: string | null;
+          grade: string | null;
+          professional_grader: string | null;
+          certification_number: string | null;
+          signed: boolean | null;
+          signed_by: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -68,6 +74,12 @@ export interface Database {
           seo_title?: string | null;
           seo_description?: string | null;
           ebay_listing_id?: string | null;
+          genre?: string | null;
+          grade?: string | null;
+          professional_grader?: string | null;
+          certification_number?: string | null;
+          signed?: boolean | null;
+          signed_by?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -88,6 +100,12 @@ export interface Database {
           seo_title?: string | null;
           seo_description?: string | null;
           ebay_listing_id?: string | null;
+          genre?: string | null;
+          grade?: string | null;
+          professional_grader?: string | null;
+          certification_number?: string | null;
+          signed?: boolean | null;
+          signed_by?: string | null;
           updated_at?: string;
         };
       };
