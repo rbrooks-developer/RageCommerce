@@ -46,6 +46,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+function renderWithEmojiColor(text: string) {
+  return text.split(/([^\x00-\x7F]+)/).map((seg, i) =>
+    /[^\x00-\x7F]/.test(seg)
+      ? <span key={i} style={{ color: "initial" }}>{seg}</span>
+      : seg
+  );
+}
+
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = await createClient();
@@ -179,7 +187,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             <p className="text-2xl font-semibold">{formatPrice(Number(product.price) * 100)}</p>
 
             {product.description && (
-              <p className="text-sm leading-relaxed" style={{ opacity: 0.7 }}>{product.description}</p>
+              <p className="text-sm leading-relaxed" style={{ opacity: 0.7 }}>{renderWithEmojiColor(product.description)}</p>
             )}
 
             {showCgcButton && (
