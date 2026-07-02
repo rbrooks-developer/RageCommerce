@@ -18,11 +18,12 @@ export default async function AccountLayout({ children }: { children: React.Reac
   const { data: { user } } = await supabase.auth.getUser();
 
   const [profileResult, approvedOffersResult] = await Promise.all([
-    user ? supabase.from("profiles").select("role").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
+    user ? supabase.from("profiles").select("role, avatar_url").eq("id", user.id).maybeSingle() : Promise.resolve({ data: null }),
     user ? supabase.from("product_offers").select("*", { count: "exact", head: true }).eq("user_id", user.id).in("status", ["approved", "countered"]) : Promise.resolve({ count: 0 }),
   ]);
 
   const isAdmin = ((profileResult.data as { role: string } | null)?.role === "admin");
+  const avatarUrl = (profileResult.data as { avatar_url?: string | null } | null)?.avatar_url ?? null;
   const approvedOffersCount = approvedOffersResult.count ?? 0;
 
   const homepage = settings?.homepage_config as HomepageConfig | null;
@@ -58,6 +59,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
         navConfig={(settings?.nav_config as NavConfig) ?? { items: [] }}
         isLoggedIn={!!user}
         isAdmin={isAdmin}
+        avatarUrl={avatarUrl}
         bgColor={bgColor}
         fontColor={fontColor}
         approvedOffersCount={approvedOffersCount}

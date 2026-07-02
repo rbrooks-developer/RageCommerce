@@ -11,7 +11,11 @@ import { AddressManager } from "./AddressManager";
 import { ProfileForm } from "./ProfileForm";
 import { PasswordForm } from "./PasswordForm";
 import { MyOffers } from "./MyOffers";
-import { AvatarUpload } from "@/components/account/AvatarUpload";
+import dynamic from "next/dynamic";
+const AvatarUpload = dynamic(
+  () => import("@/components/account/AvatarUpload").then((m) => m.AvatarUpload),
+  { ssr: false, loading: () => <div className="h-24 w-24 rounded-full bg-gray-200 animate-pulse" /> }
+);
 import type { Order, UserAddress } from "@/types";
 
 type OrderRow = Pick<Order, "id" | "status" | "total_price" | "created_at" | "tracking_number">;
