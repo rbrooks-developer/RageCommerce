@@ -17,6 +17,7 @@ interface HeaderProps {
   bgColor?: string;
   fontColor?: string;
   approvedOffersCount?: number;
+  avatarUrl?: string | null;
   striationImageUrl?: string | null;
   striationOpacity?: number;
   striationBlendMode?: React.CSSProperties["mixBlendMode"];
@@ -38,7 +39,7 @@ function isAccountLink(link: string) {
   return n.startsWith("/account");
 }
 
-export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = false, bgColor = "#ffffff", fontColor = "#111827", approvedOffersCount = 0, striationImageUrl, striationOpacity = 30, striationBlendMode = "screen", striationPosition = "full" }: HeaderProps) {
+export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = false, bgColor = "#ffffff", fontColor = "#111827", approvedOffersCount = 0, avatarUrl, striationImageUrl, striationOpacity = 30, striationBlendMode = "screen", striationPosition = "full" }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { itemCount } = useCart();
   const navItems = navConfig?.items ?? [];
@@ -111,12 +112,22 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
             >
               {isLoggedIn ? (
                 <span className="relative inline-flex">
-                  <span
-                    className="flex h-10 w-10 items-center justify-center rounded-full"
-                    style={{ backgroundColor: fontColor }}
-                  >
-                    <UserRound className="h-6 w-6" style={{ color: bgColor }} />
-                  </span>
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={avatarUrl}
+                      alt="My account"
+                      className="h-10 w-10 rounded-full object-cover"
+                      style={{ border: `2px solid ${fontColor}` }}
+                    />
+                  ) : (
+                    <span
+                      className="flex h-10 w-10 items-center justify-center rounded-full"
+                      style={{ backgroundColor: fontColor }}
+                    >
+                      <UserRound className="h-6 w-6" style={{ color: bgColor }} />
+                    </span>
+                  )}
                   <span
                     className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500"
                     style={{ boxShadow: `0 0 0 2px ${bgColor}` }}

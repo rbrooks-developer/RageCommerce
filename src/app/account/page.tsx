@@ -11,6 +11,7 @@ import { AddressManager } from "./AddressManager";
 import { ProfileForm } from "./ProfileForm";
 import { PasswordForm } from "./PasswordForm";
 import { MyOffers } from "./MyOffers";
+import { AvatarUpload } from "@/components/account/AvatarUpload";
 import type { Order, UserAddress } from "@/types";
 
 type OrderRow = Pick<Order, "id" | "status" | "total_price" | "created_at" | "tracking_number">;
@@ -88,7 +89,7 @@ export default async function AccountPage() {
   ]);
 
   const [{ data: profileRaw, error: profileError }, { data: addressesRaw }, { data: ordersRaw }, { data: offersRaw }] = await Promise.all([
-    supabase.from("profiles").select("first_name, last_name, phone").eq("id", user.id).maybeSingle(),
+    supabase.from("profiles").select("first_name, last_name, phone, avatar_url").eq("id", user.id).maybeSingle(),
     supabase.from("user_addresses").select("*").eq("user_id", user.id).order("created_at", { ascending: true }),
     supabase
       .from("orders")
@@ -127,14 +128,19 @@ export default async function AccountPage() {
 
       {/* ── Profile ─────────────────────────────────── */}
       <section>
-        <SectionHeading title="Profile" description="Your name and contact details." />
-        <div className="rounded-lg p-5" style={panelStyle}>
-          <ProfileForm
-            firstName={profile?.first_name ?? null}
-            lastName={profile?.last_name ?? null}
-            phone={profile?.phone ?? null}
-            email={user.email ?? ""}
-          />
+        <SectionHeading title="Profile" description="Your name, contact details, and profile photo." />
+        <div className="rounded-lg p-5 space-y-6" style={panelStyle}>
+          <div className="flex flex-col items-center sm:items-start sm:flex-row sm:gap-8">
+            <AvatarUpload currentUrl={(profileRaw as any)?.avatar_url ?? null} />
+            <div className="flex-1 w-full">
+              <ProfileForm
+                firstName={profile?.first_name ?? null}
+                lastName={profile?.last_name ?? null}
+                phone={profile?.phone ?? null}
+                email={user.email ?? ""}
+              />
+            </div>
+          </div>
         </div>
       </section>
 

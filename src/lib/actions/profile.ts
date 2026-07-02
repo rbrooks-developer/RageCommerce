@@ -35,6 +35,24 @@ export async function updateProfile(_prev: unknown, formData: FormData) {
   return { success: true };
 }
 
+export async function saveAvatarUrl(avatarUrl: string | null): Promise<{ error?: string; success?: true }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() } as any)
+    .eq("id", user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/account");
+  revalidatePath("/", "layout");
+  refresh();
+  return { success: true };
+}
+
 export async function changePassword(_prev: unknown, formData: FormData) {
   const password = (formData.get("password") as string) ?? "";
   const confirm = (formData.get("confirm_password") as string) ?? "";
