@@ -62,6 +62,25 @@ export async function saveEbayCategoryMapping(
   return { success: true as const };
 }
 
+export async function saveEbayListingSettings(
+  _prevState: { error?: string; success?: true } | null,
+  formData: FormData,
+): Promise<{ error?: string; success?: true }> {
+  const auth = await requireAdmin();
+  if (auth.error) return { error: auth.error };
+
+  const cgcCensusUrl = (formData.get("cgc_census_url") as string | null)?.trim() || null;
+
+  try {
+    await saveEbayConfig({ cgc_census_url: cgcCensusUrl });
+    revalidatePath("/admin/ebay");
+    refresh();
+    return { success: true };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
 export async function saveEbayInventorySyncSettings(
   _prevState: { error?: string; success?: true } | null,
   formData: FormData,

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/data/settings";
+import { getEbayConfig } from "@/lib/ebay/auth";
 import { notFound } from "next/navigation";
 import { formatPrice, ogImageUrl } from "@/lib/utils";
 import { ProductImages } from "./ProductImages";
@@ -104,6 +105,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     }
   }
 
+  const ebayConfig = await getEbayConfig();
+  const cgcCensusUrl = ebayConfig?.cgc_census_url ?? null;
+  const showCgcButton =
+    cgcCensusUrl &&
+    product.name.includes("CGC") &&
+    (product as any).certification_number != null;
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
   const jsonLd = {
     "@context": "https://schema.org",
@@ -172,6 +180,21 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
             {product.description && (
               <p className="text-sm leading-relaxed" style={{ opacity: 0.7 }}>{product.description}</p>
+            )}
+
+            {showCgcButton && (
+              <a
+                href={`${cgcCensusUrl}${(product as any).certification_number}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium transition-colors hover:opacity-80"
+                style={{
+                  borderColor: "currentColor",
+                  opacity: 0.85,
+                }}
+              >
+                CGC Census / Grader Notes
+              </a>
             )}
 
             <AddToCartButton product={product} />

@@ -1,6 +1,7 @@
 import { getEbayConfig } from "@/lib/ebay/auth";
 import { EbaySettings } from "@/components/admin/EbaySettings";
 import { EbayInventorySyncSettings } from "@/components/admin/EbayInventorySyncSettings";
+import { EbayListingSettings } from "@/components/admin/EbayListingSettings";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export default async function EbayAdminPage({
         errorParam={error}
       />
       <EbayInventorySyncSettings config={config} />
+      <EbayListingSettings config={config} />
     </div>
   );
 }
