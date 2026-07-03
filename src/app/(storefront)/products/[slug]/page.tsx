@@ -129,10 +129,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const ebayConfig = await getEbayConfig();
   const cgcCensusUrl      = ebayConfig?.cgc_census_url       ?? null;
   const cgcButtonImageUrl = ebayConfig?.cgc_button_image_url ?? null;
-  const showCgcButton =
-    cgcCensusUrl &&
-    product.name.includes("CGC") &&
-    (product as any).certification_number != null;
+  const certNumber = ((product as any).certification_number as string | null)?.trim() || null;
+  const hasCgcMark =
+    product.name.toLowerCase().includes("cgc") ||
+    ((product as any).professional_grader as string | null)?.toLowerCase().includes("cgc");
+  const showCgcButton = cgcCensusUrl && hasCgcMark && certNumber != null;
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
   const jsonLd = {
@@ -206,7 +207,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
             {showCgcButton && (
               <a
-                href={`${cgcCensusUrl}${(product as any).certification_number}`}
+                href={`${cgcCensusUrl}${certNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block transition-opacity hover:opacity-80"
