@@ -67,7 +67,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
           }}
         />
       )}
-      <div style={{ position: "relative", zIndex: 1 }}>
+      <div style={{ position: "relative", zIndex: 1, transform: "translateZ(0)" }}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between pt-2">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg" style={{ color: fontColor }}>
