@@ -55,6 +55,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
           style={{
             position: "absolute",
             inset: 0,
+            zIndex: -1,
             pointerEvents: "none",
             backgroundImage: `url(${striationImageUrl})`,
             backgroundAttachment: "fixed",
