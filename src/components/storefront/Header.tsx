@@ -58,7 +58,6 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
             zIndex: 0,
             pointerEvents: "none",
             backgroundImage: `url(${striationImageUrl})`,
-            backgroundAttachment: "fixed",
             backgroundSize: striationPosition === "full" ? "cover" : striationPosition === "tile" ? "auto" : "auto 100%",
             backgroundPosition: striationPosition === "left" ? "left center" : striationPosition === "right" ? "right center" : "center",
             backgroundRepeat: striationPosition === "tile" ? "repeat" : "no-repeat",
