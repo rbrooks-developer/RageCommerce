@@ -55,9 +55,9 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
           style={{
             position: "absolute",
             inset: 0,
-            zIndex: 0,
             pointerEvents: "none",
             backgroundImage: `url(${striationImageUrl})`,
+            backgroundAttachment: "fixed",
             backgroundSize: striationPosition === "full" ? "cover" : striationPosition === "tile" ? "auto" : "auto 100%",
             backgroundPosition: striationPosition === "left" ? "left center" : striationPosition === "right" ? "right center" : "center",
             backgroundRepeat: striationPosition === "tile" ? "repeat" : "no-repeat",
@@ -66,7 +66,7 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
           }}
         />
       )}
-      <div style={{ position: "relative", zIndex: 1, transform: "translateZ(0)" }}>
+      <div style={{ position: "relative" }}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between pt-2">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg" style={{ color: fontColor }}>
