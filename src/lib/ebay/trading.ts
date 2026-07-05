@@ -67,8 +67,9 @@ function parseItem(raw: any): TradingItem | null {
   const description = rawDesc ? stripHtml(rawDesc) : null;
 
   // Images — always an array thanks to XMLParser isArray config
+  // Swap eBay's size suffix (s-l500, s-l300, etc.) to s-l1600 for full resolution
   const pics: string[] = raw.PictureDetails?.PictureURL ?? [];
-  const images = pics.filter(Boolean);
+  const images = pics.filter(Boolean).map((url) => url.replace(/s-l\d+/, "s-l1600"));
 
   // eBay primary category
   const ebayCategoryId = String(raw.PrimaryCategory?.CategoryID ?? "").trim();
