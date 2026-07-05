@@ -74,7 +74,7 @@ function parseItem(raw: any): TradingItem | null {
   const images = pics.filter(Boolean).map((url) =>
     url
       .replace(/s-l\d+(\.(jpg|jpeg|png|webp))/i, "s-l1600$1")
-      .replace(/\$_\d+(\.(jpg|jpeg|png))/i, "$$_0$1")
+      .replace(/\$_\d+(\.(jpg|jpeg|png))/i, "$$_57$1")
   );
 
   // eBay primary category
