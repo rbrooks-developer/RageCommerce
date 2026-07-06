@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { revalidatePath, refresh } from "next/cache";
 import { z } from "zod";
@@ -20,7 +20,7 @@ export async function createTariffCode(_prevState: unknown, formData: FormData) 
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const { error } = await supabase.from("tariff_codes").insert(parsed.data as any);
   if (error) return { error: error.message };
 
@@ -39,7 +39,7 @@ export async function updateTariffCode(id: string, _prevState: unknown, formData
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const { error } = await supabase.from("tariff_codes").update(parsed.data as any).eq("id", id);
   if (error) return { error: error.message };
 
@@ -52,7 +52,7 @@ export async function deleteTariffCode(id: string) {
   const auth = await requireAdmin();
   if (auth.error) throw new Error(auth.error);
 
-  const supabase = await createClient();
+  const supabase = createServiceClient();
   const { error } = await supabase.from("tariff_codes").delete().eq("id", id);
   if (error) throw new Error(error.message);
 
