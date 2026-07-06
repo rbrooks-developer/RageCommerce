@@ -244,6 +244,7 @@ export interface Database {
           meta_title: string | null;
           meta_description: string | null;
           logo_url: string | null;
+          logo_spin: boolean | null;
           favicon_url: string | null;
           bg_color: string;
           font_color: string;
@@ -268,6 +269,7 @@ export interface Database {
           meta_title?: string | null;
           meta_description?: string | null;
           logo_url?: string | null;
+          logo_spin?: boolean | null;
           favicon_url?: string | null;
           bg_color?: string;
           font_color?: string;
@@ -291,6 +293,7 @@ export interface Database {
           meta_title?: string | null;
           meta_description?: string | null;
           logo_url?: string | null;
+          logo_spin?: boolean | null;
           favicon_url?: string | null;
           bg_color?: string;
           font_color?: string;

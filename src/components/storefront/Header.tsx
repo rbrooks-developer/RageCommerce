@@ -11,6 +11,7 @@ import type { NavConfig } from "@/types";
 interface HeaderProps {
   siteTitle: string;
   logoUrl: string | null;
+  logoSpin?: boolean;
   navConfig: NavConfig;
   isLoggedIn: boolean;
   isAdmin?: boolean;
@@ -39,7 +40,7 @@ function isAccountLink(link: string) {
   return n.startsWith("/account");
 }
 
-export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = false, bgColor = "#ffffff", fontColor = "#111827", approvedOffersCount = 0, avatarUrl, striationImageUrl, striationOpacity = 30, striationBlendMode = "screen", striationPosition = "full" }: HeaderProps) {
+export function Header({ siteTitle, logoUrl, logoSpin = false, navConfig, isLoggedIn, isAdmin = false, bgColor = "#ffffff", fontColor = "#111827", approvedOffersCount = 0, avatarUrl, striationImageUrl, striationOpacity = 30, striationBlendMode = "screen", striationPosition = "full" }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { itemCount } = useCart();
   const navItems = navConfig?.items ?? [];
@@ -71,7 +72,14 @@ export function Header({ siteTitle, logoUrl, navConfig, isLoggedIn, isAdmin = fa
         <div className="flex h-16 items-center justify-between pt-2">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg" style={{ color: fontColor }}>
             {logoUrl ? (
-              <Image src={logoUrl} alt={siteTitle} width={48} height={48} className="object-contain" />
+              <Image
+                src={logoUrl}
+                alt={siteTitle}
+                width={48}
+                height={48}
+                className="object-contain"
+                style={logoSpin ? { animation: "spin 6s linear infinite" } : undefined}
+              />
             ) : (
               siteTitle
             )}

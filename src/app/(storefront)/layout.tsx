@@ -52,6 +52,7 @@ export default async function StorefrontLayout({ children }: { children: React.R
       <Header
         siteTitle={settings?.site_title ?? "My Store"}
         logoUrl={settings?.logo_url ?? null}
+        logoSpin={!!(settings as any)?.logo_spin}
         navConfig={(settings?.nav_config as NavConfig) ?? { items: [] }}
         isLoggedIn={!!user}
         isAdmin={isAdmin}

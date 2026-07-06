@@ -140,6 +140,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showSitePassword, setShowSitePassword] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string[]>(defaultValues?.logo_url ? [defaultValues.logo_url] : []);
+  const [logoSpin, setLogoSpin] = useState<boolean>(!!(defaultValues as any)?.logo_spin);
   const [faviconUrl, setFaviconUrl] = useState<string[]>(defaultValues?.favicon_url ? [defaultValues.favicon_url] : []);
 
   const homepage = defaultValues?.homepage_config as HomepageConfig | null;
@@ -223,6 +224,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
       meta_title: g("meta_title") || undefined,
       meta_description: g("meta_description") || undefined,
       logo_url: logoUrl[0] ?? null,
+      logo_spin: logoSpin,
       favicon_url: faviconUrl[0] ?? null,
       tax_mode: taxMode as "stripe" | "flat_rate" | "none",
       tax_flat_rate: taxMode === "flat_rate" ? parseFloat(g("tax_flat_rate")) : undefined,
@@ -341,7 +343,19 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         </div>
         <div><Label htmlFor="meta_title">Meta Title <span className="text-gray-400 font-normal">(max 60 chars)</span></Label><Input id="meta_title" name="meta_title" maxLength={60} defaultValue={defaultValues?.meta_title ?? ""} /></div>
         <div><Label htmlFor="meta_description">Meta Description <span className="text-gray-400 font-normal">(max 160 chars)</span></Label><Textarea id="meta_description" name="meta_description" maxLength={160} rows={2} defaultValue={defaultValues?.meta_description ?? ""} /></div>
-        <div><Label>Logo</Label><ImageUpload value={logoUrl} onChange={setLogoUrl} max={1} /></div>
+        <div>
+          <Label>Logo</Label>
+          <ImageUpload value={logoUrl} onChange={setLogoUrl} max={1} />
+          <label className="mt-2 flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={logoSpin}
+              onChange={(e) => setLogoSpin(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span className="text-sm text-gray-700">Spin logo (animated)</span>
+          </label>
+        </div>
         <div><Label>Favicon <span className="text-gray-400 font-normal">(.ico, .png, .svg, .webp)</span></Label><ImageUpload value={faviconUrl} onChange={setFaviconUrl} max={1} bucket="site-assets" pathPrefix="site" /></div>
         <div>
           <Label>OG Image <span className="text-gray-400 font-normal">(shared preview image for social media — recommended 1200×630)</span></Label>

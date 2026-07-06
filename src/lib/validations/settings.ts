@@ -52,6 +52,7 @@ export const siteSettingsSchema = z.object({
   meta_title: z.string().max(60).nullable().optional(),
   meta_description: z.string().max(160).nullable().optional(),
   logo_url: z.string().url().nullable().optional(),
+  logo_spin: z.boolean().nullable().optional(),
   favicon_url: z.string().url().nullable().optional(),
   tax_mode: z.enum(["stripe", "flat_rate", "none"]),
   tax_flat_rate: z.number().min(0).max(1).nullable().optional(),

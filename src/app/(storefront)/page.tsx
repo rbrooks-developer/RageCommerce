@@ -32,6 +32,7 @@ export default async function HomePage() {
   const fontColor = homepage?.font_color  ?? "#d4af37";
   const heroFont  = homepage?.hero_font   ?? "Playfair Display";
   const logoUrl   = settings?.logo_url    ?? null;
+  const logoSpin  = !!(settings as any)?.logo_spin;
   const siteTitle = settings?.site_title  ?? "My Store";
 
   // Hero display name and tagline: use hero-specific fields, fall back to footer, then site title
@@ -89,6 +90,7 @@ export default async function HomePage() {
                 fill
                 sizes="(min-width: 768px) 144px, 112px"
                 className="object-contain"
+                style={logoSpin ? { animation: "spin 6s linear infinite" } : undefined}
               />
             </div>
           )}

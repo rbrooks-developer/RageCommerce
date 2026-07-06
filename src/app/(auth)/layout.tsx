@@ -51,6 +51,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       <Header
         siteTitle={settings?.site_title ?? "My Store"}
         logoUrl={settings?.logo_url ?? null}
+        logoSpin={!!(settings as any)?.logo_spin}
         navConfig={(settings?.nav_config as NavConfig) ?? { items: [] }}
         isLoggedIn={!!user}
         isAdmin={isAdmin}

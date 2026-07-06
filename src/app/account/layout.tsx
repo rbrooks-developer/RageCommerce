@@ -56,6 +56,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
       <Header
         siteTitle={settings?.site_title ?? "My Store"}
         logoUrl={settings?.logo_url ?? null}
+        logoSpin={!!(settings as any)?.logo_spin}
         navConfig={(settings?.nav_config as NavConfig) ?? { items: [] }}
         isLoggedIn={!!user}
         isAdmin={isAdmin}
