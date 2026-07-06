@@ -193,6 +193,8 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
       const trackingNumber: string = purchased.tracking_code ?? "";
       const labelUrl: string = purchased.postage_label?.label_url ?? "";
       const shipmentId: string = purchased.id ?? "";
+      const customsFormUrl: string | null =
+        (purchased.forms as any[] | null)?.find((f: any) => f.form_type === "customs")?.form_url ?? null;
 
       // Update order
       await supabase
@@ -201,6 +203,7 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
           status: "shipped",
           tracking_number: trackingNumber,
           shipping_label_url: labelUrl,
+          customs_form_url: customsFormUrl,
           easypost_shipment_id: shipmentId,
         })
         .eq("id", orderId);
@@ -267,6 +270,7 @@ export async function voidLabel(orderId: string): Promise<{ success: boolean; er
       status: "paid",
       tracking_number: null,
       shipping_label_url: null,
+      customs_form_url: null,
       easypost_shipment_id: null,
     })
     .eq("id", orderId);

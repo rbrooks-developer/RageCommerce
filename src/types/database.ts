@@ -161,6 +161,7 @@ export interface Database {
           signature_required: boolean;
           tracking_number: string | null;
           shipping_label_url: string | null;
+          customs_form_url: string | null;
           easypost_shipment_id: string | null;
           shipping_name: string;
           shipping_address_line1: string;
@@ -189,6 +190,7 @@ export interface Database {
           signature_required?: boolean;
           tracking_number?: string | null;
           shipping_label_url?: string | null;
+          customs_form_url?: string | null;
           easypost_shipment_id?: string | null;
           shipping_name: string;
           shipping_address_line1: string;
@@ -204,6 +206,7 @@ export interface Database {
           status?: OrderStatus;
           tracking_number?: string | null;
           shipping_label_url?: string | null;
+          customs_form_url?: string | null;
           easypost_shipment_id?: string | null;
           refunded_amount?: number;
           updated_at?: string;

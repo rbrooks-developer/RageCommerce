@@ -101,6 +101,16 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 Download Label PDF
               </a>
             )}
+            {order.customs_form_url && (
+              <a
+                href={order.customs_form_url}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm text-amber-800 hover:bg-amber-100 transition-colors"
+              >
+                Download Customs Form
+              </a>
+            )}
           </div>
         </div>
       )}
