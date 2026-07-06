@@ -30,9 +30,12 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     ...(faviconUrl ? {
       icons: {
-        icon: [{ url: faviconUrl }],
-        apple: [{ url: faviconUrl }],
-        shortcut: [{ url: faviconUrl }],
+        icon: [
+          { url: "/api/favicon?size=32",  sizes: "32x32",  type: "image/png" },
+          { url: "/api/favicon?size=192", sizes: "192x192", type: "image/png" },
+        ],
+        apple: [{ url: "/api/favicon?size=180", sizes: "180x180", type: "image/png" }],
+        shortcut: [{ url: "/api/favicon?size=32", type: "image/png" }],
       },
     } : {}),
   };

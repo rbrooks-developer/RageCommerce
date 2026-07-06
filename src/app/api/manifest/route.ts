@@ -5,6 +5,7 @@ export async function GET() {
   const settings = await getSettings();
   const faviconUrl = settings?.favicon_url ?? null;
   const siteTitle  = settings?.site_title  ?? "My Store";
+  const appUrl     = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
   const manifest = {
     name: siteTitle,
@@ -15,7 +16,8 @@ export async function GET() {
     theme_color: "#ffffff",
     icons: faviconUrl
       ? [
-          { src: faviconUrl, sizes: "any", type: "image/png", purpose: "any maskable" },
+          { src: `${appUrl}/api/favicon?size=192`, sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: `${appUrl}/api/favicon?size=512`, sizes: "512x512", type: "image/png", purpose: "maskable" },
         ]
       : [],
   };
