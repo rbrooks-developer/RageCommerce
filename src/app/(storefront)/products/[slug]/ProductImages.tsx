@@ -86,11 +86,12 @@ export function ProductImages({ images, name }: { images: string[]; name: string
       {/* Desktop: hover-zoom */}
       <div
         ref={containerRef}
-        className="product-zoom-container relative aspect-square overflow-hidden rounded-lg cursor-crosshair hidden lg:block"
+        className="product-zoom-container relative aspect-square overflow-hidden rounded-lg cursor-zoom-in hidden lg:block"
         style={{ zIndex: 46, isolation: "isolate" }}
         onMouseEnter={(e) => zoomIn(e.clientX, e.clientY)}
         onMouseMove={(e) => pan(e.clientX, e.clientY)}
         onMouseLeave={zoomOut}
+        onClick={() => setLightboxOpen(true)}
       >
         <div
           ref={wrapperRef}
