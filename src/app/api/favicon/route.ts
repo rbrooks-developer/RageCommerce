@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     const buffer = Buffer.from(await res.arrayBuffer());
     const png = await sharp(buffer).resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
 
-    return new NextResponse(png, {
+    return new NextResponse(new Uint8Array(png), {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "public, max-age=86400",
