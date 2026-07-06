@@ -32,15 +32,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const product = data as Pick<Product, "name" | "seo_title" | "seo_description" | "images">;
   const settings = await getSettings();
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const title = product.seo_title || `${product.name} | ${settings?.site_title ?? "Store"}`;
+  const description = product.seo_description || undefined;
   return {
-    title: product.seo_title ?? `${product.name} | ${settings?.site_title ?? "Store"}`,
-    description: product.seo_description ?? undefined,
+    title,
+    description,
     alternates: { canonical: `${appUrl}/products/${slug}` },
     openGraph: {
       type: "website",
       url: `${appUrl}/products/${slug}`,
-      title: product.seo_title ?? product.name,
-      description: product.seo_description ?? undefined,
+      title: product.seo_title || product.name,
+      description,
       images: (product.images as string[]).slice(0, 1).map(ogImageUrl),
     },
   };
