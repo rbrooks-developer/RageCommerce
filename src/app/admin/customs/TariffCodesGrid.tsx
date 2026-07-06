@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { createTariffCode, updateTariffCode, deleteTariffCode } from "@/lib/actions/tariff-codes";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,12 @@ function AddRow({ onCancel }: { onCancel: () => void }) {
     { error?: string; success?: boolean } | null, (p: FormData) => void, boolean
   ];
 
+  useEffect(() => {
+    if (state?.success) onCancel();
+  }, [state?.success]);
+
   return (
-    <form action={async (fd) => { formAction(fd); if (!state?.error) onCancel(); }} className="flex items-center gap-2 px-4 py-2 border-t border-gray-100 bg-gray-50">
+    <form action={formAction} className="flex items-center gap-2 px-4 py-2 border-t border-gray-100 bg-gray-50">
       <Input name="hs_tariff_number" placeholder="e.g. 9705.00.0000" className="w-40 text-sm h-8" maxLength={20} required />
       <Input name="description" placeholder="Description" className="flex-1 text-sm h-8" maxLength={255} required />
       {state?.error && <p className="text-xs text-red-500 shrink-0">{state.error}</p>}
@@ -34,8 +38,12 @@ function EditRow({ code, onCancel }: { code: TariffCode; onCancel: () => void })
     { error?: string; success?: boolean } | null, (p: FormData) => void, boolean
   ];
 
+  useEffect(() => {
+    if (state?.success) onCancel();
+  }, [state?.success]);
+
   return (
-    <form action={async (fd) => { formAction(fd); if (!state?.error) onCancel(); }} className="flex items-center gap-2 px-4 py-2 bg-blue-50">
+    <form action={formAction} className="flex items-center gap-2 px-4 py-2 bg-blue-50">
       <Input name="hs_tariff_number" defaultValue={code.hs_tariff_number} className="w-40 text-sm h-8" maxLength={20} required />
       <Input name="description" defaultValue={code.description} className="flex-1 text-sm h-8" maxLength={255} required />
       {state?.error && <p className="text-xs text-red-500 shrink-0">{state.error}</p>}
