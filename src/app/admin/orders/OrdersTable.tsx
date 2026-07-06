@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { Badge, OrderStatusBadge } from "@/components/ui/badge";
-import { cancelOrder, generateLabels, updateOrderStatus } from "@/lib/actions/orders";
+import { cancelOrder, generateLabels } from "@/lib/actions/orders";
 import { Spinner } from "@/components/ui/spinner";
 import type { Order } from "@/types";
 
@@ -252,27 +252,69 @@ export function OrdersTable({ orders }: Props) {
   );
 }
 
+function CancelModal({
+  orderNumber,
+  onConfirm,
+  onClose,
+  isPending,
+}: {
+  orderNumber: string;
+  onConfirm: (restoreInventory: boolean) => void;
+  onClose: () => void;
+  isPending: boolean;
+}) {
+  const [restoreInventory, setRestoreInventory] = useState(true);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="w-full max-w-sm rounded-lg bg-white shadow-xl p-6 space-y-4 mx-4">
+        <h2 className="text-base font-semibold text-gray-900">Cancel Order #{orderNumber}?</h2>
+        <p className="text-sm text-gray-600">This will issue a full Stripe refund to the customer.</p>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={restoreInventory}
+            onChange={(e) => setRestoreInventory(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          <span className="text-sm text-gray-700">Restore inventory to website</span>
+        </label>
+        <p className="text-xs text-gray-400 -mt-2 pl-7">
+          Uncheck only if the item was already shipped and you do not expect it back.
+        </p>
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={() => onConfirm(restoreInventory)}
+            disabled={isPending}
+            className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+          >
+            {isPending ? <Spinner className="h-4 w-4 mx-auto" /> : "Confirm Cancel & Refund"}
+          </button>
+          <button
+            onClick={onClose}
+            disabled={isPending}
+            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function OrderRowActions({ order }: { order: OrderRow }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
-  function handleCancel() {
-    if (!confirm(`Cancel order #${order.id.slice(0, 8).toUpperCase()}? This will issue a full Stripe refund.`)) return;
+  function handleCancelConfirm(restoreInventory: boolean) {
     startTransition(async () => {
       try {
-        await cancelOrder(order.id);
+        await cancelOrder(order.id, restoreInventory);
+        setShowCancelModal(false);
       } catch (err: any) {
         setError(err.message);
-      }
-    });
-  }
-
-  function handleStatus(status: string) {
-    startTransition(async () => {
-      try {
-        await updateOrderStatus(order.id, status as any);
-      } catch (err: any) {
-        setError(err.message);
+        setShowCancelModal(false);
       }
     });
   }
@@ -290,23 +332,33 @@ function OrderRowActions({ order }: { order: OrderRow }) {
   if (isPending) return <Spinner className="h-4 w-4 text-gray-400" />;
 
   return (
-    <div className="flex items-center gap-2 text-xs">
-      {error && <span className="text-red-500 text-xs">{error}</span>}
-      {order.status === "paid" && (
-        <button onClick={handleSingleLabel} className="text-indigo-600 hover:underline">
-          Label
-        </button>
+    <>
+      {showCancelModal && (
+        <CancelModal
+          orderNumber={order.id.slice(0, 8).toUpperCase()}
+          onConfirm={handleCancelConfirm}
+          onClose={() => setShowCancelModal(false)}
+          isPending={isPending}
+        />
       )}
-      {(order.status === "paid" || order.status === "shipped") && (
-        <button onClick={handleCancel} className="text-red-500 hover:underline">
-          Cancel
-        </button>
-      )}
-      {order.shipping_label_url && (
-        <a href={order.shipping_label_url} target="_blank" rel="noreferrer" className="text-gray-500 hover:underline">
-          Label PDF
-        </a>
-      )}
-    </div>
+      <div className="flex items-center gap-2 text-xs">
+        {error && <span className="text-red-500 text-xs">{error}</span>}
+        {order.status === "paid" && (
+          <button onClick={handleSingleLabel} className="text-indigo-600 hover:underline">
+            Label
+          </button>
+        )}
+        {(order.status === "paid" || order.status === "shipped") && (
+          <button onClick={() => setShowCancelModal(true)} className="text-red-500 hover:underline">
+            Cancel
+          </button>
+        )}
+        {order.shipping_label_url && (
+          <a href={order.shipping_label_url} target="_blank" rel="noreferrer" className="text-gray-500 hover:underline">
+            Label PDF
+          </a>
+        )}
+      </div>
+    </>
   );
 }
