@@ -57,9 +57,9 @@ function parseItem(raw: any): TradingItem | null {
   const price = parseFloat(String(raw.StartPrice ?? 0));
   if (price <= 0) return null;
 
-  // Remaining inventory
+  // Remaining inventory — QuantitySold is nested under SellingStatus, not at item root
   const totalQty = parseInt(String(raw.Quantity ?? 0), 10);
-  const soldQty  = parseInt(String(raw.QuantitySold ?? 0), 10);
+  const soldQty  = parseInt(String(raw.SellingStatus?.QuantitySold ?? 0), 10);
   const inventory = Math.max(0, totalQty - soldQty);
 
   // Description — HTML stripped to plain text
@@ -298,8 +298,8 @@ async function getEbayItemStatus(
 </GetItemRequest>`);
 
   const { response } = parseAck(xml, "GetItemResponse");
-  const totalQty  = parseInt(String(response?.Item?.Quantity      ?? 0), 10);
-  const soldQty   = parseInt(String(response?.Item?.QuantitySold  ?? 0), 10);
+  const totalQty  = parseInt(String(response?.Item?.Quantity                        ?? 0), 10);
+  const soldQty   = parseInt(String(response?.Item?.SellingStatus?.QuantitySold ?? 0), 10);
   const status    = String(response?.Item?.SellingStatus?.ListingStatus ?? "").toLowerCase();
   return { quantity: Math.max(0, totalQty - soldQty), isActive: status === "active" };
 }
