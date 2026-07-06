@@ -244,7 +244,9 @@ export interface Database {
           meta_title: string | null;
           meta_description: string | null;
           logo_url: string | null;
-          logo_spin: boolean | null;
+          logo_spin_header: boolean | null;
+          logo_spin_hero: boolean | null;
+          logo_spin_footer: boolean | null;
           favicon_url: string | null;
           bg_color: string;
           font_color: string;
@@ -269,7 +271,9 @@ export interface Database {
           meta_title?: string | null;
           meta_description?: string | null;
           logo_url?: string | null;
-          logo_spin?: boolean | null;
+          logo_spin_header?: boolean | null;
+          logo_spin_hero?: boolean | null;
+          logo_spin_footer?: boolean | null;
           favicon_url?: string | null;
           bg_color?: string;
           font_color?: string;
@@ -293,7 +297,9 @@ export interface Database {
           meta_title?: string | null;
           meta_description?: string | null;
           logo_url?: string | null;
-          logo_spin?: boolean | null;
+          logo_spin_header?: boolean | null;
+          logo_spin_hero?: boolean | null;
+          logo_spin_footer?: boolean | null;
           favicon_url?: string | null;
           bg_color?: string;
           font_color?: string;

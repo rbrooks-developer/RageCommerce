@@ -11,7 +11,7 @@ import type { NavConfig } from "@/types";
 interface HeaderProps {
   siteTitle: string;
   logoUrl: string | null;
-  logoSpin?: boolean;
+  logoSpin?: boolean; // spin in the sticky header
   navConfig: NavConfig;
   isLoggedIn: boolean;
   isAdmin?: boolean;

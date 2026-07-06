@@ -51,7 +51,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       <Header
         siteTitle={settings?.site_title ?? "My Store"}
         logoUrl={settings?.logo_url ?? null}
-        logoSpin={!!(settings as any)?.logo_spin}
+        logoSpin={!!(settings as any)?.logo_spin_header}
         navConfig={(settings?.nav_config as NavConfig) ?? { items: [] }}
         isLoggedIn={!!user}
         isAdmin={isAdmin}
@@ -77,6 +77,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       <Footer
         siteTitle={settings?.site_title ?? "My Store"}
         logoUrl={settings?.logo_url ?? null}
+        logoSpin={!!(settings as any)?.logo_spin_footer}
         footerConfig={(settings?.footer_config as FooterConfig) ?? { links: [], social: [], copyright_text: "" }}
         contactInfo={(settings?.contact_info as ContactInfo) ?? { email: null, phone: null, address: null }}
         bgColor={bgColor}

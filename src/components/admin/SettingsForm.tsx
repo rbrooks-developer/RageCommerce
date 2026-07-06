@@ -140,7 +140,9 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [showSitePassword, setShowSitePassword] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string[]>(defaultValues?.logo_url ? [defaultValues.logo_url] : []);
-  const [logoSpin, setLogoSpin] = useState<boolean>(!!(defaultValues as any)?.logo_spin);
+  const [logoSpinHeader, setLogoSpinHeader] = useState<boolean>(!!(defaultValues as any)?.logo_spin_header);
+  const [logoSpinHero, setLogoSpinHero] = useState<boolean>(!!(defaultValues as any)?.logo_spin_hero);
+  const [logoSpinFooter, setLogoSpinFooter] = useState<boolean>(!!(defaultValues as any)?.logo_spin_footer);
   const [faviconUrl, setFaviconUrl] = useState<string[]>(defaultValues?.favicon_url ? [defaultValues.favicon_url] : []);
 
   const homepage = defaultValues?.homepage_config as HomepageConfig | null;
@@ -224,7 +226,9 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
       meta_title: g("meta_title") || undefined,
       meta_description: g("meta_description") || undefined,
       logo_url: logoUrl[0] ?? null,
-      logo_spin: logoSpin,
+      logo_spin_header: logoSpinHeader,
+      logo_spin_hero: logoSpinHero,
+      logo_spin_footer: logoSpinFooter,
       favicon_url: faviconUrl[0] ?? null,
       tax_mode: taxMode as "stripe" | "flat_rate" | "none",
       tax_flat_rate: taxMode === "flat_rate" ? parseFloat(g("tax_flat_rate")) : undefined,
@@ -346,15 +350,23 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         <div>
           <Label>Logo</Label>
           <ImageUpload value={logoUrl} onChange={setLogoUrl} max={1} />
-          <label className="mt-2 flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={logoSpin}
-              onChange={(e) => setLogoSpin(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            <span className="text-sm text-gray-700">Spin logo (animated)</span>
-          </label>
+          <div className="mt-2 flex flex-wrap gap-4">
+            {([
+              ["Header", logoSpinHeader, setLogoSpinHeader],
+              ["Hero", logoSpinHero, setLogoSpinHero],
+              ["Footer", logoSpinFooter, setLogoSpinFooter],
+            ] as [string, boolean, (v: boolean) => void][]).map(([label, checked, setter]) => (
+              <label key={label} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => setter(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="text-sm text-gray-700">Spin in {label}</span>
+              </label>
+            ))}
+          </div>
         </div>
         <div><Label>Favicon <span className="text-gray-400 font-normal">(.ico, .png, .svg, .webp)</span></Label><ImageUpload value={faviconUrl} onChange={setFaviconUrl} max={1} bucket="site-assets" pathPrefix="site" /></div>
         <div>

@@ -5,6 +5,7 @@ import type { FooterConfig, ContactInfo } from "@/types";
 interface FooterProps {
   siteTitle: string;
   logoUrl: string | null;
+  logoSpin?: boolean;
   footerConfig: FooterConfig;
   contactInfo: ContactInfo;
   bgColor?: string;
@@ -14,6 +15,7 @@ interface FooterProps {
 export function Footer({
   siteTitle,
   logoUrl,
+  logoSpin = false,
   footerConfig,
   contactInfo,
   bgColor = "#ffffff",
@@ -40,6 +42,7 @@ export function Footer({
                 loading="lazy"
                 decoding="async"
                 className="h-16 w-auto opacity-90 hover:opacity-100 transition-opacity"
+                style={logoSpin ? { animation: "spin 6s linear infinite" } : undefined}
               />
             ) : (
               <span className="text-base font-bold tracking-[0.15em] uppercase" style={{ color: fontColor }}>

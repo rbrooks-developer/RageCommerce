@@ -32,7 +32,7 @@ export default async function HomePage() {
   const fontColor = homepage?.font_color  ?? "#d4af37";
   const heroFont  = homepage?.hero_font   ?? "Playfair Display";
   const logoUrl   = settings?.logo_url    ?? null;
-  const logoSpin  = !!(settings as any)?.logo_spin;
+  const logoSpin  = !!(settings as any)?.logo_spin_hero;
   const siteTitle = settings?.site_title  ?? "My Store";
 
   // Hero display name and tagline: use hero-specific fields, fall back to footer, then site title
