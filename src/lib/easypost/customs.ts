@@ -4,6 +4,7 @@ export type CustomsItemInput = {
   weightOz: number;
   unitValueUsd: number;
   originCountry: string;
+  hsTariffNumber?: string;
 };
 
 export function buildCustomsInfo(items: CustomsItemInput[], signer: string) {
@@ -18,6 +19,7 @@ export function buildCustomsInfo(items: CustomsItemInput[], signer: string) {
       weight: parseFloat((item.weightOz * item.quantity).toFixed(2)),
       value: parseFloat((item.unitValueUsd * item.quantity).toFixed(2)),
       origin_country: item.originCountry,
+      ...(item.hsTariffNumber ? { hs_tariff_number: item.hsTariffNumber } : {}),
     })),
   };
 }

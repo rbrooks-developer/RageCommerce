@@ -181,6 +181,20 @@ export function CategoryForm({
         )}
       </div>
 
+      {/* ── HS Tariff Number ── */}
+      <div>
+        <Label htmlFor="hs_tariff_number">HS Tariff Number</Label>
+        <Input
+          id="hs_tariff_number"
+          name="hs_tariff_number"
+          defaultValue={defaultValues?.hs_tariff_number ?? ""}
+          placeholder="e.g. 9705.00.0000"
+          error={errors?.hs_tariff_number?.[0]}
+          maxLength={20}
+        />
+        <p className="mt-1 text-xs text-gray-500">Used on international customs forms. 6–10 digit Harmonized System code.</p>
+      </div>
+
       <Button type="submit" loading={isPending}>{submitLabel}</Button>
 
       {/* ── eBay category picker modal ── */}

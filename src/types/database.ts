@@ -123,6 +123,7 @@ export interface Database {
           parent_id: string | null;
           ebay_category_id: string | null;
           ebay_category_name: string | null;
+          hs_tariff_number: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -133,6 +134,7 @@ export interface Database {
           parent_id?: string | null;
           ebay_category_id?: string | null;
           ebay_category_name?: string | null;
+          hs_tariff_number?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -142,6 +144,7 @@ export interface Database {
           parent_id?: string | null;
           ebay_category_id?: string | null;
           ebay_category_name?: string | null;
+          hs_tariff_number?: string | null;
           updated_at?: string;
         };
       };

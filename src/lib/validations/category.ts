@@ -6,6 +6,7 @@ export const categorySchema = z.object({
   parent_id: z.string().uuid().nullable().optional(),
   ebay_category_id:   z.string().nullable().optional(),
   ebay_category_name: z.string().nullable().optional(),
+  hs_tariff_number:   z.string().max(20).nullable().optional(),
 });
 
 export type CategoryInput = z.infer<typeof categorySchema>;

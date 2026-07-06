@@ -112,11 +112,11 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
       // Load order items with product dimensions
       const { data: itemsRaw } = await supabase
         .from("order_items")
-        .select("*, products(id, name, weight_oz, length_in, width_in, height_in)")
+        .select("*, products(id, name, weight_oz, length_in, width_in, height_in, category_id)")
         .eq("order_id", orderId);
 
       type ItemWithProduct = OrderItem & {
-        products: Pick<Product, "id" | "name" | "weight_oz" | "length_in" | "width_in" | "height_in"> | null;
+        products: Pick<Product, "id" | "name" | "weight_oz" | "length_in" | "width_in" | "height_in"> & { category_id: string | null } | null;
       };
       const items = (itemsRaw ?? []) as ItemWithProduct[];
 
@@ -137,6 +137,19 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
 
       const originCountry = storeAddress.country ?? "US";
       const isInternational = order.shipping_country !== originCountry;
+
+      let hsTariffMap: Record<string, string | null> = {};
+      if (isInternational) {
+        const categoryIds = [...new Set(items.map((i) => i.products?.category_id).filter(Boolean))] as string[];
+        if (categoryIds.length > 0) {
+          const { data: cats } = await supabase
+            .from("categories")
+            .select("id, hs_tariff_number")
+            .in("id", categoryIds);
+          hsTariffMap = Object.fromEntries((cats ?? []).map((c: any) => [c.id, c.hs_tariff_number ?? null]));
+        }
+      }
+
       const customsInfo = isInternational
         ? buildCustomsInfo(
             items.map((item) => ({
@@ -145,6 +158,7 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
               weightOz: Number(item.products?.weight_oz ?? 0),
               unitValueUsd: Number(item.price),
               originCountry,
+              hsTariffNumber: item.products?.category_id ? (hsTariffMap[item.products.category_id] ?? undefined) : undefined,
             })),
             storeAddress.name,
           )

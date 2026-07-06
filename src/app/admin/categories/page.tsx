@@ -52,7 +52,10 @@ export default async function CategoriesPage() {
                 <DeleteCategoryButton id={root.id} />
               </div>
             </div>
-            <p className="text-xs text-gray-400 mt-0.5">/{root.slug}</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              /{root.slug}
+              {root.hs_tariff_number && <span className="ml-2 font-mono text-gray-400">HS: {root.hs_tariff_number}</span>}
+            </p>
 
             {getChildren(root.id).map((child) => (
               <div key={child.id} className="ml-6 mt-3 border-l-2 border-gray-100 pl-4">
@@ -63,7 +66,10 @@ export default async function CategoriesPage() {
                     <DeleteCategoryButton id={child.id} />
                   </div>
                 </div>
-                <p className="text-xs text-gray-400">/{child.slug}</p>
+                <p className="text-xs text-gray-400">
+                  /{child.slug}
+                  {child.hs_tariff_number && <span className="ml-2 font-mono text-gray-400">HS: {child.hs_tariff_number}</span>}
+                </p>
 
                 {getGrandchildren(child.id).map((grand) => (
                   <div key={grand.id} className="ml-6 mt-2 border-l-2 border-gray-100 pl-4">
@@ -74,7 +80,10 @@ export default async function CategoriesPage() {
                         <DeleteCategoryButton id={grand.id} />
                       </div>
                     </div>
-                    <p className="text-xs text-gray-400">/{grand.slug}</p>
+                    <p className="text-xs text-gray-400">
+                      /{grand.slug}
+                      {grand.hs_tariff_number && <span className="ml-2 font-mono text-gray-400">HS: {grand.hs_tariff_number}</span>}
+                    </p>
                   </div>
                 ))}
               </div>

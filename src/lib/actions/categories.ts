@@ -18,6 +18,7 @@ export async function createCategory(_prevState: unknown, formData: FormData) {
     parent_id: formData.get("parent_id") || null,
     ebay_category_id:   formData.get("ebay_category_id")   || null,
     ebay_category_name: formData.get("ebay_category_name") || null,
+    hs_tariff_number:   formData.get("hs_tariff_number")   || null,
   });
 
   if (!parsed.success) {
@@ -44,6 +45,7 @@ export async function updateCategory(id: string, _prevState: unknown, formData: 
     parent_id: formData.get("parent_id") || null,
     ebay_category_id:   formData.get("ebay_category_id")   || null,
     ebay_category_name: formData.get("ebay_category_name") || null,
+    hs_tariff_number:   formData.get("hs_tariff_number")   || null,
   });
 
   if (!parsed.success) {

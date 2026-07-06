@@ -38,12 +38,12 @@ export async function POST(request: NextRequest) {
   const productIds = items.map((i) => i.productId);
   const { data: rawProducts } = await supabase
     .from("products")
-    .select("id, name, price, weight_oz, length_in, width_in, height_in")
+    .select("id, name, price, weight_oz, length_in, width_in, height_in, category_id")
     .in("id", productIds);
 
   const products = (rawProducts ?? []) as Pick<
     Product,
-    "id" | "name" | "price" | "weight_oz" | "length_in" | "width_in" | "height_in"
+    "id" | "name" | "price" | "weight_oz" | "length_in" | "width_in" | "height_in" | "category_id"
   >[];
 
   if (products.length === 0) {
@@ -81,17 +81,32 @@ export async function POST(request: NextRequest) {
 
   const originCountry = storeAddress.country ?? "US";
   const isInternational = address.country !== originCountry;
+
+  let hsTariffMap: Record<string, string | null> = {};
+  if (isInternational) {
+    const categoryIds = [...new Set(products.map((p) => (p as any).category_id).filter(Boolean))];
+    if (categoryIds.length > 0) {
+      const { data: cats } = await supabase
+        .from("categories")
+        .select("id, hs_tariff_number")
+        .in("id", categoryIds);
+      hsTariffMap = Object.fromEntries((cats ?? []).map((c: any) => [c.id, c.hs_tariff_number ?? null]));
+    }
+  }
+
   const customsInfo = isInternational
     ? buildCustomsInfo(
         items.flatMap((item) => {
           const product = products.find((p) => p.id === item.productId);
           if (!product) return [];
+          const hsTariffNumber = hsTariffMap[(product as any).category_id] ?? undefined;
           return [{
             description: product.name,
             quantity: item.quantity,
             weightOz: Number(product.weight_oz),
             unitValueUsd: Number(product.price),
             originCountry,
+            hsTariffNumber,
           }];
         }),
         storeAddress.name,
