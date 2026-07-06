@@ -1,12 +1,21 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { saveAnalyticsSettings } from "@/lib/actions/settings";
 import { CheckCircle, XCircle, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 
 export function AnalyticsDashboard({ lookerStudioUrl }: { lookerStudioUrl: string | null }) {
   const [state, formAction, pending] = useActionState(saveAnalyticsSettings, null);
   const [configOpen, setConfigOpen] = useState(!lookerStudioUrl);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state?.success) {
+      router.refresh();
+      setConfigOpen(false);
+    }
+  }, [state, router]);
 
   return (
     <div className="space-y-4">
@@ -54,7 +63,7 @@ export function AnalyticsDashboard({ lookerStudioUrl }: { lookerStudioUrl: strin
               {state?.success && (
                 <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800">
                   <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                  <span>Saved. Reload the page to see the updated report.</span>
+                  <span>Saved.</span>
                 </div>
               )}
               {state?.error && (
