@@ -183,6 +183,14 @@ export function CheckoutFlow({ allowedCountries, defaultShipping, initialPromo }
     const result = await applyPromoCode(promoInput.trim());
     setPromoLoading(false);
     if (!result.ok) { setPromoError(result.error ?? "Invalid promo code."); return; }
+
+    // Block free-shipping promos that don't allow international when country is non-US
+    if (result.promo!.discount_type === "free_shipping" && !result.promo!.allow_international && address.country !== "US") {
+      await removePromoCode();
+      setPromoError("This promo code is not valid for international orders.");
+      return;
+    }
+
     setAppliedPromo(result.promo!);
     setPromoInput("");
   }
@@ -244,7 +252,20 @@ export function CheckoutFlow({ allowedCountries, defaultShipping, initialPromo }
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ opacity: 0.75 }}>Country</label>
                 <select value={address.country}
-                  onChange={(e) => setAddress((a) => ({ ...a, country: e.target.value, state: "" }))}
+                  onChange={(e) => {
+                    const newCountry = e.target.value;
+                    setAddress((a) => ({ ...a, country: newCountry, state: "" }));
+                    if (
+                      appliedPromo?.discount_type === "free_shipping" &&
+                      appliedPromo.allow_international === false &&
+                      newCountry !== "US"
+                    ) {
+                      removePromoCode().then(() => {
+                        setAppliedPromo(null);
+                        setPromoError("This promo code is not valid for international orders and has been removed.");
+                      });
+                    }
+                  }}
                   className={inputClass} style={inputStyle}>
                   {allowedCountries.map((c) => (
                     <option key={c.code} value={c.code}>{c.name}</option>
