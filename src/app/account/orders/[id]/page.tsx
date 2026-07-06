@@ -160,6 +160,20 @@ export default async function AccountOrderPage({
             <span>Total</span>
             <span>{formatPrice(Number(order.total_price) * 100)}</span>
           </div>
+          {Number(order.refunded_amount) > 0 && (
+            <>
+              <div className="flex justify-between text-red-500">
+                <span>{Number(order.refunded_amount) >= Number(order.total_price) ? "Refunded" : "Partially refunded"}</span>
+                <span>-{formatPrice(Number(order.refunded_amount) * 100)}</span>
+              </div>
+              {Number(order.refunded_amount) < Number(order.total_price) && (
+                <div className="flex justify-between font-semibold text-gray-900 text-base pt-2 border-t border-gray-100">
+                  <span>Net paid</span>
+                  <span>{formatPrice((Number(order.total_price) - Number(order.refunded_amount)) * 100)}</span>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
