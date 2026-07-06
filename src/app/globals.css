@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@keyframes logo-spin-3d {
+  0%   { transform: perspective(600px) rotateY(0deg); }
+  100% { transform: perspective(600px) rotateY(360deg); }
+}
+
 /* Scoped dark variant — activates dark: classes inside [data-admin-theme="dark"] */
 @custom-variant dark (&:where([data-admin-theme="dark"], [data-admin-theme="dark"] *));
 

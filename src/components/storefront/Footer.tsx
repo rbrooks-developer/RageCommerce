@@ -42,7 +42,7 @@ export function Footer({
                 loading="lazy"
                 decoding="async"
                 className="h-16 w-auto opacity-90 hover:opacity-100 transition-opacity"
-                style={logoSpin ? { animation: "spin 6s linear infinite" } : undefined}
+                style={logoSpin ? { animation: "logo-spin-3d 3s linear infinite" } : undefined}
               />
             ) : (
               <span className="text-base font-bold tracking-[0.15em] uppercase" style={{ color: fontColor }}>

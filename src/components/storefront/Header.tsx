@@ -78,7 +78,7 @@ export function Header({ siteTitle, logoUrl, logoSpin = false, navConfig, isLogg
                 width={48}
                 height={48}
                 className="object-contain"
-                style={logoSpin ? { animation: "spin 6s linear infinite" } : undefined}
+                style={logoSpin ? { animation: "logo-spin-3d 3s linear infinite" } : undefined}
               />
             ) : (
               siteTitle
