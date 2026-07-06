@@ -18,6 +18,9 @@ interface SendOrderConfirmationOptions {
   shippingAddress: string;
   siteTitle: string;
   displayName?: string | null;
+  promoCode?: string | null;
+  discountAmount?: number;
+  shippingDiscount?: number;
 }
 
 export async function sendOrderConfirmation(opts: SendOrderConfirmationOptions) {
@@ -58,14 +61,15 @@ export async function sendOrderConfirmation(opts: SendOrderConfirmationOptions) 
         <tbody>${itemRows}</tbody>
       </table>
 
-      <div style="border-top:1px solid #e5e7eb;padding-top:16px;font-size:14px;space-y:4px">
+      <div style="border-top:1px solid #e5e7eb;padding-top:16px;font-size:14px">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="color:#6b7280">Subtotal</span>
           <span>$${opts.subtotal.toFixed(2)}</span>
         </div>
+        ${opts.discountAmount && opts.discountAmount > 0 ? `<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#16a34a">Promo${opts.promoCode ? ` (${opts.promoCode})` : " discount"}</span><span style="color:#16a34a">-$${opts.discountAmount.toFixed(2)}</span></div>` : ""}
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span style="color:#6b7280">Shipping</span>
-          <span>$${opts.shippingCost.toFixed(2)}</span>
+          <span style="color:#6b7280">Shipping${opts.shippingDiscount && opts.shippingDiscount > 0 && opts.promoCode ? ` (${opts.promoCode})` : ""}</span>
+          <span>${opts.shippingDiscount && opts.shippingDiscount >= opts.shippingCost ? '<span style="color:#16a34a">FREE</span>' : `$${(opts.shippingCost - (opts.shippingDiscount ?? 0)).toFixed(2)}`}</span>
         </div>
         ${opts.taxAmount > 0 ? `<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#6b7280">Tax</span><span>$${opts.taxAmount.toFixed(2)}</span></div>` : ""}
         <div style="display:flex;justify-content:space-between;font-weight:600;font-size:15px;margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb">

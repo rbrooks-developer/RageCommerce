@@ -153,9 +153,23 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <span>Subtotal</span>
             <span>{formatPrice(Number(order.subtotal) * 100)}</span>
           </div>
+          {Number(order.discount_amount) > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span>Promo {order.promo_code ? `(${order.promo_code})` : "discount"}</span>
+              <span>-{formatPrice(Number(order.discount_amount) * 100)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-gray-600">
-            <span>Shipping</span>
-            <span>{formatPrice(Number(order.shipping_cost) * 100)}</span>
+            <span>
+              Shipping
+              {Number(order.shipping_discount) > 0 && order.promo_code && (
+                <span className="ml-1 text-xs text-green-600">({order.promo_code})</span>
+              )}
+            </span>
+            {Number(order.shipping_discount) >= Number(order.shipping_cost)
+              ? <span className="text-green-600 font-medium">FREE</span>
+              : <span>{formatPrice((Number(order.shipping_cost) - Number(order.shipping_discount)) * 100)}</span>
+            }
           </div>
           {Number(order.tax_amount) > 0 && (
             <div className="flex justify-between text-gray-600">
