@@ -437,48 +437,60 @@ export function CheckoutFlow({ allowedCountries, defaultShipping, initialPromo }
         <div className="lg:w-72 shrink-0">
           <div className="rounded-lg p-5 sticky top-24 space-y-3" style={panelStyle}>
             <h3 className="font-semibold text-sm">Order Summary</h3>
-            <div className="space-y-1.5 text-sm">
-              <div className="flex justify-between" style={{ opacity: 0.7 }}><span>Subtotal</span><span>{formatPrice(subtotal * 100)}</span></div>
-              {appliedPromo && (() => {
-                const d = calculatePromoDiscount(appliedPromo, subtotal, shippingCost, address.country);
-                return (
-                  <>
-                    {d.discountAmount > 0 && (
-                      <div className="flex justify-between text-green-600 dark:text-green-400">
-                        <span>Promo ({appliedPromo.code})</span>
-                        <span>-{formatPrice(d.discountAmount * 100)}</span>
-                      </div>
-                    )}
-                    {d.shippingDiscount > 0 && (
-                      <div className="flex justify-between text-green-600 dark:text-green-400">
-                        <span>Shipping discount</span>
-                        <span>-{formatPrice(d.shippingDiscount * 100)}</span>
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
-              {selectedRate && (
-                <div className="flex justify-between" style={{ opacity: 0.7 }}>
-                  <span>Shipping</span><span>{formatPrice((parseFloat(selectedRate.rate) - insuranceFee) * 100)}</span>
+            {(() => {
+              const d = appliedPromo ? calculatePromoDiscount(appliedPromo, subtotal, shippingCost, address.country) : null;
+              const baseShipping = selectedRate ? parseFloat(selectedRate.rate) - insuranceFee : 0;
+
+              // Distribute shipping discount: base rate first, then insurance
+              let displayBaseShipping = baseShipping;
+              let displayInsurance = insuranceFee;
+              if (d && d.shippingDiscount > 0) {
+                const leftoverAfterBase = Math.max(0, d.shippingDiscount - baseShipping);
+                displayBaseShipping = Math.max(0, baseShipping - d.shippingDiscount);
+                displayInsurance = Math.max(0, insuranceFee - leftoverAfterBase);
+              }
+
+              const effectiveTotal = (subtotal - (d?.discountAmount ?? 0)) + (shippingCost - (d?.shippingDiscount ?? 0));
+
+              return (
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex justify-between" style={{ opacity: 0.7 }}>
+                    <span>Subtotal</span><span>{formatPrice(subtotal * 100)}</span>
+                  </div>
+                  {d && d.discountAmount > 0 && (
+                    <div className="flex justify-between text-green-600 dark:text-green-400">
+                      <span>Promo ({appliedPromo!.code})</span>
+                      <span>-{formatPrice(d.discountAmount * 100)}</span>
+                    </div>
+                  )}
+                  {selectedRate && (
+                    <div className="flex justify-between" style={d?.shippingDiscount ? {} : { opacity: 0.7 }}>
+                      <span>
+                        Shipping
+                        {d?.shippingDiscount ? <span className="ml-1.5 text-xs text-green-600 dark:text-green-400">({appliedPromo!.code})</span> : null}
+                      </span>
+                      {displayBaseShipping === 0
+                        ? <span className="text-green-600 dark:text-green-400 font-medium">FREE</span>
+                        : <span style={{ opacity: 0.7 }}>{formatPrice(displayBaseShipping * 100)}</span>
+                      }
+                    </div>
+                  )}
+                  {insuranceFee > 0 && (
+                    <div className="flex justify-between" style={d?.shippingDiscount ? {} : { opacity: 0.7 }}>
+                      <span>Insurance (1%)</span>
+                      {displayInsurance === 0
+                        ? <span className="text-green-600 dark:text-green-400 font-medium">FREE</span>
+                        : <span style={{ opacity: 0.7 }}>{formatPrice(displayInsurance * 100)}</span>
+                      }
+                    </div>
+                  )}
+                  <div className="flex justify-between font-semibold pt-1" style={dividerStyle}>
+                    <span>Total</span>
+                    <span>{formatPrice(Math.max(0, effectiveTotal) * 100)}</span>
+                  </div>
                 </div>
-              )}
-              {insuranceFee > 0 && (
-                <div className="flex justify-between" style={{ opacity: 0.7 }}>
-                  <span>Insurance (1%)</span><span>{formatPrice(insuranceFee * 100)}</span>
-                </div>
-              )}
-              <div className="flex justify-between font-semibold pt-1" style={dividerStyle}>
-                <span>Total</span>
-                <span>
-                  {(() => {
-                    const d = appliedPromo ? calculatePromoDiscount(appliedPromo, subtotal, shippingCost, address.country) : null;
-                    const total = (subtotal - (d?.discountAmount ?? 0)) + (shippingCost - (d?.shippingDiscount ?? 0));
-                    return formatPrice(Math.max(0, total) * 100);
-                  })()}
-                </span>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* Promo code input */}
             <div className="pt-2" style={dividerStyle}>
