@@ -31,7 +31,7 @@ export default async function CheckoutPage() {
     if (promoResult.data) {
       const { data: promoData } = await sb
         .from("promos")
-        .select("code, discount_type, discount_value, max_shipping_discount")
+        .select("code, discount_type, discount_value, max_shipping_discount, allow_international")
         .eq("code", (promoResult.data as { promo_code: string }).promo_code)
         .eq("enabled", true)
         .maybeSingle();

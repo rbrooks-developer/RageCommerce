@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
       const promo = promoResult.promo;
       promoCode = promo.code;
       promoId = promo.id;
-      const discount = calculatePromoDiscount(promo, subtotal, shippingCost);
+      const discount = calculatePromoDiscount(promo, subtotal, shippingCost, shippingAddress.country);
       discountAmount = discount.discountAmount;
       shippingDiscount = discount.shippingDiscount;
     }

@@ -21,6 +21,7 @@ type Props = {
     maximum_order: number | null;
     max_uses: number | null;
     max_uses_per_customer: number | null;
+    allow_international: boolean;
   };
 };
 
@@ -41,6 +42,7 @@ export function PromoForm({ promo }: Props) {
   const [maxShippingDiscount, setMaxShippingDiscount] = useState(
     promo?.max_shipping_discount != null ? String(promo.max_shipping_discount) : ""
   );
+  const [allowInternational, setAllowInternational] = useState(promo?.allow_international ?? true);
   const [startDate, setStartDate] = useState(fmt(promo?.start_date ?? null));
   const [expirationDate, setExpirationDate] = useState(fmt(promo?.expiration_date ?? null));
   const [minimumOrder, setMinimumOrder] = useState(
@@ -78,6 +80,7 @@ export function PromoForm({ promo }: Props) {
       maximum_order: maximumOrder ? Number(maximumOrder) : null,
       max_uses: maxUses ? Number(maxUses) : null,
       max_uses_per_customer: maxUsesPerCustomer ? Number(maxUsesPerCustomer) : null,
+      allow_international: allowInternational,
     };
 
     const result = isEdit
@@ -161,17 +164,30 @@ export function PromoForm({ promo }: Props) {
       )}
 
       {discountType === "free_shipping" && (
-        <div>
-          <label className={labelClass}>Max Shipping Discount (leave blank for full discount)</label>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={maxShippingDiscount}
-            onChange={(e) => setMaxShippingDiscount(e.target.value)}
-            className={inputClass}
-            placeholder="e.g. 10.00"
-          />
+        <div className="space-y-3">
+          <div>
+            <label className={labelClass}>Max Shipping Discount (leave blank for full discount)</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={maxShippingDiscount}
+              onChange={(e) => setMaxShippingDiscount(e.target.value)}
+              className={inputClass}
+              placeholder="e.g. 10.00"
+            />
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={allowInternational}
+              onChange={(e) => setAllowInternational(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-indigo-600"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Allow on international orders
+            </span>
+          </label>
         </div>
       )}
 

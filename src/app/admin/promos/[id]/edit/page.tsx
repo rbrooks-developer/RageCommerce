@@ -10,7 +10,7 @@ export default async function EditPromoPage({ params }: { params: Promise<{ id: 
   const sb = createServiceClient();
   const { data } = await sb
     .from("promos")
-    .select("id, code, description, enabled, discount_type, discount_value, max_shipping_discount, start_date, expiration_date, minimum_order, maximum_order, max_uses, max_uses_per_customer")
+    .select("id, code, description, enabled, discount_type, discount_value, max_shipping_discount, start_date, expiration_date, minimum_order, maximum_order, max_uses, max_uses_per_customer, allow_international")
     .eq("id", id)
     .maybeSingle();
 

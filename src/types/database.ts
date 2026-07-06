@@ -389,6 +389,7 @@ export interface Database {
           max_uses: number | null;
           current_uses: number;
           max_uses_per_customer: number | null;
+          allow_international: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -407,6 +408,7 @@ export interface Database {
           max_uses?: number | null;
           current_uses?: number;
           max_uses_per_customer?: number | null;
+          allow_international?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -424,6 +426,7 @@ export interface Database {
           max_uses?: number | null;
           current_uses?: number;
           max_uses_per_customer?: number | null;
+          allow_international?: boolean;
           updated_at?: string;
         };
       };

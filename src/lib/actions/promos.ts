@@ -10,6 +10,7 @@ export type AppliedPromo = {
   discount_type: PromoDiscountType;
   discount_value: number;
   max_shipping_discount: number | null;
+  allow_international: boolean;
 };
 
 export type PromoBanner = {
@@ -33,6 +34,7 @@ export type PromoFormData = {
   maximum_order: number | null;
   max_uses: number | null;
   max_uses_per_customer: number | null;
+  allow_international: boolean;
 };
 
 // ─── Admin: promo CRUD ────────────────────────────────────────────────────────
@@ -132,6 +134,7 @@ export async function applyPromoCode(code: string): Promise<{
       discount_type: result.promo.discount_type,
       discount_value: result.promo.discount_value,
       max_shipping_discount: result.promo.max_shipping_discount,
+      allow_international: result.promo.allow_international ?? true,
     },
   };
 }

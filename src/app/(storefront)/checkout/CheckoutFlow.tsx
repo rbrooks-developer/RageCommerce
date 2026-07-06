@@ -419,7 +419,7 @@ export function CheckoutFlow({ allowedCountries, defaultShipping, initialPromo }
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between" style={{ opacity: 0.7 }}><span>Subtotal</span><span>{formatPrice(subtotal * 100)}</span></div>
               {appliedPromo && (() => {
-                const d = calculatePromoDiscount(appliedPromo, subtotal, shippingCost);
+                const d = calculatePromoDiscount(appliedPromo, subtotal, shippingCost, address.country);
                 return (
                   <>
                     {d.discountAmount > 0 && (
@@ -451,7 +451,7 @@ export function CheckoutFlow({ allowedCountries, defaultShipping, initialPromo }
                 <span>Total</span>
                 <span>
                   {(() => {
-                    const d = appliedPromo ? calculatePromoDiscount(appliedPromo, subtotal, shippingCost) : null;
+                    const d = appliedPromo ? calculatePromoDiscount(appliedPromo, subtotal, shippingCost, address.country) : null;
                     const total = (subtotal - (d?.discountAmount ?? 0)) + (shippingCost - (d?.shippingDiscount ?? 0));
                     return formatPrice(Math.max(0, total) * 100);
                   })()}

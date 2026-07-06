@@ -4,6 +4,7 @@ export type PromoForCalc = {
   discount_type: PromoDiscountType;
   discount_value: number;
   max_shipping_discount: number | null;
+  allow_international?: boolean;
 };
 
 export type PromoDiscount = {
@@ -14,7 +15,8 @@ export type PromoDiscount = {
 export function calculatePromoDiscount(
   promo: PromoForCalc,
   subtotal: number,
-  shippingCost: number
+  shippingCost: number,
+  shippingCountry?: string
 ): PromoDiscount {
   switch (promo.discount_type) {
     case "percentage": {
@@ -24,6 +26,10 @@ export function calculatePromoDiscount(
     case "fixed":
       return { discountAmount: Math.min(promo.discount_value, subtotal), shippingDiscount: 0 };
     case "free_shipping": {
+      // Skip discount for international orders when not allowed
+      if (promo.allow_international === false && shippingCountry && shippingCountry !== "US") {
+        return { discountAmount: 0, shippingDiscount: 0 };
+      }
       const shippingDiscount =
         promo.max_shipping_discount != null
           ? Math.min(shippingCost, promo.max_shipping_discount)
