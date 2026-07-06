@@ -17,11 +17,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();
   const homepage = settings?.homepage_config as import("@/types").HomepageConfig | null;
   const ogImage = homepage?.og_image_url ?? settings?.logo_url ?? null;
+  const faviconUrl = settings?.favicon_url ?? null;
   return {
-    // Lets every page below resolve relative metadata URLs (canonical,
-    // openGraph.images, etc.) to absolute ones even if a page forgets to
-    // (or NEXT_PUBLIC_APP_URL is ever unset) — without this, those fields
-    // silently fall back to relative/localhost URLs in production.
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
     title: { default: settings?.site_title ?? "My Store", template: `%s | ${settings?.site_title ?? "My Store"}` },
     description: settings?.meta_description ?? undefined,
@@ -31,6 +28,13 @@ export async function generateMetadata(): Promise<Metadata> {
       url: process.env.NEXT_PUBLIC_APP_URL ?? "",
       ...(ogImage ? { images: [ogImageUrl(ogImage)] } : {}),
     },
+    ...(faviconUrl ? {
+      icons: {
+        icon: [{ url: faviconUrl }],
+        apple: [{ url: faviconUrl }],
+        shortcut: [{ url: faviconUrl }],
+      },
+    } : {}),
   };
 }
 
@@ -106,24 +110,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       {/* React 19 hoists <link> elements to <head> automatically — no manual <head> wrapper needed */}
-      {faviconUrl && (
-        <>
-          <link
-            rel="icon"
-            href={faviconUrl}
-            type={
-              /\.svg$/i.test(faviconUrl) ? "image/svg+xml" :
-              /\.png$/i.test(faviconUrl) ? "image/png" :
-              /\.(jpg|jpeg)$/i.test(faviconUrl) ? "image/jpeg" :
-              "image/x-icon"
-            }
-            sizes="any"
-          />
-          <link rel="apple-touch-icon" href={faviconUrl} />
-          <link rel="shortcut icon" href={faviconUrl} />
-          <link rel="manifest" href="/api/manifest" />
-        </>
-      )}
+      {faviconUrl && <link rel="manifest" href="/api/manifest" />}
       {(googleFontUrl || heroFontUrl) && (
         <>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
