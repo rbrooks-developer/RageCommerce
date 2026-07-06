@@ -40,9 +40,19 @@ export async function updateSettings(data: SiteSettingsInput) {
 
   const supabase = await createClient();
 
+  // Preserve keys in tracking_config that the settings form doesn't know about
+  // (e.g. looker_studio_url saved separately from the analytics page).
+  const { data: current } = await supabase
+    .from("site_settings")
+    .select("tracking_config")
+    .eq("id", 1)
+    .single();
+  const existingTracking = (current as any)?.tracking_config ?? {};
+  const mergedTracking = { ...existingTracking, ...parsed.data.tracking_config };
+
   const { error } = await supabase
     .from("site_settings")
-    .update(parsed.data as any)
+    .update({ ...parsed.data, tracking_config: mergedTracking } as any)
     .eq("id", 1);
 
   if (error) return { error: { _form: [error.message] } };
