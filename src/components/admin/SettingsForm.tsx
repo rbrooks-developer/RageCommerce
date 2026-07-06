@@ -467,7 +467,7 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
       <Section title="Hero">
         <div>
           <Label htmlFor="hero_display_name">Display Name <span className="text-gray-400 font-normal">(large title text on homepage)</span></Label>
-          <Input id="hero_display_name" name="hero_display_name" defaultValue={homepage?.hero_display_name ?? ""} placeholder="e.g. GODLY COMICS" />
+          <Input id="hero_display_name" name="hero_display_name" defaultValue={homepage?.hero_display_name ?? ""} placeholder="e.g. Business Name" />
         </div>
         <div>
           <Label htmlFor="hero_tagline">Tagline <span className="text-gray-400 font-normal">(small text below title)</span></Label>
