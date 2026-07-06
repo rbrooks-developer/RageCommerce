@@ -77,9 +77,9 @@ export function ImageUpload({ value, onChange, max = 10, bucket = "product-image
             <button
               type="button"
               onClick={() => remove(url)}
-              className="absolute top-1 right-1 rounded-full bg-white/90 p-0.5 shadow hover:bg-white"
+              className="absolute top-1 right-1 rounded-full bg-white/90 p-0.5 shadow hover:bg-white dark:bg-gray-700 dark:hover:bg-gray-600"
             >
-              <X className="h-3 w-3 text-gray-700" />
+              <X className="h-3 w-3 text-gray-700 dark:text-gray-100" />
             </button>
           </div>
         ))}
