@@ -7,7 +7,11 @@
 [data-admin-theme="dark"] {
   color-scheme: dark;
 
-  /* Backgrounds */
+  /* Override the bg-gray-50 on the layout wrapper itself (same element as the attribute) */
+  background-color: #111827;
+  color: #f9fafb;
+
+  /* Backgrounds — descendants */
   .bg-white         { background-color: #1f2937; }
   .bg-gray-50       { background-color: #111827; }
   .bg-gray-100      { background-color: #374151; }
@@ -25,6 +29,7 @@
   .border-gray-100  { border-color: #374151; }
   .border-gray-200  { border-color: #374151; }
   .border-gray-300  { border-color: #4b5563; }
+  .divide-gray-100 > * + * { border-color: #374151; }
   .divide-gray-200 > * + * { border-color: #374151; }
 
   /* Inputs / selects / textareas */
