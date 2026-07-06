@@ -2,12 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { Spinner } from "@/components/ui/spinner";
-import { cancelOrder, generateLabels, updateOrderStatus, voidLabel } from "@/lib/actions/orders";
+import { cancelOrder, clearLabelFromOrder, generateLabels, updateOrderStatus, voidLabel } from "@/lib/actions/orders";
 import type { Order } from "@/types";
 
 export function OrderDetailActions({ order }: { order: Order }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [voidEasypostFailed, setVoidEasypostFailed] = useState(false);
   const [labelResult, setLabelResult] = useState<{ trackingNumber: string; labelUrl: string } | null>(null);
 
   function handleCancel() {
@@ -38,8 +39,26 @@ export function OrderDetailActions({ order }: { order: Order }) {
     startTransition(async () => {
       try {
         setError(null);
+        setVoidEasypostFailed(false);
         const result = await voidLabel(order.id);
-        if (!result.success) setError(result.error ?? "Failed to void label");
+        if (!result.success) {
+          setError(result.error ?? "Failed to void label");
+          if (result.easypostError) setVoidEasypostFailed(true);
+        }
+      } catch (err: any) {
+        setError(err.message);
+      }
+    });
+  }
+
+  function handleClearLabel() {
+    if (!confirm("Remove this label from the order without a refund? The order will return to paid status. Only do this if EasyPost already denied the refund.")) return;
+    startTransition(async () => {
+      try {
+        setError(null);
+        setVoidEasypostFailed(false);
+        const result = await clearLabelFromOrder(order.id);
+        if (!result.success) setError(result.error ?? "Failed to clear label");
       } catch (err: any) {
         setError(err.message);
       }
@@ -73,7 +92,14 @@ export function OrderDetailActions({ order }: { order: Order }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 space-y-3">
       {error && (
-        <p className="text-sm text-red-500 bg-red-50 rounded-md px-3 py-2">{error}</p>
+        <div className="space-y-2">
+          <p className="text-sm text-red-500 bg-red-50 rounded-md px-3 py-2">{error}</p>
+          {voidEasypostFailed && (
+            <p className="text-xs text-gray-500 px-1">
+              EasyPost denied the refund (carrier already has the package). You can remove the label from this order without a refund if needed.
+            </p>
+          )}
+        </div>
       )}
       {labelResult && (
         <div className="text-sm text-green-700 bg-green-50 rounded-md px-3 py-2 space-y-1">
@@ -105,6 +131,14 @@ export function OrderDetailActions({ order }: { order: Order }) {
             className="rounded-md border border-orange-200 px-4 py-2 text-sm font-medium text-orange-600 hover:bg-orange-50 transition-colors"
           >
             Void Label & Get Refund
+          </button>
+        )}
+        {voidEasypostFailed && !isPending && (
+          <button
+            onClick={handleClearLabel}
+            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Remove Label (No Refund)
           </button>
         )}
 

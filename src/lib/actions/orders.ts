@@ -241,7 +241,7 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
   return results;
 }
 
-export async function voidLabel(orderId: string): Promise<{ success: boolean; error?: string }> {
+export async function voidLabel(orderId: string): Promise<{ success: boolean; error?: string; easypostError?: boolean }> {
   const auth = await requireAdmin();
   if (auth.error) return { success: false, error: auth.error };
 
@@ -261,8 +261,31 @@ export async function voidLabel(orderId: string): Promise<{ success: boolean; er
     const easypost = getEasyPostClient() as any;
     await easypost.Shipment.refund(order.easypost_shipment_id);
   } catch (err: any) {
-    return { success: false, error: err.message ?? "EasyPost refund failed" };
+    return { success: false, error: err.message ?? "EasyPost refund failed", easypostError: true };
   }
+
+  await supabase
+    .from("orders")
+    .update({
+      status: "paid",
+      tracking_number: null,
+      shipping_label_url: null,
+      customs_form_url: null,
+      easypost_shipment_id: null,
+    })
+    .eq("id", orderId);
+
+  revalidatePath(`/admin/orders/${orderId}`);
+  revalidatePath("/admin/orders");
+  refresh();
+  return { success: true };
+}
+
+export async function clearLabelFromOrder(orderId: string): Promise<{ success: boolean; error?: string }> {
+  const auth = await requireAdmin();
+  if (auth.error) return { success: false, error: auth.error };
+
+  const supabase = createServiceClient();
 
   await supabase
     .from("orders")
