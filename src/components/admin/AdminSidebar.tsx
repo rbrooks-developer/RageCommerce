@@ -115,7 +115,7 @@ export function AdminSidebar({ unreadNotifications, pendingOffers, isDark }: { u
   return (
     <>
       {/* Mobile header bar */}
-      <div className="flex h-16 items-center border-b bg-white px-4 lg:hidden">
+      <div className="flex h-16 items-center border-b bg-white dark:bg-gray-900 dark:border-gray-700 px-4 lg:hidden">
         <button
           onClick={() => setMobileOpen(true)}
           className="p-2 rounded-md hover:bg-gray-100"
@@ -142,7 +142,7 @@ export function AdminSidebar({ unreadNotifications, pendingOffers, isDark }: { u
       {/* Mobile slide-in */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transition-transform lg:hidden",
+          "fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-900 shadow-xl transition-transform lg:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -150,7 +150,7 @@ export function AdminSidebar({ unreadNotifications, pendingOffers, isDark }: { u
       </div>
 
       {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:bg-white">
+      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:border-r lg:bg-white dark:bg-gray-900 dark:border-gray-700">
         <SidebarContent unreadNotifications={unreadNotifications} pendingOffers={pendingOffers} isDark={isDark} />
       </div>
     </>
