@@ -17,15 +17,22 @@ interface Props {
   orders: OrderRow[];
 }
 
+function canSelect(o: OrderRow) {
+  return (
+    o.status !== "refunded" &&
+    o.status !== "partially_refunded" &&
+    o.status !== "pending" &&
+    (o.status === "paid" || !!o.shipping_label_url)
+  );
+}
+
 export function OrdersTable({ orders }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
   const [results, setResults] = useState<{ id: string; error?: string }[]>([]);
 
-  // Selectable: paid orders (generate labels) OR any order with an existing label (print)
-  const selectableIds = orders
-    .filter((o) => o.status === "paid" || !!o.shipping_label_url)
-    .map((o) => o.id);
+  // Selectable: paid or shipped orders only (not pending, refunded, or partially_refunded)
+  const selectableIds = orders.filter(canSelect).map((o) => o.id);
   const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selected.has(id));
 
   function toggleAll() {
@@ -168,7 +175,7 @@ export function OrdersTable({ orders }: Props) {
             <div className="flex items-center gap-3 pt-1 border-t border-gray-100">
               <Link href={`/admin/orders/${order.id}`} className="text-sm text-blue-600 hover:underline">View</Link>
               <OrderRowActions order={order} />
-              {(order.status === "paid" || !!order.shipping_label_url) && (
+              {canSelect(order) && (
                 <label className="ml-auto flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
                   <input
                     type="checkbox"
@@ -217,7 +224,7 @@ export function OrdersTable({ orders }: Props) {
               {orders.map((order) => (
                 <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="px-4 py-3">
-                    {(order.status === "paid" || !!order.shipping_label_url) && (
+                    {canSelect(order) && (
                       <input
                         type="checkbox"
                         checked={selected.has(order.id)}
