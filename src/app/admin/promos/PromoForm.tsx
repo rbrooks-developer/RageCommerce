@@ -59,7 +59,7 @@ export function PromoForm({ promo }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!code.trim()) { setError("Code is required."); return; }
-    if (!discountValue || isNaN(Number(discountValue)) || Number(discountValue) < 0) {
+    if (discountType !== "free_shipping" && (!discountValue || isNaN(Number(discountValue)) || Number(discountValue) < 0)) {
       setError("Discount value must be a valid number."); return;
     }
     setSaving(true);
@@ -70,7 +70,7 @@ export function PromoForm({ promo }: Props) {
       description,
       enabled,
       discount_type: discountType,
-      discount_value: Number(discountValue),
+      discount_value: discountType === "free_shipping" ? 0 : Number(discountValue),
       max_shipping_discount: maxShippingDiscount ? Number(maxShippingDiscount) : null,
       start_date: startDate ? new Date(startDate).toISOString() : null,
       expiration_date: expirationDate ? new Date(expirationDate).toISOString() : null,
