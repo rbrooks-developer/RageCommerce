@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatPrice } from "@/lib/utils";
 import { Package, FolderOpen, ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
-import type { Order, Product } from "@/types";
+import type { Product } from "@/types";
 
 async function getStats() {
   const supabase = await createClient();
@@ -89,20 +89,8 @@ async function getStats() {
   };
 }
 
-type RecentOrder = Pick<Order, "id" | "status" | "total_price" | "created_at" | "shipping_name">;
-
-async function getRecentOrders(): Promise<RecentOrder[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("orders")
-    .select("id, status, total_price, created_at, shipping_name")
-    .order("created_at", { ascending: false })
-    .limit(5);
-  return (data ?? []) as RecentOrder[];
-}
-
 export default async function AdminDashboard() {
-  const [stats, recentOrders] = await Promise.all([getStats(), getRecentOrders()]);
+  const [stats] = await Promise.all([getStats()]);
 
   const profitValue = stats.profit === null
     ? "—"
@@ -143,29 +131,6 @@ export default async function AdminDashboard() {
         })}
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white">
-        <div className="border-b px-5 py-4">
-          <h2 className="font-semibold text-gray-900">Recent Orders</h2>
-        </div>
-        {recentOrders.length === 0 ? (
-          <p className="px-5 py-8 text-center text-sm text-gray-400">No orders yet.</p>
-        ) : (
-          <div className="divide-y">
-            {recentOrders.map((order) => (
-              <div key={order.id} className="flex items-center justify-between px-5 py-3 text-sm">
-                <div>
-                  <p className="font-medium text-gray-900">{order.shipping_name}</p>
-                  <p className="text-gray-400 text-xs">{new Date(order.created_at).toLocaleDateString()}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-gray-700">{formatPrice(Number(order.total_price) * 100)}</span>
-                  <span className="capitalize text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">{order.status}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }
