@@ -107,17 +107,22 @@ export default async function RootLayout({
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       {/* React 19 hoists <link> elements to <head> automatically — no manual <head> wrapper needed */}
       {faviconUrl && (
-        <link
-          rel="icon"
-          href={faviconUrl}
-          type={
-            /\.svg$/i.test(faviconUrl) ? "image/svg+xml" :
-            /\.png$/i.test(faviconUrl) ? "image/png" :
-            /\.(jpg|jpeg)$/i.test(faviconUrl) ? "image/jpeg" :
-            "image/x-icon"
-          }
-          sizes="any"
-        />
+        <>
+          <link
+            rel="icon"
+            href={faviconUrl}
+            type={
+              /\.svg$/i.test(faviconUrl) ? "image/svg+xml" :
+              /\.png$/i.test(faviconUrl) ? "image/png" :
+              /\.(jpg|jpeg)$/i.test(faviconUrl) ? "image/jpeg" :
+              "image/x-icon"
+            }
+            sizes="any"
+          />
+          <link rel="apple-touch-icon" href={faviconUrl} />
+          <link rel="shortcut icon" href={faviconUrl} />
+          <link rel="manifest" href="/api/manifest" />
+        </>
       )}
       {(googleFontUrl || heroFontUrl) && (
         <>
