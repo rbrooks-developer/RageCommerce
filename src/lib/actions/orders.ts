@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getStripeClient } from "@/lib/stripe/client";
 import { getEasyPostClient } from "@/lib/easypost/client";
 import { EASYPOST_MAX_INSURABLE_VALUE } from "@/lib/easypost/protection";
+import { buildCustomsInfo } from "@/lib/easypost/customs";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { getSettings } from "@/lib/data/settings";
 import { sendShippingUpdate } from "@/lib/emails/shippingUpdate";
@@ -134,6 +135,21 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
 
       const easypost = getEasyPostClient() as any;
 
+      const originCountry = storeAddress.country ?? "US";
+      const isInternational = order.shipping_country !== originCountry;
+      const customsInfo = isInternational
+        ? buildCustomsInfo(
+            items.map((item) => ({
+              description: item.products?.name ?? "Merchandise",
+              quantity: item.quantity,
+              weightOz: Number(item.products?.weight_oz ?? 0),
+              unitValueUsd: Number(item.price),
+              originCountry,
+            })),
+            storeAddress.name,
+          )
+        : null;
+
       const shipment = await easypost.Shipment.create({
         // Signature confirmation affects carrier pricing, so it has to be
         // requested up front — it can't be bolted on at purchase time.
@@ -166,6 +182,7 @@ export async function generateLabels(orderIds: string[]): Promise<LabelResult[]>
           width: maxWidth,
           height: maxHeight,
         },
+        ...(customsInfo ? { customs_info: customsInfo } : {}),
       });
 
       const lowestRate = shipment.lowestRate();

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/data/settings";
 import { resolveSubtotal } from "@/lib/cart/pricing";
 import { resolveShippingProtection, calculateInsuranceFee } from "@/lib/easypost/protection";
+import { buildCustomsInfo } from "@/lib/easypost/customs";
 import type { Product, StoreAddress } from "@/types";
 
 const requestSchema = z.object({
@@ -37,12 +38,12 @@ export async function POST(request: NextRequest) {
   const productIds = items.map((i) => i.productId);
   const { data: rawProducts } = await supabase
     .from("products")
-    .select("id, weight_oz, length_in, width_in, height_in")
+    .select("id, name, price, weight_oz, length_in, width_in, height_in")
     .in("id", productIds);
 
   const products = (rawProducts ?? []) as Pick<
     Product,
-    "id" | "weight_oz" | "length_in" | "width_in" | "height_in"
+    "id" | "name" | "price" | "weight_oz" | "length_in" | "width_in" | "height_in"
   >[];
 
   if (products.length === 0) {
@@ -78,6 +79,25 @@ export async function POST(request: NextRequest) {
   const { insuranceRequired, signatureRequired } = resolveShippingProtection(subtotal, settings);
   const insuranceFee = calculateInsuranceFee(subtotal, insuranceRequired);
 
+  const originCountry = storeAddress.country ?? "US";
+  const isInternational = address.country !== originCountry;
+  const customsInfo = isInternational
+    ? buildCustomsInfo(
+        items.flatMap((item) => {
+          const product = products.find((p) => p.id === item.productId);
+          if (!product) return [];
+          return [{
+            description: product.name,
+            quantity: item.quantity,
+            weightOz: Number(product.weight_oz),
+            unitValueUsd: Number(product.price),
+            originCountry,
+          }];
+        }),
+        storeAddress.name,
+      )
+    : null;
+
   try {
     const shipment = await (getEasyPostClient() as any).Shipment.create({
       to_address: {
@@ -105,6 +125,7 @@ export async function POST(request: NextRequest) {
         width: maxWidth,
         height: maxHeight,
       },
+      ...(customsInfo ? { customs_info: customsInfo } : {}),
       // Signature confirmation affects carrier pricing, so it must be set
       // before requesting rates — not applied after the fact at purchase time.
       ...(signatureRequired ? { options: { delivery_confirmation: "SIGNATURE" } } : {}),
