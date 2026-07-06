@@ -325,8 +325,13 @@ export async function POST(request: NextRequest) {
       // place inventory is restored for any refund, whether triggered by the
       // admin "Cancel & Refund" button or a refund issued directly in
       // Stripe, so it only ever happens once per order.
-      const alreadyShipped = !!refundedOrder?.tracking_number;
-      console.log(`[webhook] charge.refunded: alreadyShipped=${alreadyShipped} — ${alreadyShipped ? "SKIPPING inventory restore (has tracking_number)" : "will restore inventory"}`);
+      // If the admin cancelled the order before the refund fired, always restore
+      // inventory — the label may have been generated but the item never shipped.
+      // Only skip restoration when a label exists AND the order was NOT
+      // explicitly cancelled (e.g., a post-shipment refund from the Stripe dashboard).
+      const cancelledByAdmin = refundedOrder?.status === "cancelled";
+      const alreadyShipped = !cancelledByAdmin && !!refundedOrder?.tracking_number;
+      console.log(`[webhook] charge.refunded: cancelledByAdmin=${cancelledByAdmin} alreadyShipped=${alreadyShipped} — ${alreadyShipped ? "SKIPPING inventory restore (shipped, not cancelled)" : "will restore inventory"}`);
       if (!alreadyShipped) {
         const { data: itemsRaw } = await supabase
           .from("order_items")
