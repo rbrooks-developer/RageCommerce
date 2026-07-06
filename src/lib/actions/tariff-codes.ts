@@ -18,7 +18,7 @@ export async function createTariffCode(_prevState: unknown, formData: FormData) 
     hs_tariff_number: formData.get("hs_tariff_number"),
     description: formData.get("description"),
   });
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const supabase = await createClient();
   const { error } = await supabase.from("tariff_codes").insert(parsed.data as any);
@@ -37,7 +37,7 @@ export async function updateTariffCode(id: string, _prevState: unknown, formData
     hs_tariff_number: formData.get("hs_tariff_number"),
     description: formData.get("description"),
   });
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const supabase = await createClient();
   const { error } = await supabase.from("tariff_codes").update(parsed.data as any).eq("id", id);
