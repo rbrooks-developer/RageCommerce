@@ -12,12 +12,18 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();
   const homepage = settings?.homepage_config as import("@/types").HomepageConfig | null;
   const ogImage = homepage?.og_image_url ?? settings?.logo_url ?? null;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const title = settings?.meta_title ?? settings?.site_title ?? "Home";
+  const description = settings?.meta_description ?? undefined;
   return {
-    title: settings?.meta_title ?? settings?.site_title ?? "Home",
-    description: settings?.meta_description ?? undefined,
+    title,
+    description,
+    alternates: { canonical: appUrl || "/" },
     openGraph: {
-      title: settings?.meta_title ?? settings?.site_title ?? "Home",
-      description: settings?.meta_description ?? undefined,
+      type: "website",
+      url: appUrl || "/",
+      title,
+      description,
       images: ogImage ? [ogImageUrl(ogImage)] : [],
     },
   };

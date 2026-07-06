@@ -19,10 +19,18 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();
   const siteTitle = settings?.site_title ?? "Store";
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const title = `All Products | ${siteTitle}`;
+  const description = settings?.meta_description ?? `Shop all products at ${siteTitle}.`;
   return {
-    title: `All Products | ${siteTitle}`,
-    description: settings?.meta_description ?? `Shop all products at ${siteTitle}.`,
+    title,
+    description,
     alternates: { canonical: `${appUrl}/products` },
+    openGraph: {
+      type: "website",
+      url: `${appUrl}/products`,
+      title,
+      description,
+    },
   };
 }
 

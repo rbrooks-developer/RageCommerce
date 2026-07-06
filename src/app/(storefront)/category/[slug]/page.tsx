@@ -35,6 +35,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: `${category.name} | ${siteTitle}`,
     description: `Browse ${category.name} products at ${siteTitle}.`,
     alternates: { canonical: `${appUrl}/category/${slug}` },
+    openGraph: {
+      type: "website",
+      url: `${appUrl}/category/${slug}`,
+      title: `${category.name} | ${siteTitle}`,
+      description: `Browse ${category.name} products at ${siteTitle}.`,
+    },
   };
 }
 
