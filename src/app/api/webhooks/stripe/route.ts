@@ -261,7 +261,12 @@ export async function POST(request: NextRequest) {
         amount: number;
       };
 
-      if (!charge.payment_intent) break;
+      console.log(`[webhook] charge.refunded: payment_intent=${charge.payment_intent ?? "null"} amount=${charge.amount} amount_refunded=${charge.amount_refunded}`);
+
+      if (!charge.payment_intent) {
+        console.error("[webhook] charge.refunded: no payment_intent on charge — cannot look up order");
+        break;
+      }
 
       // Look up the order directly — faster and avoids a Stripe API round-trip
       const { data: orderRow } = await supabase
@@ -271,6 +276,8 @@ export async function POST(request: NextRequest) {
         .maybeSingle();
       const refundedOrder = orderRow as Order | null;
       const orderId = refundedOrder?.id;
+
+      console.log(`[webhook] charge.refunded: order lookup — id=${orderId ?? "NOT FOUND"} status=${refundedOrder?.status ?? "n/a"} tracking_number=${refundedOrder?.tracking_number ?? "null"}`);
 
       if (!orderId) {
         console.error("charge.refunded: no order found for payment_intent", charge.payment_intent);
@@ -319,19 +326,23 @@ export async function POST(request: NextRequest) {
       // admin "Cancel & Refund" button or a refund issued directly in
       // Stripe, so it only ever happens once per order.
       const alreadyShipped = !!refundedOrder?.tracking_number;
+      console.log(`[webhook] charge.refunded: alreadyShipped=${alreadyShipped} — ${alreadyShipped ? "SKIPPING inventory restore (has tracking_number)" : "will restore inventory"}`);
       if (!alreadyShipped) {
         const { data: itemsRaw } = await supabase
           .from("order_items")
           .select("product_id, quantity")
           .eq("order_id", orderId);
 
+        console.log(`[webhook] charge.refunded: restoring inventory for ${(itemsRaw ?? []).length} item(s)`);
         for (const item of (itemsRaw ?? []) as { product_id: string; quantity: number }[]) {
           const { error: invErr } = await supabase.rpc("increment_inventory", {
             product_id: item.product_id,
             amount: item.quantity,
           });
           if (invErr) {
-            console.error(`charge.refunded: inventory restore failed for ${item.product_id}:`, invErr.message);
+            console.error(`charge.refunded: inventory restore FAILED for product_id=${item.product_id} qty=${item.quantity}:`, invErr.message);
+          } else {
+            console.log(`[webhook] charge.refunded: inventory restored product_id=${item.product_id} +${item.quantity}`);
           }
         }
         console.log(`[webhook] inventory restored for order ${orderId}`);

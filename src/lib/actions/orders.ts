@@ -42,17 +42,26 @@ export async function cancelOrder(orderId: string) {
   }
 
   // Issue Stripe refund
+  console.log(`[cancelOrder] orderId=${orderId} status=${order.status} stripe_session_id=${order.stripe_session_id ?? "null"} stripe_payment_intent_id=${(order as any).stripe_payment_intent_id ?? "null"} tracking_number=${order.tracking_number ?? "null"}`);
+
   if (order.stripe_session_id) {
     try {
       const stripe = getStripeClient();
       const session = await stripe.checkout.sessions.retrieve(order.stripe_session_id);
       const paymentIntentId = session.payment_intent as string | null;
+      console.log(`[cancelOrder] session payment_intent=${paymentIntentId ?? "null"}`);
       if (paymentIntentId) {
-        await stripe.refunds.create({ payment_intent: paymentIntentId });
+        const refund = await stripe.refunds.create({ payment_intent: paymentIntentId });
+        console.log(`[cancelOrder] refund created id=${refund.id} status=${refund.status}`);
+      } else {
+        console.error(`[cancelOrder] WARNING: session has no payment_intent — no refund issued, webhook will NOT fire`);
       }
     } catch (err: any) {
+      console.error(`[cancelOrder] Stripe refund error: ${err.message}`);
       throw new Error(`Stripe refund failed: ${err.message}`);
     }
+  } else {
+    console.error(`[cancelOrder] WARNING: order has no stripe_session_id — no refund issued, webhook will NOT fire, inventory will NOT restore`);
   }
 
   // Set status immediately after the refund call returns, before any other
