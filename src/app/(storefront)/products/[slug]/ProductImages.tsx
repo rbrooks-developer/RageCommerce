@@ -140,8 +140,8 @@ export function ProductImages({ images, name }: { images: string[]; name: string
     <div className="space-y-3">
       <div
         ref={containerRef}
-        className="product-zoom-container relative aspect-square overflow-hidden rounded-lg cursor-crosshair"
-        style={{ backgroundColor: "var(--product-detail-bg, transparent)", zIndex: 46, isolation: "isolate", touchAction: "none" }}
+        className="product-zoom-container relative aspect-[3/4] lg:aspect-square overflow-hidden lg:rounded-lg cursor-crosshair"
+        style={{ backgroundColor: "transparent", zIndex: 46, isolation: "isolate", touchAction: "none" }}
         onMouseEnter={(e) => zoomIn(e.clientX, e.clientY)}
         onMouseMove={(e) => pan(e.clientX, e.clientY)}
         onMouseLeave={zoomOut}

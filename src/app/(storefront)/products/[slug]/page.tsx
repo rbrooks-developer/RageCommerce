@@ -185,14 +185,21 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <Breadcrumbs crumbs={breadcrumbCrumbs} />
-        <div className="flex flex-col gap-8 lg:flex-row">
-          <div className="lg:w-1/2">
-            <ProductImages images={images} name={product.name} />
-          </div>
+      <div className="relative py-8">
+        {/* Breadcrumbs — always padded */}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Breadcrumbs crumbs={breadcrumbCrumbs} />
+        </div>
 
-          <div className="lg:w-1/2 space-y-5">
+        <div className="mx-auto max-w-7xl lg:px-8">
+          <div className="flex flex-col lg:gap-8 lg:flex-row">
+            {/* Image — edge-to-edge on mobile */}
+            <div className="lg:w-1/2">
+              <ProductImages images={images} name={product.name} />
+            </div>
+
+            {/* Info — padded on mobile, no extra padding on desktop */}
+            <div className="lg:w-1/2 space-y-5 px-4 sm:px-6 lg:px-0 mt-6 lg:mt-0">
             {product.categories && (
               <p className="text-xs uppercase tracking-widest" style={{ opacity: 0.5 }}>
                 {product.categories.name}
@@ -242,6 +249,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             )}
           </div>
         </div>
+      </div>
       </div>
     </>
   );
