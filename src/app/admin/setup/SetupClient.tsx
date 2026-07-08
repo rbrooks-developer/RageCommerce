@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { CheckCircle2, XCircle, AlertCircle, Copy, Check, Loader2 } from "lucide-react";
-import { installFeature, FEATURE_SQL } from "@/lib/actions/setup";
+import { installFeature } from "@/lib/actions/setup";
+import { FEATURE_SQL } from "@/lib/setup-sql";
 import type { FeatureResult, SetupStatus } from "@/lib/actions/setup";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
