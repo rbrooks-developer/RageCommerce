@@ -15,6 +15,7 @@ type OrderRow = Pick<
 
 interface Props {
   orders: OrderRow[];
+  restockingFeePercent?: number;
 }
 
 function canSelect(o: OrderRow) {
@@ -26,7 +27,7 @@ function canSelect(o: OrderRow) {
   );
 }
 
-export function OrdersTable({ orders }: Props) {
+export function OrdersTable({ orders, restockingFeePercent = 0 }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
   const [results, setResults] = useState<{ id: string; error?: string }[]>([]);
@@ -234,7 +235,7 @@ export function OrdersTable({ orders }: Props) {
             )}
             <div className="flex items-center gap-3 pt-1 border-t border-gray-100">
               <Link href={`/admin/orders/${order.id}`} className="text-sm text-blue-600 hover:underline">View</Link>
-              <OrderRowActions order={order} />
+              <OrderRowActions order={order} restockingFeePercent={restockingFeePercent} />
               {canSelect(order) && (
                 <label className="ml-auto flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
                   <input
@@ -306,7 +307,7 @@ export function OrdersTable({ orders }: Props) {
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-3">
                       <Link href={`/admin/orders/${order.id}`} className="text-blue-600 hover:underline text-xs">View</Link>
-                      <OrderRowActions order={order} />
+                      <OrderRowActions order={order} restockingFeePercent={restockingFeePercent} />
                     </div>
                   </td>
                 </tr>
@@ -321,21 +322,34 @@ export function OrdersTable({ orders }: Props) {
 
 function CancelModal({
   orderNumber,
+  totalPrice,
+  restockingFeePercent,
   onConfirm,
   onClose,
   isPending,
 }: {
   orderNumber: string;
+  totalPrice: number;
+  restockingFeePercent: number;
   onConfirm: (restoreInventory: boolean) => void;
   onClose: () => void;
   isPending: boolean;
 }) {
   const [restoreInventory, setRestoreInventory] = useState(true);
+  const feeCents = restockingFeePercent > 0 ? Math.round(totalPrice * 100 * restockingFeePercent / 100) : 0;
+  const refundCents = Math.round(totalPrice * 100) - feeCents;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="w-full max-w-sm rounded-lg bg-white shadow-xl p-6 space-y-4 mx-4">
         <h2 className="text-base font-semibold text-gray-900">Cancel Order #{orderNumber}?</h2>
-        <p className="text-sm text-gray-600">This will issue a full Stripe refund to the customer.</p>
+        {feeCents > 0 ? (
+          <p className="text-sm text-gray-600">
+            A <strong>{restockingFeePercent}% restocking fee</strong> (${(feeCents / 100).toFixed(2)}) will be deducted.
+            Customer will receive a <strong>${(refundCents / 100).toFixed(2)}</strong> refund.
+          </p>
+        ) : (
+          <p className="text-sm text-gray-600">This will issue a full Stripe refund to the customer.</p>
+        )}
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
@@ -408,7 +422,7 @@ function GenerateLabelModal({
   );
 }
 
-function OrderRowActions({ order }: { order: OrderRow }) {
+function OrderRowActions({ order, restockingFeePercent = 0 }: { order: OrderRow; restockingFeePercent?: number }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -445,6 +459,8 @@ function OrderRowActions({ order }: { order: OrderRow }) {
       {showCancelModal && (
         <CancelModal
           orderNumber={order.id.slice(0, 8).toUpperCase()}
+          totalPrice={Number(order.total_price)}
+          restockingFeePercent={restockingFeePercent}
           onConfirm={handleCancelConfirm}
           onClose={() => setShowCancelModal(false)}
           isPending={isPending}
