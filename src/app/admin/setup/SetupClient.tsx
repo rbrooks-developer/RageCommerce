@@ -196,8 +196,8 @@ export function SetupClient({ status }: { status: SetupStatus }) {
             hasManagementToken={status.hasManagementToken}
           />
           <FeatureCard
-            title="Cron Jobs"
-            description="CRON_SECRET secures the eBay inventory sync endpoint. NEXT_PUBLIC_APP_URL is used in emails."
+            title="Cron / Scheduled Sync"
+            description="CRON_SECRET secures the eBay inventory sync endpoint. On the free Vercel plan, set up cron-job.org (free) to call /api/cron/ebay-inventory-sync with Authorization: Bearer {CRON_SECRET} on your desired schedule. NEXT_PUBLIC_APP_URL is used in order emails."
             feature={status.cron}
             hasManagementToken={status.hasManagementToken}
           />
