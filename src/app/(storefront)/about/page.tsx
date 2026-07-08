@@ -40,7 +40,7 @@ export default async function AboutPage() {
                 )}
               </div>
               {about?.image1_url && (
-                <div className="flex-1 w-full">
+                <div className="flex-1 w-full relative z-50">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={about.image1_url}
@@ -56,7 +56,7 @@ export default async function AboutPage() {
           {hasBlock2 && (
             <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
               {about?.image2_url && (
-                <div className="flex-1 w-full order-2 md:order-1">
+                <div className="flex-1 w-full order-2 md:order-1 relative z-50">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={about.image2_url}
