@@ -21,6 +21,7 @@ import {
   BarChart2,
   Globe,
   Percent,
+  Wrench,
 } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -36,6 +37,7 @@ const navItems = [
   { label: "Customs",           href: "/admin/customs",        icon: Globe },
   { label: "Notifications",    href: "/admin/notifications",  icon: Bell },
   { label: "Settings",         href: "/admin/settings",       icon: Settings },
+  { label: "Setup",            href: "/admin/setup",          icon: Wrench },
 ];
 
 function NavLink({ item, unreadCount, onClick }: { item: typeof navItems[0]; unreadCount?: number; onClick?: () => void }) {
