@@ -23,18 +23,18 @@ export default async function AboutPage() {
 
   return (
     <div style={{ backgroundColor: bgColor, color: fontColor }}>
-      <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
-        <div className="space-y-20 md:space-y-32">
+      <div className="max-w-5xl mx-auto px-6 py-8 md:py-12">
+        <div className="space-y-10 md:space-y-14">
 
           {/* Block 1: text left, image right */}
           {hasBlock1 && (
-            <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
-              <div className="flex-1 space-y-5">
+            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+              <div className="flex-1 space-y-3">
                 {about?.heading1 && (
-                  <h1 className="text-4xl md:text-5xl font-bold leading-tight">{about.heading1}</h1>
+                  <h1 className="text-2xl md:text-3xl font-bold leading-tight">{about.heading1}</h1>
                 )}
                 {about?.body1 && (
-                  <p className="text-base md:text-lg leading-relaxed" style={{ opacity: 0.8 }}>
+                  <p className="text-sm md:text-base leading-relaxed" style={{ opacity: 0.8 }}>
                     {about.body1}
                   </p>
                 )}
@@ -45,7 +45,7 @@ export default async function AboutPage() {
                   <img
                     src={about.image1_url}
                     alt={about.heading1 ?? "About us"}
-                    className="w-full h-72 md:h-80 object-cover rounded-2xl"
+                    className="w-full h-52 md:h-60 object-cover rounded-xl"
                   />
                 </div>
               )}
@@ -54,23 +54,23 @@ export default async function AboutPage() {
 
           {/* Block 2: image left, text right */}
           {hasBlock2 && (
-            <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
               {about?.image2_url && (
                 <div className="flex-1 w-full order-2 md:order-1 relative z-50">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={about.image2_url}
                     alt={about.heading2 ?? "Our mission"}
-                    className="w-full h-72 md:h-80 object-cover rounded-2xl"
+                    className="w-full h-52 md:h-60 object-cover rounded-xl"
                   />
                 </div>
               )}
-              <div className={`flex-1 space-y-5 ${about?.image2_url ? "order-1 md:order-2" : ""}`}>
+              <div className={`flex-1 space-y-3 ${about?.image2_url ? "order-1 md:order-2" : ""}`}>
                 {about?.heading2 && (
-                  <h2 className="text-4xl md:text-5xl font-bold leading-tight">{about.heading2}</h2>
+                  <h2 className="text-2xl md:text-3xl font-bold leading-tight">{about.heading2}</h2>
                 )}
                 {about?.body2 && (
-                  <p className="text-base md:text-lg leading-relaxed" style={{ opacity: 0.8 }}>
+                  <p className="text-sm md:text-base leading-relaxed" style={{ opacity: 0.8 }}>
                     {about.body2}
                   </p>
                 )}
@@ -80,8 +80,8 @@ export default async function AboutPage() {
 
           {/* Empty state */}
           {!hasBlock1 && !hasBlock2 && (
-            <div className="text-center py-24" style={{ opacity: 0.4 }}>
-              <p className="text-xl">Coming soon</p>
+            <div className="text-center py-16" style={{ opacity: 0.4 }}>
+              <p className="text-lg">Coming soon</p>
             </div>
           )}
 
