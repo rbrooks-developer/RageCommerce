@@ -9,7 +9,6 @@ function CancelModal({
   orderNumber,
   totalPrice,
   restockingFeePercent,
-  processingFeePercent,
   processingFeeFlat,
   onConfirm,
   onClose,
@@ -18,7 +17,6 @@ function CancelModal({
   orderNumber: string;
   totalPrice: number;
   restockingFeePercent: number;
-  processingFeePercent: number;
   processingFeeFlat: number;
   onConfirm: (restoreInventory: boolean) => void;
   onClose: () => void;
@@ -27,8 +25,8 @@ function CancelModal({
   const [restoreInventory, setRestoreInventory] = useState(true);
   const totalCents = Math.round(totalPrice * 100);
   const restockCents = restockingFeePercent > 0 ? Math.round(totalCents * restockingFeePercent / 100) : 0;
-  const procCents = processingFeePercent > 0 ? Math.round(totalCents * processingFeePercent / 100) + Math.round(processingFeeFlat * 100) : 0;
-  const totalDeductionCents = restockCents + procCents;
+  const flatCents = Math.round(processingFeeFlat * 100);
+  const totalDeductionCents = restockCents + flatCents;
   const refundCents = totalCents - totalDeductionCents;
 
   return (
@@ -43,10 +41,10 @@ function CancelModal({
                 <span>−${(restockCents / 100).toFixed(2)}</span>
               </div>
             )}
-            {procCents > 0 && (
+            {flatCents > 0 && (
               <div className="flex justify-between">
-                <span>Processing fee ({processingFeePercent}%{processingFeeFlat > 0 ? ` + $${processingFeeFlat.toFixed(2)}` : ""})</span>
-                <span>−${(procCents / 100).toFixed(2)}</span>
+                <span>Flat fee</span>
+                <span>−${(flatCents / 100).toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between font-semibold text-gray-800 border-t border-gray-200 pt-1 mt-1">
@@ -92,7 +90,7 @@ function CancelModal({
   );
 }
 
-export function OrderDetailActions({ order, restockingFeePercent = 0, processingFeePercent = 0, processingFeeFlat = 0 }: { order: Order; restockingFeePercent?: number; processingFeePercent?: number; processingFeeFlat?: number }) {
+export function OrderDetailActions({ order, restockingFeePercent = 0, processingFeeFlat = 0 }: { order: Order; restockingFeePercent?: number; processingFeeFlat?: number }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [voidEasypostFailed, setVoidEasypostFailed] = useState(false);
@@ -184,7 +182,6 @@ export function OrderDetailActions({ order, restockingFeePercent = 0, processing
           orderNumber={order.id.slice(0, 8).toUpperCase()}
           totalPrice={Number(order.total_price)}
           restockingFeePercent={restockingFeePercent}
-          processingFeePercent={processingFeePercent}
           processingFeeFlat={processingFeeFlat}
           onConfirm={handleCancelConfirm}
           onClose={() => setShowCancelModal(false)}

@@ -211,7 +211,5 @@ export type CheckoutConfig = {
   restocking_fee_active: boolean;
   restocking_fee_percent: number;
   restocking_fee_disclaimer: string;
-  processing_fee_active: boolean;
-  processing_fee_percent: number;
   processing_fee_flat: number;
 };

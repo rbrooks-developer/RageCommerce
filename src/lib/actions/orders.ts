@@ -51,26 +51,21 @@ export async function cancelOrder(orderId: string, restoreInventory: boolean = t
       const paymentIntentId = session.payment_intent as string | null;
       console.log(`[cancelOrder] session payment_intent=${paymentIntentId ?? "null"}`);
       if (paymentIntentId) {
-        // Apply configured deductions (restocking fee + processing fee) as a partial refund.
+        // Apply configured deductions (restocking fee % + optional flat processing fee).
         const settings = await getSettings();
         const checkoutCfg = (settings as any)?.checkout_config as {
-          restocking_fee_active?: boolean; restocking_fee_percent?: number;
-          processing_fee_active?: boolean; processing_fee_percent?: number; processing_fee_flat?: number;
+          restocking_fee_active?: boolean; restocking_fee_percent?: number; processing_fee_flat?: number;
         } | null;
         const totalCents = Math.round(Number(order.total_price) * 100);
 
         const restockPct = checkoutCfg?.restocking_fee_active && (checkoutCfg.restocking_fee_percent ?? 0) > 0
           ? checkoutCfg.restocking_fee_percent! : 0;
         const restockCents = restockPct > 0 ? Math.round(totalCents * restockPct / 100) : 0;
+        const flatCents = checkoutCfg?.restocking_fee_active ? Math.round((checkoutCfg.processing_fee_flat ?? 0) * 100) : 0;
 
-        const procPct = checkoutCfg?.processing_fee_active && (checkoutCfg.processing_fee_percent ?? 0) > 0
-          ? checkoutCfg.processing_fee_percent! : 0;
-        const procFlatCents = checkoutCfg?.processing_fee_active ? Math.round((checkoutCfg.processing_fee_flat ?? 0) * 100) : 0;
-        const procCents = procPct > 0 ? Math.round(totalCents * procPct / 100) + procFlatCents : 0;
-
-        const totalDeductionCents = restockCents + procCents;
+        const totalDeductionCents = restockCents + flatCents;
         const refundCents = totalCents - totalDeductionCents;
-        console.log(`[cancelOrder] totalCents=${totalCents} restockCents=${restockCents} procCents=${procCents} totalDeductionCents=${totalDeductionCents} refundCents=${refundCents}`);
+        console.log(`[cancelOrder] totalCents=${totalCents} restockCents=${restockCents} flatCents=${flatCents} totalDeductionCents=${totalDeductionCents} refundCents=${refundCents}`);
 
         // Embed the inventory intent and cancellation flag in metadata so the
         // charge.refunded webhook knows the admin's decisions.

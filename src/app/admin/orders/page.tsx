@@ -18,8 +18,7 @@ export default async function OrdersPage() {
   const orders = (raw ?? []) as OrderRow[];
   const checkoutCfg = (settings as any)?.checkout_config as CheckoutConfig | null;
   const restockingFeePercent = checkoutCfg?.restocking_fee_active ? (checkoutCfg.restocking_fee_percent ?? 0) : 0;
-  const processingFeePercent = checkoutCfg?.processing_fee_active ? (checkoutCfg.processing_fee_percent ?? 0) : 0;
-  const processingFeeFlat = checkoutCfg?.processing_fee_active ? (checkoutCfg.processing_fee_flat ?? 0) : 0;
+  const processingFeeFlat = checkoutCfg?.restocking_fee_active ? (checkoutCfg.processing_fee_flat ?? 0) : 0;
 
   return (
     <div className="space-y-5">
@@ -28,7 +27,7 @@ export default async function OrdersPage() {
         <span className="text-sm text-gray-400">{orders.length} total</span>
       </div>
 
-      <OrdersTable orders={orders} restockingFeePercent={restockingFeePercent} processingFeePercent={processingFeePercent} processingFeeFlat={processingFeeFlat} />
+      <OrdersTable orders={orders} restockingFeePercent={restockingFeePercent} processingFeeFlat={processingFeeFlat} />
     </div>
   );
 }

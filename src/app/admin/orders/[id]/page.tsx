@@ -40,8 +40,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const customerEmail = (profileResult.data as { email: string } | null)?.email;
   const checkoutCfg = (settings as any)?.checkout_config as CheckoutConfig | null;
   const restockingFeePercent = checkoutCfg?.restocking_fee_active ? (checkoutCfg.restocking_fee_percent ?? 0) : 0;
-  const processingFeePercent = checkoutCfg?.processing_fee_active ? (checkoutCfg.processing_fee_percent ?? 0) : 0;
-  const processingFeeFlat = checkoutCfg?.processing_fee_active ? (checkoutCfg.processing_fee_flat ?? 0) : 0;
+  const processingFeeFlat = checkoutCfg?.restocking_fee_active ? (checkoutCfg.processing_fee_flat ?? 0) : 0;
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -61,7 +60,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       </div>
 
       {/* Actions */}
-      <OrderDetailActions order={order} restockingFeePercent={restockingFeePercent} processingFeePercent={processingFeePercent} processingFeeFlat={processingFeeFlat} />
+      <OrderDetailActions order={order} restockingFeePercent={restockingFeePercent} processingFeeFlat={processingFeeFlat} />
 
       {/* Customer + Shipping */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -207,8 +207,6 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [restockingFeeActive, setRestockingFeeActive] = useState(checkoutCfg?.restocking_fee_active ?? false);
   const [restockingFeePercent, setRestockingFeePercent] = useState(checkoutCfg?.restocking_fee_percent ?? 0);
   const [restockingFeeDisclaimer, setRestockingFeeDisclaimer] = useState(checkoutCfg?.restocking_fee_disclaimer ?? "");
-  const [processingFeeActive, setProcessingFeeActive] = useState(checkoutCfg?.processing_fee_active ?? false);
-  const [processingFeePercent, setProcessingFeePercent] = useState(checkoutCfg?.processing_fee_percent ?? 0);
   const [processingFeeFlat, setProcessingFeeFlat] = useState(checkoutCfg?.processing_fee_flat ?? 0);
 
   const aboutCfg = (defaultValues as any)?.about_config as AboutConfig | null;
@@ -309,8 +307,6 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         restocking_fee_active: restockingFeeActive,
         restocking_fee_percent: restockingFeePercent,
         restocking_fee_disclaimer: restockingFeeDisclaimer,
-        processing_fee_active: restockingFeeActive && processingFeePercent > 0,
-        processing_fee_percent: processingFeePercent,
         processing_fee_flat: processingFeeFlat,
       },
       about_config: {
@@ -824,41 +820,19 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 items-end">
-            <div>
-              <Label htmlFor="processing_fee_percent">Processing Fee % <span className="text-gray-400 font-normal">(optional)</span></Label>
-              <div className="mt-1 flex items-center gap-2">
-                <input
-                  id="processing_fee_percent"
-                  type="number"
-                  min={0}
-                  max={100}
-                  step={0.01}
-                  value={processingFeePercent}
-                  onChange={(e) => {
-                    const v = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
-                    setProcessingFeePercent(v);
-                    if (processingFeeActive && v <= 0) setProcessingFeeActive(false);
-                  }}
-                  className="w-24 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                />
-                <span className="text-sm text-gray-500">%</span>
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="processing_fee_flat">Processing Flat Fee <span className="text-gray-400 font-normal">(optional)</span></Label>
-              <div className="mt-1 flex items-center gap-2">
-                <span className="text-sm text-gray-500">$</span>
-                <input
-                  id="processing_fee_flat"
-                  type="number"
-                  min={0}
-                  step={0.01}
-                  value={processingFeeFlat}
-                  onChange={(e) => setProcessingFeeFlat(Math.max(0, parseFloat(e.target.value) || 0))}
-                  className="w-24 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-                />
-              </div>
+          <div>
+            <Label htmlFor="processing_fee_flat">Flat Fee Deduction <span className="text-gray-400 font-normal">(optional)</span></Label>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-sm text-gray-500">$</span>
+              <input
+                id="processing_fee_flat"
+                type="number"
+                min={0}
+                step={0.01}
+                value={processingFeeFlat}
+                onChange={(e) => setProcessingFeeFlat(Math.max(0, parseFloat(e.target.value) || 0))}
+                className="w-24 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              />
             </div>
           </div>
 
