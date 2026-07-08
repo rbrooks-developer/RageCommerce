@@ -16,6 +16,8 @@ type OrderRow = Pick<
 interface Props {
   orders: OrderRow[];
   restockingFeePercent?: number;
+  processingFeePercent?: number;
+  processingFeeFlat?: number;
 }
 
 function canSelect(o: OrderRow) {
@@ -27,7 +29,7 @@ function canSelect(o: OrderRow) {
   );
 }
 
-export function OrdersTable({ orders, restockingFeePercent = 0 }: Props) {
+export function OrdersTable({ orders, restockingFeePercent = 0, processingFeePercent = 0, processingFeeFlat = 0 }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
   const [results, setResults] = useState<{ id: string; error?: string }[]>([]);
@@ -235,7 +237,7 @@ export function OrdersTable({ orders, restockingFeePercent = 0 }: Props) {
             )}
             <div className="flex items-center gap-3 pt-1 border-t border-gray-100">
               <Link href={`/admin/orders/${order.id}`} className="text-sm text-blue-600 hover:underline">View</Link>
-              <OrderRowActions order={order} restockingFeePercent={restockingFeePercent} />
+              <OrderRowActions order={order} restockingFeePercent={restockingFeePercent} processingFeePercent={processingFeePercent} processingFeeFlat={processingFeeFlat} />
               {canSelect(order) && (
                 <label className="ml-auto flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">
                   <input
@@ -307,7 +309,7 @@ export function OrdersTable({ orders, restockingFeePercent = 0 }: Props) {
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-3">
                       <Link href={`/admin/orders/${order.id}`} className="text-blue-600 hover:underline text-xs">View</Link>
-                      <OrderRowActions order={order} restockingFeePercent={restockingFeePercent} />
+                      <OrderRowActions order={order} restockingFeePercent={restockingFeePercent} processingFeePercent={processingFeePercent} processingFeeFlat={processingFeeFlat} />
                     </div>
                   </td>
                 </tr>
@@ -324,6 +326,8 @@ function CancelModal({
   orderNumber,
   totalPrice,
   restockingFeePercent,
+  processingFeePercent,
+  processingFeeFlat,
   onConfirm,
   onClose,
   isPending,
@@ -331,22 +335,41 @@ function CancelModal({
   orderNumber: string;
   totalPrice: number;
   restockingFeePercent: number;
+  processingFeePercent: number;
+  processingFeeFlat: number;
   onConfirm: (restoreInventory: boolean) => void;
   onClose: () => void;
   isPending: boolean;
 }) {
   const [restoreInventory, setRestoreInventory] = useState(true);
-  const feeCents = restockingFeePercent > 0 ? Math.round(totalPrice * 100 * restockingFeePercent / 100) : 0;
-  const refundCents = Math.round(totalPrice * 100) - feeCents;
+  const totalCents = Math.round(totalPrice * 100);
+  const restockCents = restockingFeePercent > 0 ? Math.round(totalCents * restockingFeePercent / 100) : 0;
+  const procCents = processingFeePercent > 0 ? Math.round(totalCents * processingFeePercent / 100) + Math.round(processingFeeFlat * 100) : 0;
+  const totalDeductionCents = restockCents + procCents;
+  const refundCents = totalCents - totalDeductionCents;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="w-full max-w-sm rounded-lg bg-white shadow-xl p-6 space-y-4 mx-4">
         <h2 className="text-base font-semibold text-gray-900">Cancel Order #{orderNumber}?</h2>
-        {feeCents > 0 ? (
-          <p className="text-sm text-gray-600">
-            A <strong>{restockingFeePercent}% restocking fee</strong> (${(feeCents / 100).toFixed(2)}) will be deducted.
-            Customer will receive a <strong>${(refundCents / 100).toFixed(2)}</strong> refund.
-          </p>
+        {totalDeductionCents > 0 ? (
+          <div className="text-sm text-gray-600 space-y-1">
+            {restockCents > 0 && (
+              <div className="flex justify-between">
+                <span>Restocking fee ({restockingFeePercent}%)</span>
+                <span>−${(restockCents / 100).toFixed(2)}</span>
+              </div>
+            )}
+            {procCents > 0 && (
+              <div className="flex justify-between">
+                <span>Processing fee ({processingFeePercent}%{processingFeeFlat > 0 ? ` + $${processingFeeFlat.toFixed(2)}` : ""})</span>
+                <span>−${(procCents / 100).toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-semibold text-gray-800 border-t border-gray-200 pt-1 mt-1">
+              <span>Customer refund</span>
+              <span>${(refundCents / 100).toFixed(2)}</span>
+            </div>
+          </div>
         ) : (
           <p className="text-sm text-gray-600">This will issue a full Stripe refund to the customer.</p>
         )}
@@ -422,7 +445,7 @@ function GenerateLabelModal({
   );
 }
 
-function OrderRowActions({ order, restockingFeePercent = 0 }: { order: OrderRow; restockingFeePercent?: number }) {
+function OrderRowActions({ order, restockingFeePercent = 0, processingFeePercent = 0, processingFeeFlat = 0 }: { order: OrderRow; restockingFeePercent?: number; processingFeePercent?: number; processingFeeFlat?: number }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -461,6 +484,8 @@ function OrderRowActions({ order, restockingFeePercent = 0 }: { order: OrderRow;
           orderNumber={order.id.slice(0, 8).toUpperCase()}
           totalPrice={Number(order.total_price)}
           restockingFeePercent={restockingFeePercent}
+          processingFeePercent={processingFeePercent}
+          processingFeeFlat={processingFeeFlat}
           onConfirm={handleCancelConfirm}
           onClose={() => setShowCancelModal(false)}
           isPending={isPending}

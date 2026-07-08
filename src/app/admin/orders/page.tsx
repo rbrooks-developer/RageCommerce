@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
+import { getSettings } from "@/lib/data/settings";
 import { OrdersTable } from "./OrdersTable";
-import type { Order } from "@/types";
+import type { Order, CheckoutConfig } from "@/types";
 
 type OrderRow = Pick<
   Order,
@@ -8,13 +9,17 @@ type OrderRow = Pick<
 >;
 
 export default async function OrdersPage() {
-  const supabase = await createClient();
+  const [supabase, settings] = await Promise.all([createClient(), getSettings()]);
   const { data: raw } = await supabase
     .from("orders")
     .select("id, status, total_price, shipping_name, created_at, tracking_number, shipping_label_url")
     .order("created_at", { ascending: false });
 
   const orders = (raw ?? []) as OrderRow[];
+  const checkoutCfg = (settings as any)?.checkout_config as CheckoutConfig | null;
+  const restockingFeePercent = checkoutCfg?.restocking_fee_active ? (checkoutCfg.restocking_fee_percent ?? 0) : 0;
+  const processingFeePercent = checkoutCfg?.processing_fee_active ? (checkoutCfg.processing_fee_percent ?? 0) : 0;
+  const processingFeeFlat = checkoutCfg?.processing_fee_active ? (checkoutCfg.processing_fee_flat ?? 0) : 0;
 
   return (
     <div className="space-y-5">
@@ -23,7 +28,7 @@ export default async function OrdersPage() {
         <span className="text-sm text-gray-400">{orders.length} total</span>
       </div>
 
-      <OrdersTable orders={orders} />
+      <OrdersTable orders={orders} restockingFeePercent={restockingFeePercent} processingFeePercent={processingFeePercent} processingFeeFlat={processingFeeFlat} />
     </div>
   );
 }

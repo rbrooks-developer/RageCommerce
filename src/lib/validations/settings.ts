@@ -110,6 +110,14 @@ export const siteSettingsSchema = z.object({
   handling_fee: z.number().min(0, "Handling fee cannot be negative").nullable().optional(),
   insurance_min_subtotal: z.number().min(0, "Must be 0 or greater").nullable().optional(),
   signature_min_subtotal: z.number().min(0, "Must be 0 or greater").nullable().optional(),
+  checkout_config: z.object({
+    restocking_fee_active: z.boolean().default(false),
+    restocking_fee_percent: z.number().min(0).max(100).default(0),
+    restocking_fee_disclaimer: z.string().default(""),
+    processing_fee_active: z.boolean().default(false),
+    processing_fee_percent: z.number().min(0).max(100).default(0),
+    processing_fee_flat: z.number().min(0).default(0),
+  }).optional(),
   about_config: z.object({
     heading1: z.string().default("About Us"),
     body1: z.string().default(""),

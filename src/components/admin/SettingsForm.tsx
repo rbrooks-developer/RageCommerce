@@ -207,6 +207,9 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [restockingFeeActive, setRestockingFeeActive] = useState(checkoutCfg?.restocking_fee_active ?? false);
   const [restockingFeePercent, setRestockingFeePercent] = useState(checkoutCfg?.restocking_fee_percent ?? 0);
   const [restockingFeeDisclaimer, setRestockingFeeDisclaimer] = useState(checkoutCfg?.restocking_fee_disclaimer ?? "");
+  const [processingFeeActive, setProcessingFeeActive] = useState(checkoutCfg?.processing_fee_active ?? false);
+  const [processingFeePercent, setProcessingFeePercent] = useState(checkoutCfg?.processing_fee_percent ?? 0);
+  const [processingFeeFlat, setProcessingFeeFlat] = useState(checkoutCfg?.processing_fee_flat ?? 0);
 
   const aboutCfg = (defaultValues as any)?.about_config as AboutConfig | null;
   const [aboutHeading1, setAboutHeading1] = useState(aboutCfg?.heading1 ?? "About Us");
@@ -235,6 +238,11 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
     if (restockingFeeActive && (!restockingFeeDisclaimer.trim() || restockingFeePercent <= 0)) {
       setSaving(false);
       setMessage({ type: "error", text: "Restocking fee cannot be active without both a disclaimer and a percentage greater than 0." });
+      return;
+    }
+    if (processingFeeActive && processingFeePercent <= 0) {
+      setSaving(false);
+      setMessage({ type: "error", text: "Processing fee cannot be active without a percentage greater than 0." });
       return;
     }
 
@@ -306,6 +314,9 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         restocking_fee_active: restockingFeeActive,
         restocking_fee_percent: restockingFeePercent,
         restocking_fee_disclaimer: restockingFeeDisclaimer,
+        processing_fee_active: processingFeeActive,
+        processing_fee_percent: processingFeePercent,
+        processing_fee_flat: processingFeeFlat,
       },
       about_config: {
         heading1: aboutHeading1,
@@ -848,6 +859,68 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
           </label>
           {(!restockingFeeDisclaimer.trim() || restockingFeePercent <= 0) && (
             <p className="text-xs text-gray-400 -mt-2">Fill in both the percentage and disclaimer text above to enable.</p>
+          )}
+        </div>
+
+        <div className="space-y-4 border-t border-gray-100 pt-4">
+          <div>
+            <p className="text-sm font-medium text-gray-700">Processing Fee Recovery</p>
+            <p className="text-xs text-gray-400 mt-0.5">Deduct transaction costs (e.g. Stripe's 2.9% + $0.30) from admin cancellation refunds. Percentage is required; flat fee is optional.</p>
+          </div>
+          <div className="flex flex-wrap gap-4 items-end">
+            <div>
+              <Label htmlFor="processing_fee_percent">Percentage</Label>
+              <div className="mt-1 flex items-center gap-2">
+                <input
+                  id="processing_fee_percent"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.01}
+                  value={processingFeePercent}
+                  onChange={(e) => {
+                    const v = Math.max(0, Math.min(100, parseFloat(e.target.value) || 0));
+                    setProcessingFeePercent(v);
+                    if (processingFeeActive && v <= 0) setProcessingFeeActive(false);
+                  }}
+                  className="w-24 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                />
+                <span className="text-sm text-gray-500">%</span>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="processing_fee_flat">Flat Fee <span className="text-gray-400 font-normal">(optional)</span></Label>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="text-sm text-gray-500">$</span>
+                <input
+                  id="processing_fee_flat"
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={processingFeeFlat}
+                  onChange={(e) => setProcessingFeeFlat(Math.max(0, parseFloat(e.target.value) || 0))}
+                  className="w-24 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                />
+              </div>
+            </div>
+          </div>
+          {processingFeePercent > 0 && (
+            <p className="text-xs text-gray-400">
+              e.g. $100 order → deduct ${(100 * processingFeePercent / 100 + processingFeeFlat).toFixed(2)}
+            </p>
+          )}
+          <label className={`flex items-center gap-3 w-fit ${processingFeePercent <= 0 ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}>
+            <input
+              type="checkbox"
+              checked={processingFeeActive}
+              disabled={processingFeePercent <= 0}
+              onChange={(e) => setProcessingFeeActive(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+            />
+            <span className="text-sm font-medium text-gray-700">Apply processing fee deduction to admin cancellation refunds</span>
+          </label>
+          {processingFeePercent <= 0 && (
+            <p className="text-xs text-gray-400 -mt-2">Enter a percentage above to enable.</p>
           )}
         </div>
       </Section>

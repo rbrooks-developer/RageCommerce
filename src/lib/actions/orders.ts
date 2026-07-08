@@ -51,13 +51,39 @@ export async function cancelOrder(orderId: string, restoreInventory: boolean = t
       const paymentIntentId = session.payment_intent as string | null;
       console.log(`[cancelOrder] session payment_intent=${paymentIntentId ?? "null"}`);
       if (paymentIntentId) {
-        // Embed the inventory intent in refund metadata so the charge.refunded
-        // webhook knows what the admin decided without a separate DB column.
+        // Apply configured deductions (restocking fee + processing fee) as a partial refund.
+        const settings = await getSettings();
+        const checkoutCfg = (settings as any)?.checkout_config as {
+          restocking_fee_active?: boolean; restocking_fee_percent?: number;
+          processing_fee_active?: boolean; processing_fee_percent?: number; processing_fee_flat?: number;
+        } | null;
+        const totalCents = Math.round(Number(order.total_price) * 100);
+
+        const restockPct = checkoutCfg?.restocking_fee_active && (checkoutCfg.restocking_fee_percent ?? 0) > 0
+          ? checkoutCfg.restocking_fee_percent! : 0;
+        const restockCents = restockPct > 0 ? Math.round(totalCents * restockPct / 100) : 0;
+
+        const procPct = checkoutCfg?.processing_fee_active && (checkoutCfg.processing_fee_percent ?? 0) > 0
+          ? checkoutCfg.processing_fee_percent! : 0;
+        const procFlatCents = checkoutCfg?.processing_fee_active ? Math.round((checkoutCfg.processing_fee_flat ?? 0) * 100) : 0;
+        const procCents = procPct > 0 ? Math.round(totalCents * procPct / 100) + procFlatCents : 0;
+
+        const totalDeductionCents = restockCents + procCents;
+        const refundCents = totalCents - totalDeductionCents;
+        console.log(`[cancelOrder] totalCents=${totalCents} restockCents=${restockCents} procCents=${procCents} totalDeductionCents=${totalDeductionCents} refundCents=${refundCents}`);
+
+        // Embed the inventory intent and cancellation flag in metadata so the
+        // charge.refunded webhook knows the admin's decisions.
         const refund = await stripe.refunds.create({
           payment_intent: paymentIntentId,
-          metadata: { source: "admin_cancel", restore_inventory: restoreInventory ? "yes" : "no" },
+          ...(totalDeductionCents > 0 ? { amount: refundCents } : {}),
+          metadata: {
+            source: "admin_cancel",
+            restore_inventory: restoreInventory ? "yes" : "no",
+            is_order_cancellation: "yes",
+          },
         });
-        console.log(`[cancelOrder] refund created id=${refund.id} status=${refund.status} restore_inventory=${restoreInventory}`);
+        console.log(`[cancelOrder] refund created id=${refund.id} status=${refund.status} restore_inventory=${restoreInventory} deduction_cents=${totalDeductionCents}`);
       } else {
         console.error(`[cancelOrder] WARNING: session has no payment_intent — no refund issued, webhook will NOT fire`);
       }

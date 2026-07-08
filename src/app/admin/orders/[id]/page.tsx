@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getSettings } from "@/lib/data/settings";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { OrderStatusBadge } from "@/components/ui/badge";
 import { OrderDetailActions } from "./OrderDetailActions";
 import { ChevronLeft } from "lucide-react";
-import type { Order, OrderItem, Product } from "@/types";
+import type { Order, OrderItem, Product, CheckoutConfig } from "@/types";
 
 type ItemWithProduct = OrderItem & {
   products: Pick<Product, "id" | "name" | "images"> | null;
@@ -31,13 +32,16 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   const items = (itemsRaw ?? []) as ItemWithProduct[];
 
-  const { data: profileRaw } = await supabase
-    .from("profiles")
-    .select("email")
-    .eq("id", order.user_id)
-    .maybeSingle();
+  const [profileResult, settings] = await Promise.all([
+    supabase.from("profiles").select("email").eq("id", order.user_id).maybeSingle(),
+    getSettings(),
+  ]);
 
-  const customerEmail = (profileRaw as { email: string } | null)?.email;
+  const customerEmail = (profileResult.data as { email: string } | null)?.email;
+  const checkoutCfg = (settings as any)?.checkout_config as CheckoutConfig | null;
+  const restockingFeePercent = checkoutCfg?.restocking_fee_active ? (checkoutCfg.restocking_fee_percent ?? 0) : 0;
+  const processingFeePercent = checkoutCfg?.processing_fee_active ? (checkoutCfg.processing_fee_percent ?? 0) : 0;
+  const processingFeeFlat = checkoutCfg?.processing_fee_active ? (checkoutCfg.processing_fee_flat ?? 0) : 0;
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -57,7 +61,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       </div>
 
       {/* Actions */}
-      <OrderDetailActions order={order} />
+      <OrderDetailActions order={order} restockingFeePercent={restockingFeePercent} processingFeePercent={processingFeePercent} processingFeeFlat={processingFeeFlat} />
 
       {/* Customer + Shipping */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
