@@ -11,11 +11,10 @@ export function EbayInventorySyncSettings({
 }: {
   config: EbayConfig | null;
 }) {
-  const isConnected    = !!config?.access_token;
-  const enabled        = config?.inventory_sync_enabled          ?? false;
-  const intervalHours  = Math.max(1, Math.round((config?.inventory_sync_interval_minutes ?? 60) / 60));
-  const lastRun        = config?.inventory_sync_last_run         ?? null;
-  const discountPct    = config?.price_discount_percent          ?? 0;
+  const isConnected = !!config?.access_token;
+  const enabled     = config?.inventory_sync_enabled  ?? false;
+  const lastRun     = config?.inventory_sync_last_run ?? null;
+  const discountPct = config?.price_discount_percent  ?? 0;
 
   const [state, formAction, pending] = useActionState(saveEbayInventorySyncSettings, null);
 
@@ -24,10 +23,10 @@ export function EbayInventorySyncSettings({
       <div>
         <h2 className="text-base font-semibold text-gray-900">Inventory Sync Service</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Automatically updates product inventory from eBay on a schedule. eBay is the
-          source of truth — quantities are pulled via the Trading API and written to the
-          website. If a listing no longer exists on eBay, the product inventory is set to
-          0 (out of stock). On the Hobby plan the cron runs once daily.
+          Automatically updates product inventory from eBay whenever the cron job runs.
+          eBay is the source of truth — quantities are pulled via the Trading API and
+          written to the website. If a listing no longer exists on eBay, the product
+          inventory is set to 0 (out of stock). Schedule is configured in cron-job.org.
         </p>
       </div>
 
@@ -48,24 +47,6 @@ export function EbayInventorySyncSettings({
           />
           <span className="text-sm font-medium text-gray-700">Enable automatic sync</span>
         </label>
-
-        <div className="flex items-center gap-3">
-          <label htmlFor="inv-interval" className="text-sm text-gray-700 shrink-0 w-40">
-            Sync every (hours)
-          </label>
-          <input
-            id="inv-interval"
-            type="number"
-            name="interval_hours"
-            defaultValue={intervalHours}
-            min={1}
-            max={24}
-            disabled={!isConnected}
-            className="w-24 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-900
-                       focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
-          />
-          <span className="text-xs text-gray-400">1–24 hours</span>
-        </div>
 
         <div className="flex items-center gap-3">
           <label htmlFor="ebay-discount" className="text-sm text-gray-700 shrink-0 w-40">
