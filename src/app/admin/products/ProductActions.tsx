@@ -60,11 +60,48 @@ export function DeleteProductButton({ id }: { id: string }) {
   );
 }
 
+function DeleteAllModal({
+  onConfirm,
+  onClose,
+  loading,
+}: {
+  onConfirm: () => void;
+  onClose: () => void;
+  loading: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="w-full max-w-sm rounded-lg bg-white shadow-xl p-6 space-y-4 mx-4">
+        <h2 className="text-base font-semibold text-gray-900">Delete All Products?</h2>
+        <p className="text-sm text-gray-600">
+          This will permanently remove every product and cannot be undone. Products tied to existing orders will be kept automatically.
+        </p>
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+          >
+            {loading ? <Spinner className="h-4 w-4 mx-auto" /> : "Yes, Delete All"}
+          </button>
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            Back
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function DeleteAllProductsButton() {
   const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const handleDeleteAll = async () => {
-    if (!confirm("Delete ALL products? This will permanently remove every product and cannot be undone.")) return;
     setLoading(true);
     try {
       const result = await deleteAllProducts();
@@ -80,18 +117,28 @@ export function DeleteAllProductsButton() {
       alert("Failed to delete products.");
     } finally {
       setLoading(false);
+      setShowModal(false);
     }
   };
 
   return (
-    <button
-      onClick={handleDeleteAll}
-      disabled={loading}
-      className="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 h-11 text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50"
-    >
-      {loading ? <Spinner className="h-4 w-4" /> : null}
-      Delete All
-    </button>
+    <>
+      {showModal && (
+        <DeleteAllModal
+          onConfirm={handleDeleteAll}
+          onClose={() => setShowModal(false)}
+          loading={loading}
+        />
+      )}
+      <button
+        onClick={() => setShowModal(true)}
+        disabled={loading}
+        className="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 h-11 text-sm font-medium text-white hover:bg-red-700 transition-colors disabled:opacity-50"
+      >
+        {loading ? <Spinner className="h-4 w-4" /> : null}
+        Delete All
+      </button>
+    </>
   );
 }
 
