@@ -75,7 +75,7 @@ export function ProductForm({
       {/* Images */}
       <div>
         <Label>Product Images</Label>
-        <ImageUpload value={images} onChange={setImages} max={10} />
+        <ImageUpload value={images} onChange={setImages} max={25} />
       </div>
 
       {/* Name + Slug */}
