@@ -12,7 +12,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { X } from "lucide-react";
 import { SUBDIVISIONS, getSubdivisionLabel, getCountryName } from "@/lib/data/countries";
 import type { Country } from "@/lib/data/countries";
-import type { EasyPostRate, ShippingAddress, UserAddress } from "@/types";
+import type { EasyPostRate, ShippingAddress, UserAddress, CheckoutConfig } from "@/types";
 import { EASYPOST_MAX_INSURABLE_VALUE } from "@/lib/easypost/protection";
 
 type Step = "address" | "shipping" | "review";
@@ -40,10 +40,11 @@ const btnPrimaryStyle: React.CSSProperties = {
 
 const inputClass = "w-full rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-current";
 
-export function CheckoutFlow({ allowedCountries, defaultShipping, initialPromo }: {
+export function CheckoutFlow({ allowedCountries, defaultShipping, initialPromo, checkoutConfig }: {
   allowedCountries: Country[];
   defaultShipping: UserAddress | null;
   initialPromo?: AppliedPromo | null;
+  checkoutConfig?: CheckoutConfig | null;
 }) {
   const router = useRouter();
   const { items, subtotal, clearCart, reloadCart } = useCart();
@@ -429,6 +430,11 @@ export function CheckoutFlow({ allowedCountries, defaultShipping, initialPromo }
                 {loading ? "Redirecting to payment…" : "Pay Now"}
               </button>
               <p className="text-xs text-center" style={{ opacity: 0.4 }}>You'll be redirected to Stripe's secure payment page.</p>
+              {checkoutConfig?.restocking_fee_active && checkoutConfig.restocking_fee_disclaimer && (
+                <p className="text-sm text-center font-semibold leading-relaxed text-gray-800">
+                  {checkoutConfig.restocking_fee_disclaimer}
+                </p>
+              )}
             </div>
           )}
         </div>
