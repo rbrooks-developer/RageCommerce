@@ -186,7 +186,7 @@ export function ContactForm({ heading, subheading, bodyText, email, social }: Pr
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     required
-                    className="w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current"
+                    className="w-full rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-current"
                     style={inputStyle}
                   />
                 </div>
@@ -196,7 +196,7 @@ export function ContactForm({ heading, subheading, bodyText, email, social }: Pr
                     type="text"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current"
+                    className="w-full rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-current"
                     style={inputStyle}
                   />
                 </div>
@@ -210,7 +210,7 @@ export function ContactForm({ heading, subheading, bodyText, email, social }: Pr
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
                   required
-                  className="w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current"
+                  className="w-full rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-current"
                   style={inputStyle}
                 />
               </div>
@@ -222,7 +222,7 @@ export function ContactForm({ heading, subheading, bodyText, email, social }: Pr
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   required
-                  rows={5}
+                  rows={3}
                   className="w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current resize-none"
                   style={inputStyle}
                 />
@@ -271,7 +271,7 @@ export function ContactForm({ heading, subheading, bodyText, email, social }: Pr
                   onChange={(e) => setNewsletterEmail(e.target.value)}
                   required
                   placeholder="you@example.com"
-                  className="w-full rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-current"
+                  className="w-full rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-current"
                   style={inputStyle}
                 />
               </div>
