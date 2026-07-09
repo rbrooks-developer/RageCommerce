@@ -124,6 +124,11 @@ export const siteSettingsSchema = z.object({
     body2: z.string().default(""),
     image2_url: z.string().url().nullable().optional(),
   }).optional(),
+  contact_config: z.object({
+    heading: z.string().default("Get in Touch"),
+    subheading: z.string().default("I'd like to hear from you!"),
+    body_text: z.string().default("If you have any inquiries or just want to say hi, please use the contact form!"),
+  }).optional(),
   shipping_countries: z.array(z.string()).min(1, "Select at least one shipping country"),
   store_address: z.object({
     name: z.string().min(1, "Store name is required"),

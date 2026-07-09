@@ -47,4 +47,16 @@ ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS promo_banner jsonb;
   ebay: `ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS ebay_config jsonb;`.trim(),
 
   aboutUs: `ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS about_config jsonb;`.trim(),
+
+  checkoutConfig: `ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS checkout_config jsonb;`.trim(),
+
+  contactConfig: `ALTER TABLE site_settings ADD COLUMN IF NOT EXISTS contact_config jsonb;`.trim(),
+
+  newsletterSubscribers: `
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  email text NOT NULL UNIQUE,
+  subscribed_at timestamptz NOT NULL DEFAULT now()
+);
+  `.trim(),
 };

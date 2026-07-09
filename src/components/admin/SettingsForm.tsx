@@ -12,7 +12,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { createClient } from "@/lib/supabase/client";
 import { COUNTRIES } from "@/lib/data/countries";
 import type { SiteSettings } from "@/types";
-import type { HomepageConfig, NavConfig, FooterConfig, ContactInfo, StoreAddress, CarouselConfig, ChatConfig, TrackingConfig, AboutConfig, CheckoutConfig } from "@/types";
+import type { HomepageConfig, NavConfig, FooterConfig, ContactInfo, StoreAddress, CarouselConfig, ChatConfig, TrackingConfig, AboutConfig, CheckoutConfig, ContactConfig } from "@/types";
 
 const MAX_CAROUSEL_IMAGES = 25;
 
@@ -209,6 +209,11 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
   const [restockingFeeDisclaimer, setRestockingFeeDisclaimer] = useState(checkoutCfg?.restocking_fee_disclaimer ?? "");
   const [processingFeeFlat, setProcessingFeeFlat] = useState(checkoutCfg?.processing_fee_flat ?? 0);
 
+  const contactCfg = (defaultValues as any)?.contact_config as ContactConfig | null;
+  const [contactHeading, setContactHeading] = useState(contactCfg?.heading ?? "Get in Touch");
+  const [contactSubheading, setContactSubheading] = useState(contactCfg?.subheading ?? "I'd like to hear from you!");
+  const [contactBodyText, setContactBodyText] = useState(contactCfg?.body_text ?? "If you have any inquiries or just want to say hi, please use the contact form!");
+
   const aboutCfg = (defaultValues as any)?.about_config as AboutConfig | null;
   const [aboutHeading1, setAboutHeading1] = useState(aboutCfg?.heading1 ?? "About Us");
   const [aboutBody1, setAboutBody1] = useState(aboutCfg?.body1 ?? "");
@@ -316,6 +321,11 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
         heading2: aboutHeading2,
         body2: aboutBody2,
         image2_url: aboutImage2[0] ?? null,
+      },
+      contact_config: {
+        heading: contactHeading,
+        subheading: contactSubheading,
+        body_text: contactBodyText,
       },
       shipping_countries: shippingCountries,
       store_address: {
@@ -864,6 +874,26 @@ export function SettingsForm({ defaultValues, products, categories }: Props) {
           {(!restockingFeeDisclaimer.trim() || restockingFeePercent <= 0) && (
             <p className="text-xs text-gray-400 -mt-2">Fill in both the percentage and disclaimer text above to enable.</p>
           )}
+        </div>
+      </Section>
+
+      <Section title="Contact Us">
+        <p className="text-sm text-gray-500">
+          Content for the <code className="bg-gray-100 px-1 rounded text-xs">/contact</code> page. The email shown comes from your Contact → Email setting above. Social icons come from your Footer social links.
+        </p>
+        <div className="space-y-4 border-t border-gray-100 pt-4">
+          <div>
+            <Label htmlFor="contact_heading">Heading</Label>
+            <Input id="contact_heading" value={contactHeading} onChange={(e) => setContactHeading(e.target.value)} placeholder="Get in Touch" className="mt-1" />
+          </div>
+          <div>
+            <Label htmlFor="contact_subheading">Subheading</Label>
+            <Input id="contact_subheading" value={contactSubheading} onChange={(e) => setContactSubheading(e.target.value)} placeholder="I'd like to hear from you!" className="mt-1" />
+          </div>
+          <div>
+            <Label htmlFor="contact_body_text">Body Text</Label>
+            <Textarea id="contact_body_text" value={contactBodyText} onChange={(e) => setContactBodyText(e.target.value)} placeholder="If you have any inquiries or just want to say hi, please use the contact form!" rows={3} className="mt-1" />
+          </div>
         </div>
       </Section>
 

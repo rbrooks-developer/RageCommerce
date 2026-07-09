@@ -56,6 +56,9 @@ export type SetupStatus = {
   promos: FeatureResult;
   ebay: FeatureResult;
   aboutUs: FeatureResult;
+  checkoutConfig: FeatureResult;
+  contactConfig: FeatureResult;
+  newsletterSubscribers: FeatureResult;
   stripe: FeatureResult;
   easypost: FeatureResult;
   resend: FeatureResult;
@@ -66,7 +69,8 @@ export async function checkSetupStatus(): Promise<SetupStatus> {
   const [
     ordersOk, productsOk, siteSettingsOk,
     promosOk, cartPromosOk, promoRedemptionsOk,
-    promoColOk, ebayColOk, aboutColOk,
+    promoColOk, ebayColOk, aboutColOk, checkoutColOk,
+    contactColOk, newsletterOk,
   ] = await Promise.all([
     tableExists("orders"),
     tableExists("products"),
@@ -77,6 +81,9 @@ export async function checkSetupStatus(): Promise<SetupStatus> {
     columnExists("orders", "promo_code"),
     columnExists("site_settings", "ebay_config"),
     columnExists("site_settings", "about_config"),
+    columnExists("site_settings", "checkout_config"),
+    columnExists("site_settings", "contact_config"),
+    tableExists("newsletter_subscribers"),
   ]);
 
   const env = (key: string) => !!process.env[key];
@@ -139,6 +146,21 @@ export async function checkSetupStatus(): Promise<SetupStatus> {
       ok: aboutColOk,
       items: [{ label: "site_settings.about_config column", ok: aboutColOk }],
       sql: aboutColOk ? undefined : FEATURE_SQL.aboutUs,
+    },
+    checkoutConfig: {
+      ok: checkoutColOk,
+      items: [{ label: "site_settings.checkout_config column", ok: checkoutColOk }],
+      sql: checkoutColOk ? undefined : FEATURE_SQL.checkoutConfig,
+    },
+    contactConfig: {
+      ok: contactColOk,
+      items: [{ label: "site_settings.contact_config column", ok: contactColOk }],
+      sql: contactColOk ? undefined : FEATURE_SQL.contactConfig,
+    },
+    newsletterSubscribers: {
+      ok: newsletterOk,
+      items: [{ label: "newsletter_subscribers table", ok: newsletterOk }],
+      sql: newsletterOk ? undefined : FEATURE_SQL.newsletterSubscribers,
     },
     stripe: { ok: stripeItems.every((i) => i.ok), items: stripeItems },
     easypost: { ok: easypostItems.every((i) => i.ok), items: easypostItems },

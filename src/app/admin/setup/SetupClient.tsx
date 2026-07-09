@@ -176,6 +176,27 @@ export function SetupClient({ status }: { status: SetupStatus }) {
             hasManagementToken={status.hasManagementToken}
             featureId="aboutUs"
           />
+          <FeatureCard
+            title="Checkout Config"
+            description="checkout_config column in site_settings — required for restocking fee disclaimer on checkout"
+            feature={status.checkoutConfig}
+            hasManagementToken={status.hasManagementToken}
+            featureId="checkoutConfig"
+          />
+          <FeatureCard
+            title="Contact Us Page"
+            description="contact_config column in site_settings — required for /contact page content"
+            feature={status.contactConfig}
+            hasManagementToken={status.hasManagementToken}
+            featureId="contactConfig"
+          />
+          <FeatureCard
+            title="Newsletter Subscribers"
+            description="newsletter_subscribers table — stores emails collected from the /contact page"
+            feature={status.newsletterSubscribers}
+            hasManagementToken={status.hasManagementToken}
+            featureId="newsletterSubscribers"
+          />
         </div>
       </section>
 

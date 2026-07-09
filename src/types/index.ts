@@ -213,3 +213,9 @@ export type CheckoutConfig = {
   restocking_fee_disclaimer: string;
   processing_fee_flat: number;
 };
+
+export type ContactConfig = {
+  heading: string;
+  subheading: string;
+  body_text: string;
+};
