@@ -33,12 +33,11 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# vercel
+# vercel — entire directory ignored so customer project configs stay local only
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
 .env*
