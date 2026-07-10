@@ -346,6 +346,10 @@ export async function POST(request: NextRequest) {
       // - Stripe portal refund: no metadata → always restore (user requested it).
       const latestRefund = charge.refunds?.data?.[0];
       const isAdminCancel = latestRefund?.metadata?.source === "admin_cancel";
+      // is_order_cancellation distinguishes a full admin order cancellation (which may
+      // be a partial Stripe refund due to a restocking fee) from a true partial refund
+      // issued directly in the Stripe dashboard.
+      const isOrderCancellation = isAdminCancel && latestRefund?.metadata?.is_order_cancellation === "yes";
       let shouldRestoreInventory: boolean;
       if (isAdminCancel) {
         shouldRestoreInventory = latestRefund?.metadata?.restore_inventory !== "no";
@@ -353,7 +357,7 @@ export async function POST(request: NextRequest) {
         // Stripe dashboard or any other refund source: always restore.
         shouldRestoreInventory = true;
       }
-      console.log(`[webhook] charge.refunded: isAdminCancel=${isAdminCancel} shouldRestoreInventory=${shouldRestoreInventory}`);
+      console.log(`[webhook] charge.refunded: isAdminCancel=${isAdminCancel} isOrderCancellation=${isOrderCancellation} shouldRestoreInventory=${shouldRestoreInventory}`);
       if (shouldRestoreInventory) {
         const { data: itemsRaw } = await supabase
           .from("order_items")
@@ -416,10 +420,12 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Restore eBay inventory when inventory should be restored and the refund is full.
-      // Mirrors the website inventory logic: admin controls both via the checkbox;
-      // Stripe portal refunds always restore both.
-      if (isFullRefund && shouldRestoreInventory) {
+      // Restore eBay inventory when:
+      //   - full Stripe refund (e.g. Stripe portal), OR
+      //   - admin order cancellation (may be partial due to restocking fee, but the
+      //     order IS being fully cancelled so inventory should return to eBay)
+      // In both cases, respect the shouldRestoreInventory flag.
+      if ((isFullRefund || isOrderCancellation) && shouldRestoreInventory) {
         waitUntil((async () => {
           const { data: refundItems } = await supabase
             .from("order_items")

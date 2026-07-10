@@ -3,7 +3,7 @@ import { getSettings } from "@/lib/data/settings";
 import { COUNTRIES } from "@/lib/data/countries";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { CheckoutFlow } from "./CheckoutFlow";
-import type { UserAddress } from "@/types";
+import type { UserAddress, CheckoutConfig } from "@/types";
 import type { AppliedPromo } from "@/lib/actions/promos";
 
 export const metadata: Metadata = {
@@ -39,5 +39,7 @@ export default async function CheckoutPage() {
     }
   }
 
-  return <CheckoutFlow allowedCountries={allowedCountries} defaultShipping={defaultShipping} initialPromo={initialPromo} />;
+  const checkoutConfig = (settings as any)?.checkout_config as CheckoutConfig | null;
+
+  return <CheckoutFlow allowedCountries={allowedCountries} defaultShipping={defaultShipping} initialPromo={initialPromo} checkoutConfig={checkoutConfig} />;
 }
