@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel — entire directory ignored so customer project configs stay local only
 .vercel
 
+# local migration scripts — not for version control
+supabase-migration.sql
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
